@@ -20,7 +20,7 @@ export const metadata = {
   description: "Web xem phim giao diện tối giản",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className="bg-background text-white antialiased">

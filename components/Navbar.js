@@ -140,7 +140,6 @@ export default function Navbar() {
                                     <div className="absolute top-full right-0 mt-2 w-48 bg-surface/95 border border-white/10 rounded-lg shadow-xl backdrop-blur-md overflow-hidden z-50">
                                         <Link href="/tu-phim">
                                             <button className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-primary hover:bg-white/5 transition-all duration-300 flex items-center gap-2">
-                                                <span>📚</span>
                                                 Tủ phim của tôi
                                             </button>
                                         </Link>
@@ -148,7 +147,6 @@ export default function Navbar() {
                                             onClick={handleLogout}
                                             className="w-full text-left px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 border-t border-white/5 flex items-center gap-2"
                                         >
-                                            <span>🚪</span>
                                             Đăng xuất
                                         </button>
                                     </div>
