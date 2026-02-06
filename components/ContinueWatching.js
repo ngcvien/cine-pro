@@ -68,7 +68,7 @@ export default function ContinueWatching() {
 
       {watchHistory.length > 0 ? (
         <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-          <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide">
+          <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar">
             {watchHistory.map((item) => (
               <div key={item.id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
                 <HistoryItem item={item} />

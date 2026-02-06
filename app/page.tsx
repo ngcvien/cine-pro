@@ -143,7 +143,7 @@ export default async function Home() {
 
         {movies.length > 0 ? (
           <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide">
+            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar">
               {movies.map((movie: any) => (
                 <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
                   <MovieCard movie={movie} />
@@ -179,7 +179,7 @@ export default async function Home() {
 
         {singles.length > 0 ? (
           <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide">
+            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar">
               {singles.map((movie: any) => (
                 <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
                   <MovieCard movie={normalizePosterUrl(movie)} />
@@ -215,7 +215,7 @@ export default async function Home() {
 
         {series.length > 0 ? (
           <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide">
+            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar">
               {series.map((movie: any) => (
                 <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
                   <MovieCard movie={normalizePosterUrl(movie)} />

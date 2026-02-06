@@ -33,9 +33,40 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ... (các class no-scrollbar giữ nguyên) */
 .no-scrollbar::-webkit-scrollbar {
-    display: none;
+    display: none !important;
 }
 .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+/* Ẩn scrollbar cho horizontal scroll */
+.scrollbar-hide {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none !important;
+}
+.scrollbar-hide::-webkit-scrollbar-track {
+    display: none !important;
+}
+.scrollbar-hide::-webkit-scrollbar-thumb {
+    display: none !important;
+}
+
+/* Alternative class name */
+.overflow-hide-scrollbar {
+    overflow-x: auto !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+.overflow-hide-scrollbar::-webkit-scrollbar {
+    display: none !important;
+}
+.overflow-hide-scrollbar::-webkit-scrollbar-track {
+    display: none !important;
+}
+.overflow-hide-scrollbar::-webkit-scrollbar-thumb {
+    display: none !important;
 }
