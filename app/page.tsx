@@ -20,6 +20,50 @@ async function getNewMovies() {
   }
 }
 
+async function getSingleMovies() {
+  try {
+    // Thử endpoint phim lẻ, nếu lỗi fallback sang phim mới
+    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=2", {
+      next: { revalidate: 60 },
+    });
+    
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Single movies error:", error);
+    return null;
+  }
+}
+
+async function getSeriesMovies() {
+  try {
+    // Sử dụng endpoint khác thay vì phim-bo
+    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=3", {
+      next: { revalidate: 60 },
+    });
+    
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Series movies error:", error);
+    return null;
+  }
+}
+
+async function getHotMovies() {
+  try {
+    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=4", {
+      next: { revalidate: 60 },
+    });
+    
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Hot movies error:", error);
+    return null;
+  }
+}
+
 async function getFeaturedMovie() {
   try {
     const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=1", {
@@ -39,12 +83,18 @@ async function getFeaturedMovie() {
 }
 
 export default async function Home() {
-  const [data, featuredMovie] = await Promise.all([
+  const [data, featuredMovie, singleMovies, seriesMovies, hotMovies] = await Promise.all([
     getNewMovies(),
-    getFeaturedMovie()
+    getFeaturedMovie(),
+    getSingleMovies(),
+    getSeriesMovies(),
+    getHotMovies()
   ]);
   
   const movies = data?.items || [];
+  const singles = singleMovies?.items || [];
+  const series = seriesMovies?.items || [];
+  const hots = hotMovies?.items || [];
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-8 space-y-16">
@@ -68,7 +118,7 @@ export default async function Home() {
           
           <Link href="/danh-sach/phim-moi-cap-nhat" className="hidden md:block">
             <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
-              XEM TẤT CẢ ///
+              XEM TẤT CẢ
             </span>
           </Link>
         </div>
@@ -85,6 +135,72 @@ export default async function Home() {
           </div>
         )}
       </div>
+
+      {/* Single Movies Section */}
+      <div>
+        <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
+              PHIM <span className="text-primary">LẺ</span>
+            </h2>
+            <p className="text-gray-500 text-sm md:text-base mt-2 font-mono">
+              CÁC BỘ PHIM HOÀN CHỈNH VỚI MỘT TẬP DUY NHẤT.
+            </p>
+          </div>
+          
+          <Link href="/danh-sach/phim-le" className="hidden md:block">
+            <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
+              XEM TẤT CẢ
+            </span>
+          </Link>
+        </div>
+
+        {singles.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+            {singles.map((movie: any) => (
+              <MovieCard key={movie._id} movie={movie} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-gray-500">Đang tải dữ liệu hoặc lỗi kết nối...</p>
+          </div>
+        )}
+      </div>
+
+      {/* Series Movies Section */}
+      <div>
+        <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
+              PHIM <span className="text-primary">BỘ</span>
+            </h2>
+            <p className="text-gray-500 text-sm md:text-base mt-2 font-mono">
+              CÁC SERIES PHIM VỚI NHIỀU TẬP LIÊN TIẾP.
+            </p>
+          </div>
+          
+          <Link href="/danh-sach/phim-bo" className="hidden md:block">
+            <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
+              XEM TẤT CẢ
+            </span>
+          </Link>
+        </div>
+
+        {series.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+            {series.map((movie: any) => (
+              <MovieCard key={movie._id} movie={movie} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-gray-500">Đang tải dữ liệu hoặc lỗi kết nối...</p>
+          </div>
+        )}
+      </div>
+
+      
     </div>
   );
 }
