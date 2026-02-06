@@ -36,7 +36,7 @@ export default function RootLayout({
 
         <Navbar />
 
-        <main className="relative z-0">
+        <main className="relative z-0 pt-15">
             {children}
         </main>
         

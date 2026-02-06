@@ -37,7 +37,7 @@ export default function HistoryItem({ item }) {
     : `/phim/${item.slug}`;
 
   return (
-    <Link href={hrefLink} className="group relative block">
+    <Link href={hrefLink} className="group relative block flex-shrink-0 w-40 md:w-48">
       <div className="relative w-full aspect-[2/3] overflow-hidden rounded border border-white/10 group-hover:border-primary transition-colors bg-surface">
         <img
           src={movie.poster_url}

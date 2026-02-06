@@ -167,6 +167,9 @@ export default function Navbar() {
                              <div className="px-4 py-3 border-b border-white/10 mb-2">
                                 <p className="text-sm text-white font-bold truncate">{user.displayName}</p>
                              </div>
+                             <Link href="/ho-so" onClick={() => setShowProfileMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Hồ Sơ
+                             </Link>
                              <Link href="/tu-phim" onClick={() => setShowProfileMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg> Tủ Phim Của Tôi
                              </Link>
@@ -223,7 +226,10 @@ export default function Navbar() {
             ))}
 
             {!loading && user && (
-                 <Link href="/tu-phim" onClick={() => setShowMobileMenu(false)} className="block text-lg font-bold text-gray-300">Tủ Phim</Link>
+                 <div className="space-y-2">
+                     <Link href="/ho-so" onClick={() => setShowMobileMenu(false)} className="block text-lg font-bold text-gray-300">Hồ Sơ</Link>
+                     <Link href="/tu-phim" onClick={() => setShowMobileMenu(false)} className="block text-lg font-bold text-gray-300">Tủ Phim</Link>
+                 </div>
             )}
 
              {!loading && !user && (

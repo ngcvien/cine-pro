@@ -1,6 +1,7 @@
 import MovieCard from "../components/MovieCard";
 import HeroSection from "../components/HeroSection";
 import WatchingNow from "../components/WatchingNow";
+import ContinueWatching from "../components/ContinueWatching";
 import Link from "next/link";
 
 function normalizePosterUrl(movie: any) {
@@ -118,6 +119,9 @@ export default async function Home() {
       {/* Watching Now Section */}
       <WatchingNow />
 
+      {/* Continue Watching Section */}
+      <ContinueWatching />
+
       {/* New Movies Section */}
       <div>
         <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
@@ -138,10 +142,14 @@ export default async function Home() {
         </div>
 
         {movies.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {movies.map((movie: any) => (
-              <MovieCard key={movie._id} movie={movie} />
-            ))}
+          <div className="-mx-4 px-4 md:-mx-8 md:px-8">
+            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide">
+              {movies.map((movie: any) => (
+                <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
+                  <MovieCard movie={movie} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="text-center py-20">
@@ -170,10 +178,14 @@ export default async function Home() {
         </div>
 
         {singles.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {singles.map((movie: any) => (
-              <MovieCard key={movie._id} movie={movie} />
-            ))}
+          <div className="-mx-4 px-4 md:-mx-8 md:px-8">
+            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide">
+              {singles.map((movie: any) => (
+                <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
+                  <MovieCard movie={normalizePosterUrl(movie)} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="text-center py-20">
@@ -202,10 +214,14 @@ export default async function Home() {
         </div>
 
         {series.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {series.map((movie: any) => (
-              <MovieCard key={movie._id} movie={movie} />
-            ))}
+          <div className="-mx-4 px-4 md:-mx-8 md:px-8">
+            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide">
+              {series.map((movie: any) => (
+                <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
+                  <MovieCard movie={normalizePosterUrl(movie)} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="text-center py-20">
