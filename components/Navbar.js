@@ -90,8 +90,8 @@ export default function Navbar() {
         {/* LOGO & DESKTOP MENU */}
         <div className="flex items-center gap-8 md:gap-12">
           <Link href="/" className="group flex items-center gap-1">
-            <span className="text-3xl md:text-4xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-400 group-hover:scale-105 transition-transform">
-              CINE<span className="text-white">PRO</span>
+            <span className="text-3xl md:text-4xl font-black font-display tracking-tighter group-hover:scale-105 transition-transform">
+              <span className="text-white">CINE</span><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-400">PRO</span>
             </span>
           </Link>
 

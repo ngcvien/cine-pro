@@ -7,12 +7,12 @@ export default function Loading() {
         
         {/* LOGO ANIMATION */}
         <div className="relative">
-            <h1 className="text-5xl md:text-7xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-400 animate-pulse">
-              CINE<span className="text-white">PRO</span>
+            <h1 className="text-5xl md:text-7xl font-black font-display tracking-tighter animate-pulse">
+              <span className="text-white">CINE</span><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-400">PRO</span>
             </h1>
             
-            <h1 className="absolute top-full left-0 right-0 text-5xl md:text-7xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary/20 to-green-400/20 scale-y-[-1] blur-sm opacity-50 select-none pointer-events-none">
-              CINE<span className="text-white/20">PRO</span>
+            <h1 className="absolute top-full left-0 right-0 text-5xl md:text-7xl font-black font-display tracking-tighter scale-y-[-1] blur-sm opacity-50 select-none pointer-events-none">
+              <span className="text-white/20">CINE</span><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary/20 to-green-400/20">PRO</span>
             </h1>
         </div>
 
