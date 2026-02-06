@@ -172,7 +172,7 @@ export default async function Home() {
         {singles.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {singles.map((movie: any) => (
-              <MovieCard key={movie._id} movie={normalizePosterUrl(movie)} />
+              <MovieCard key={movie._id} movie={movie} />
             ))}
           </div>
         ) : (
@@ -204,7 +204,7 @@ export default async function Home() {
         {series.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {series.map((movie: any) => (
-              <MovieCard key={movie._id} movie={normalizePosterUrl(movie)} />
+              <MovieCard key={movie._id} movie={movie} />
             ))}
           </div>
         ) : (
