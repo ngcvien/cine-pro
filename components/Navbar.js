@@ -1,179 +1,239 @@
 "use client";
-import { useState, useEffect } from "react";
-import { auth, googleProvider } from "../lib/firebase";
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { auth } from "../lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import SearchBox from "./SearchBox"; // Import thanh tìm kiếm bạn vừa tạo
 
 export default function Navbar() {
-    const [user, setUser] = useState(null);
-    const [keyword, setKeyword] = useState("");
-    const [isSearchFocused, setIsSearchFocused] = useState(false);
-    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-    const router = useRouter();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  
+  const pathname = usePathname(); // Để biết đang ở trang nào
+  const router = useRouter();
+  const profileRef = useRef(null);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
-        return () => unsubscribe();
-    }, []);
+  // 1. Lắng nghe trạng thái đăng nhập
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
+  }, []);
 
-    const handleLogin = async () => {
-        try {
-            await signInWithPopup(auth, googleProvider);
-        } catch (error) {
-            console.error("Lỗi đăng nhập:", error);
-        }
+  // 2. Lắng nghe sự kiện cuộn trang (để đổi màu nền navbar)
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
     };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-    const handleLogout = async () => {
-        await signOut(auth);
-        setIsUserMenuOpen(false);
+  // 3. Đóng menu profile khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    const handleSearch = (e) => {
-        if (e.key === "Enter" && keyword.trim() !== "") {
-            router.push(`/tim-kiem?keyword=${keyword}`);
-            setIsSearchFocused(false);
-        }
-    };
+  // Xử lý đăng xuất
+  const handleLogout = async () => {
+    await signOut(auth);
+    setShowProfileMenu(false);
+    router.push("/");
+  };
 
-    const categories = [
-        { label: "PHIM MỚI", href: "/" },
-        { label: "PHIM BỘ", href: "/danh-sach/phim-bo" },
-        { label: "PHIM LẺ", href: "/danh-sach/phim-le" },
-        { label: "ANIME", href: "/danh-sach/hoat-hinh" },
-    ];
+  // Danh sách Link Menu
+  const navLinks = [
+    { name: "Trang Chủ", href: "/" },
+    { name: "Phim Lẻ", href: "/danh-sach/phim-le" },
+    { name: "Phim Bộ", href: "/danh-sach/phim-bo" },
+    { name: "Hoạt Hình", href: "/danh-sach/hoat-hinh" },
+  ];
 
-    return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b border-white/10 shadow-lg">
-            <div className="container mx-auto px-4 md:px-8 py-4">
-                <div className="flex items-center justify-between gap-6 md:gap-8">
-                    
-                    {/* LOGO */}
-                    <Link href="/" className="flex-shrink-0">
-                        <div className="text-2xl font-black tracking-tighter">
-                            <span className="text-white">CINE</span>
-                            <span className="text-primary">PRO</span>
-                        </div>
-                    </Link>
+  return (
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+        isScrolled || showMobileMenu
+          ? "bg-background/90 backdrop-blur-md border-b border-white/5 shadow-lg"
+          : "bg-gradient-to-b from-black/80 to-transparent border-b border-transparent"
+      }`}
+    >
+      <div className="container mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between gap-4">
+        
+        {/* --- 1. LOGO & DESKTOP MENU --- */}
+        <div className="flex items-center gap-8 md:gap-12">
+          {/* LOGO */}
+          <Link href="/" className="group flex items-center gap-1">
+            <span className="text-3xl md:text-4xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-400 group-hover:scale-105 transition-transform">
+              CINE<span className="text-white">PRO</span>
+            </span>
+          </Link>
 
-                    {/* DESKTOP MENU */}
-                    <div className="hidden lg:flex items-center gap-1">
-                        {categories.map((cat) => (
-                            <Link key={cat.href} href={cat.href}>
-                                <span className="text-xs font-bold text-gray-400 px-4 py-2 rounded-lg hover:text-primary hover:bg-white/5 transition-all duration-300 uppercase tracking-wider">
-                                    {cat.label}
-                                </span>
-                            </Link>
-                        ))}
-                    </div>
+          {/* DESKTOP LINKS */}
+          <ul className="hidden lg:flex items-center gap-6">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className={`text-sm font-bold uppercase tracking-wide transition-colors ${
+                      isActive ? "text-primary" : "text-gray-300 hover:text-white"
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-                    {/* SEARCH BAR */}
-                    <div className="hidden md:flex flex-1 max-w-xs items-center relative">
-                        <div className={`relative w-full transition-all duration-300 ${
-                            isSearchFocused ? "max-w-md" : "max-w-xs"
-                        }`}>
-                            <input
-                                type="text"
-                                placeholder="Tìm phim..."
-                                value={keyword}
-                                onChange={(e) => setKeyword(e.target.value)}
-                                onKeyDown={handleSearch}
-                                onFocus={() => setIsSearchFocused(true)}
-                                onBlur={() => setIsSearchFocused(false)}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 px-4 py-2.5 focus:outline-none focus:border-primary focus:bg-white/10 transition-all duration-300"
-                            />
-                            <svg
-                                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
-                        </div>
-                    </div>
-
-                    {/* RIGHT SECTION: USER & AUTH */}
-                    <div className="flex items-center gap-3 md:gap-4">
-                        {user ? (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg hover:bg-white/5 transition-colors duration-300 group"
-                                >
-                                    <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center text-black font-bold text-sm">
-                                        {user.displayName?.charAt(0).toUpperCase() || "U"}
-                                    </div>
-                                    <div className="hidden md:block text-left">
-                                        <p className="text-xs text-gray-500 font-medium">Xin chào</p>
-                                        <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">
-                                            {user.displayName?.split(" ")[0]}
-                                        </p>
-                                    </div>
-                                    <svg
-                                        className={`hidden md:block w-4 h-4 text-gray-400 transition-transform duration-300 ${
-                                            isUserMenuOpen ? "rotate-180" : ""
-                                        }`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                                        />
-                                    </svg>
-                                </button>
-
-                                {/* USER MENU DROPDOWN */}
-                                {isUserMenuOpen && (
-                                    <div className="absolute top-full right-0 mt-2 w-48 bg-surface/95 border border-white/10 rounded-lg shadow-xl backdrop-blur-md overflow-hidden z-50">
-                                        <Link href="/tu-phim">
-                                            <button className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-primary hover:bg-white/5 transition-all duration-300 flex items-center gap-2">
-                                                Tủ phim của tôi
-                                            </button>
-                                        </Link>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full text-left px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 border-t border-white/5 flex items-center gap-2"
-                                        >
-                                            Đăng xuất
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <button
-                                onClick={handleLogin}
-                                className="px-4 md:px-6 py-2.5 bg-primary text-black text-sm font-bold rounded-lg hover:bg-primary/90 transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-primary/50 uppercase tracking-wide"
-                            >
-                                Đăng nhập
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* MOBILE MENU */}
-                <div className="lg:hidden flex items-center justify-center gap-2 mt-4 pt-4 border-t border-white/5 overflow-x-auto">
-                    {categories.map((cat) => (
-                        <Link key={cat.href} href={cat.href}>
-                            <span className="text-xs font-bold text-gray-400 px-3 py-1.5 rounded hover:text-primary hover:bg-white/5 transition-all duration-300 uppercase tracking-wider whitespace-nowrap">
-                                {cat.label}
-                            </span>
-                        </Link>
-                    ))}
-                </div>
+        {/* --- 2. SEARCH & USER ACTION --- */}
+        <div className="flex items-center gap-4 md:gap-6 flex-1 justify-end">
+            
+            {/* THANH TÌM KIẾM (Hiện trên PC, ẩn trên Mobile để đưa vào menu) */}
+            <div className="hidden md:block w-full max-w-[300px]">
+                <SearchBox />
             </div>
-        </nav>
-    );
+
+            {/* USER PROFILE */}
+            {user ? (
+                <div className="relative" ref={profileRef}>
+                    {/* Avatar Button */}
+                    <button 
+                        onClick={() => setShowProfileMenu(!showProfileMenu)}
+                        className="flex items-center gap-2 focus:outline-none"
+                    >
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-green-600 p-[2px]">
+                            <img 
+                                src={user.photoURL || "https://api.dicebear.com/9.x/initials/svg?seed=User"} 
+                                alt="User" 
+                                className="w-full h-full rounded-full object-cover bg-black"
+                            />
+                        </div>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {showProfileMenu && (
+                        <div className="absolute right-0 mt-3 w-56 bg-[#121212] border border-white/10 rounded-lg shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                             <div className="px-4 py-3 border-b border-white/10 mb-2">
+                                <p className="text-sm text-white font-bold truncate">{user.displayName || "Người dùng"}</p>
+                                <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                             </div>
+                             
+                             <Link 
+                                href="/tu-phim" 
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors"
+                                onClick={() => setShowProfileMenu(false)}
+                             >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                                Tủ Phim Của Tôi
+                             </Link>
+                             
+                             <Link 
+                                href="/ho-so" 
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors"
+                                onClick={() => setShowProfileMenu(false)}
+                             >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                Cài Đặt Hồ Sơ
+                             </Link>
+
+                             <button 
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors mt-1"
+                             >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                Đăng Xuất
+                             </button>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <Link href="/dang-nhap">
+                    <button className="bg-primary hover:bg-green-400 text-black font-extrabold text-sm px-5 py-2.5 rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(0,255,65,0.4)]">
+                        ĐĂNG NHẬP
+                    </button>
+                </Link>
+            )}
+
+            {/* HAMBURGER BUTTON (Mobile Only) */}
+            <button 
+                className="lg:hidden text-white p-1"
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+                {showMobileMenu ? (
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                ) : (
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                )}
+            </button>
+        </div>
+      </div>
+
+      {/* --- 3. MOBILE MENU OVERLAY --- */}
+      {/* Hiển thị khi bấm nút Hamburger */}
+      <div 
+        className={`lg:hidden fixed inset-x-0 top-[64px] md:top-[80px] bg-background/95 backdrop-blur-xl border-b border-white/10 transition-all duration-300 overflow-hidden ${
+            showMobileMenu ? "max-h-screen opacity-100 py-6" : "max-h-0 opacity-0 py-0"
+        }`}
+      >
+         <div className="container mx-auto px-4 space-y-6">
+            {/* Search Box Mobile */}
+            <div className="mb-6">
+                <SearchBox />
+            </div>
+
+            {/* Mobile Links */}
+            <ul className="space-y-4">
+                {navLinks.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <li key={link.name}>
+                        <Link 
+                            href={link.href}
+                            className={`block text-lg font-bold ${isActive ? 'text-primary pl-4 border-l-4 border-primary' : 'text-gray-300 hover:text-white'}`}
+                            onClick={() => setShowMobileMenu(false)}
+                        >
+                            {link.name}
+                        </Link>
+                    </li>
+                  );
+                })}
+                {/* Link Tủ Phim Mobile */}
+                {user && (
+                    <li>
+                         <Link 
+                            href="/tu-phim"
+                            className={`block text-lg font-bold ${pathname === '/tu-phim' ? 'text-primary pl-4 border-l-4 border-primary' : 'text-gray-300 hover:text-white'}`}
+                            onClick={() => setShowMobileMenu(false)}
+                        >
+                            Tủ Phim
+                        </Link>
+                    </li>
+                )}
+            </ul>
+
+             {/* Login Button Mobile (nếu chưa đăng nhập) */}
+             {!user && (
+                 <div className="pt-4 border-t border-white/10">
+                     <Link href="/dang-nhap" onClick={() => setShowMobileMenu(false)}>
+                        <button className="w-full bg-white/10 text-white font-bold py-3 rounded-lg hover:bg-primary hover:text-black transition-colors">
+                            ĐĂNG NHẬP TÀI KHOẢN
+                        </button>
+                     </Link>
+                 </div>
+             )}
+         </div>
+      </div>
+    </nav>
+  );
 }
