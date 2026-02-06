@@ -3,12 +3,16 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "../lib/firebase";
-import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth"; // Thêm 2 hàm này
+import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import SearchBox from "./SearchBox";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState(null);
+  
+  // 1. THÊM STATE LOADING (Mặc định là true)
+  const [loading, setLoading] = useState(true); 
+
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   
@@ -16,11 +20,16 @@ export default function Navbar() {
   const router = useRouter();
   const profileRef = useRef(null);
 
+  // 2. CẬP NHẬT LOGIC KIỂM TRA ĐĂNG NHẬP
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false); // Khi Firebase trả lời xong (dù có user hay null) thì tắt loading
+    });
     return () => unsub();
   }, []);
 
+  // ... (Giữ nguyên các useEffect khác và các hàm handleLogin, handleLogout)
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0);
@@ -39,19 +48,16 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- 1. HÀM ĐĂNG NHẬP GOOGLE (MỚI) ---
   const handleLogin = async () => {
     try {
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
-        // Đăng nhập xong thì đóng menu mobile nếu đang mở
         setShowMobileMenu(false); 
     } catch (error) {
         console.error("Lỗi đăng nhập:", error);
     }
   };
 
-  // Xử lý đăng xuất
   const handleLogout = async () => {
     await signOut(auth);
     setShowProfileMenu(false);
@@ -66,116 +72,78 @@ export default function Navbar() {
   ];
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
         isScrolled || showMobileMenu
           ? "bg-background/90 backdrop-blur-md border-b border-white/5 shadow-lg"
           : "bg-gradient-to-b from-black/80 to-transparent border-b border-transparent"
-      }`}
-    >
+      }`}>
       <div className="container mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between gap-4">
         
-        {/* LOGO & DESKTOP MENU */}
+        {/* LOGO & MENU (Giữ nguyên) */}
         <div className="flex items-center gap-8 md:gap-12">
           <Link href="/" className="group flex items-center gap-1">
             <span className="text-3xl md:text-4xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-400 group-hover:scale-105 transition-transform">
               CINE<span className="text-white">PRO</span>
             </span>
           </Link>
-
           <ul className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className={`text-sm font-bold uppercase tracking-wide transition-colors ${
-                      isActive ? "text-primary" : "text-gray-300 hover:text-white"
-                    }`}
-                  >
+            {navLinks.map((link) => (
+               <li key={link.name}>
+                  <Link href={link.href} className={`text-sm font-bold uppercase tracking-wide transition-colors ${pathname === link.href ? "text-primary" : "text-gray-300 hover:text-white"}`}>
                     {link.name}
                   </Link>
-                </li>
-              );
-            })}
+               </li>
+            ))}
           </ul>
         </div>
 
-        {/* SEARCH & USER ACTION */}
+        {/* RIGHT SECTION */}
         <div className="flex items-center gap-4 md:gap-6 flex-1 justify-end">
-            
             <div className="hidden md:block w-full max-w-[300px]">
                 <SearchBox />
             </div>
 
-            {user ? (
-                // --- ĐÃ ĐĂNG NHẬP (Hiện Avatar) ---
+            {/* 3. XỬ LÝ HIỂN THỊ DỰA TRÊN TRẠNG THÁI LOADING */}
+            {loading ? (
+                // --- TRẠNG THÁI ĐANG TẢI (SKELETON) ---
+                // Hiện một vòng tròn xám mờ để giữ chỗ, tránh nhấp nháy layout
+                <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse"></div>
+            ) : user ? (
+                // --- ĐÃ ĐĂNG NHẬP (AVATAR) ---
                 <div className="relative" ref={profileRef}>
-                    <button 
-                        onClick={() => setShowProfileMenu(!showProfileMenu)}
-                        className="flex items-center gap-2 focus:outline-none"
-                    >
+                    <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-2 focus:outline-none">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-green-600 p-[2px]">
-                            <img 
-                                src={user.photoURL || "https://api.dicebear.com/9.x/initials/svg?seed=User"} 
-                                alt="User" 
-                                className="w-full h-full rounded-full object-cover bg-black"
-                            />
+                            <img src={user.photoURL || "https://api.dicebear.com/9.x/initials/svg?seed=User"} alt="User" className="w-full h-full rounded-full object-cover bg-black" />
                         </div>
                     </button>
-
+                    {/* DROPDOWN MENU (Giữ nguyên code cũ) */}
                     {showProfileMenu && (
                         <div className="absolute right-0 mt-3 w-56 bg-[#121212] border border-white/10 rounded-lg shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                              <div className="px-4 py-3 border-b border-white/10 mb-2">
-                                <p className="text-sm text-white font-bold truncate">{user.displayName || "Người dùng"}</p>
+                                <p className="text-sm text-white font-bold truncate">{user.displayName}</p>
                                 <p className="text-xs text-gray-400 truncate">{user.email}</p>
                              </div>
-                             
-                             <Link 
-                                href="/tu-phim" 
-                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors"
-                                onClick={() => setShowProfileMenu(false)}
-                             >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                                Tủ Phim Của Tôi
+                             <Link href="/tu-phim" onClick={() => setShowProfileMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg> Tủ Phim Của Tôi
                              </Link>
-                             
-                             <Link 
-                                href="/ho-so" 
-                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors"
-                                onClick={() => setShowProfileMenu(false)}
-                             >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                                Cài Đặt Hồ Sơ
+                             <Link href="/ho-so" onClick={() => setShowProfileMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-primary transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> Cài Đặt Hồ Sơ
                              </Link>
-
-                             <button 
-                                onClick={handleLogout}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors mt-1"
-                             >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                                Đăng Xuất
+                             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors mt-1">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> Đăng Xuất
                              </button>
                         </div>
                     )}
                 </div>
             ) : (
-                // --- CHƯA ĐĂNG NHẬP (Nút gọi hàm Popup) ---
-                // Đã sửa từ Link thành button onClick={handleLogin}
-                <button 
-                    onClick={handleLogin}
-                    className="bg-primary hover:bg-green-400 text-black font-extrabold text-sm px-5 py-2.5 rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(0,255,65,0.4)]"
-                >
+                // --- CHƯA ĐĂNG NHẬP (NÚT LOGIN) ---
+                <button onClick={handleLogin} className="bg-primary hover:bg-green-400 text-black font-extrabold text-sm px-5 py-2.5 rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(0,255,65,0.4)]">
                     ĐĂNG NHẬP
                 </button>
             )}
 
-            {/* HAMBURGER BUTTON */}
-            <button 
-                className="lg:hidden text-white p-1"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-            >
+            {/* HAMBURGER BUTTON (Giữ nguyên) */}
+            <button className="lg:hidden text-white p-1" onClick={() => setShowMobileMenu(!showMobileMenu)}>
                 {showMobileMenu ? (
                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 ) : (
@@ -184,53 +152,28 @@ export default function Navbar() {
             </button>
         </div>
       </div>
-
-      {/* MOBILE MENU */}
-      <div 
-        className={`lg:hidden fixed inset-x-0 top-[64px] md:top-[80px] bg-background/95 backdrop-blur-xl border-b border-white/10 transition-all duration-300 overflow-hidden ${
-            showMobileMenu ? "max-h-screen opacity-100 py-6" : "max-h-0 opacity-0 py-0"
-        }`}
-      >
+      
+      {/* MOBILE MENU (Cũng cần cập nhật loading tương tự nếu muốn hoàn hảo) */}
+      <div className={`lg:hidden fixed inset-x-0 top-[64px] md:top-[80px] bg-background/95 backdrop-blur-xl border-b border-white/10 transition-all duration-300 overflow-hidden ${showMobileMenu ? "max-h-screen opacity-100 py-6" : "max-h-0 opacity-0 py-0"}`}>
          <div className="container mx-auto px-4 space-y-6">
-            <div className="mb-6">
-                <SearchBox />
-            </div>
-
+            <div className="mb-6"><SearchBox /></div>
             <ul className="space-y-4">
-                {navLinks.map((link) => {
-                  const isActive = pathname === link.href;
-                  return (
+                {navLinks.map((link) => (
                     <li key={link.name}>
-                        <Link 
-                            href={link.href}
-                            className={`block text-lg font-bold ${isActive ? 'text-primary pl-4 border-l-4 border-primary' : 'text-gray-300 hover:text-white'}`}
-                            onClick={() => setShowMobileMenu(false)}
-                        >
+                        <Link href={link.href} onClick={() => setShowMobileMenu(false)} className={`block text-lg font-bold ${pathname === link.href ? 'text-primary pl-4 border-l-4 border-primary' : 'text-gray-300 hover:text-white'}`}>
                             {link.name}
                         </Link>
                     </li>
-                  );
-                })}
-                {user && (
-                    <li>
-                         <Link 
-                            href="/tu-phim"
-                            className={`block text-lg font-bold ${pathname === '/tu-phim' ? 'text-primary pl-4 border-l-4 border-primary' : 'text-gray-300 hover:text-white'}`}
-                            onClick={() => setShowMobileMenu(false)}
-                        >
-                            Tủ Phim
-                        </Link>
-                    </li>
+                ))}
+                {!loading && user && (
+                    <li><Link href="/tu-phim" onClick={() => setShowMobileMenu(false)} className={`block text-lg font-bold ${pathname === '/tu-phim' ? 'text-primary pl-4 border-l-4 border-primary' : 'text-gray-300 hover:text-white'}`}>Tủ Phim</Link></li>
                 )}
             </ul>
-
-             {!user && (
+             
+             {/* Chỉ hiện nút đăng nhập Mobile khi KHÔNG loading và KHÔNG có user */}
+             {!loading && !user && (
                  <div className="pt-4 border-t border-white/10">
-                     {/* Đã sửa nút đăng nhập Mobile luôn */}
-                     <button 
-                        onClick={handleLogin}
-                        className="w-full bg-white/10 text-white font-bold py-3 rounded-lg hover:bg-primary hover:text-black transition-colors"
-                     >
+                     <button onClick={handleLogin} className="w-full bg-white/10 text-white font-bold py-3 rounded-lg hover:bg-primary hover:text-black transition-colors">
                         ĐĂNG NHẬP TÀI KHOẢN
                      </button>
                  </div>
