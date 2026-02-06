@@ -37,80 +37,120 @@ export default async function MovieDetailPage({ params, searchParams }) {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* BACKGROUND BLUR */}
-            <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
+            <div className="fixed inset-0 z-0 opacity-15 pointer-events-none">
                  <img src={movie.poster_url} className="w-full h-full object-cover blur-3xl" alt={movie.name} />
             </div>
 
-            <div className="relative z-10 container mx-auto px-4 pt-4">
-                {/* 1. TRÌNH PHÁT VIDEO */}
-                <div className="w-full max-w-5xl mx-auto shadow-2xl shadow-primary/20 mb-8">
-                     {currentEpisode?.link_m3u8 ? (
-                         <VideoPlayer 
-                            url={currentEpisode.link_m3u8} 
-                            slug={slug} 
-                            episodeName={currentEpisode.name}
-                         />
-                     ) : (
-                         <div className="aspect-video bg-gray-900 flex items-center justify-center text-gray-500">
-                             Chưa có tập phim này
-                         </div>
-                     )}
+            <div className="relative z-10 container mx-auto px-4 md:px-8 pt-6">
+                {/* HEADER WITH BREADCRUMB */}
+                <div className="mb-8 flex items-center gap-2 text-sm text-gray-500">
+                    <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
+                    <span>/</span>
+                    <span className="text-gray-300">{movie.name}</span>
                 </div>
 
-                {/* 2. THÔNG TIN PHIM & DANH SÁCH TẬP */}
-                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                {/* MAIN CONTENT GRID */}
+                <div className="grid lg:grid-cols-3 gap-8">
                     
-                    {/* CỘT TRÁI: THÔNG TIN */}
-                    <div className="md:col-span-2 space-y-4">
-                        <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter">
-                            {movie.name}
-                        </h1>
-                        <h2 className="text-xl text-gray-400 font-mono mb-4">{movie.origin_name} ({movie.year})</h2>
-                        
-                        <div className="flex flex-wrap gap-2 text-xs font-bold mb-4">
-                            <span className="bg-white text-black px-2 py-1">⏱ {movie.time}</span>
-                            <span className="border border-primary text-primary px-2 py-1">{movie.quality}</span>
-                            <span className="bg-gray-800 text-gray-300 px-2 py-1">{movie.lang}</span>
+                    {/* LEFT SECTION: VIDEO + MOVIE INFO */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* VIDEO PLAYER */}
+                        <div className="space-y-2">
+                            {currentEpisode?.link_m3u8 ? (
+                                <VideoPlayer 
+                                    url={currentEpisode.link_m3u8} 
+                                    slug={slug} 
+                                    episodeName={currentEpisode.name}
+                                />
+                            ) : (
+                                <div className="aspect-video bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-gray-500 rounded-xl border border-white/10">
+                                    <span>Chưa có tập phim này</span>
+                                </div>
+                            )}
+                            <p className="text-xs text-gray-500 ml-1">Tập hiện tại: <span className="text-primary font-bold">{currentEpisode?.name}</span></p>
                         </div>
 
-                        <p className="text-gray-400 leading-relaxed text-sm md:text-base border-l-2 border-primary pl-4">
-                            {movie.content}
-                        </p>
+                        {/* MOVIE DETAILS */}
+                        <div className="space-y-6 bg-surface/30 border border-white/5 rounded-xl p-6 backdrop-blur-sm">
+                            {/* TITLE SECTION */}
+                            <div className="space-y-2">
+                                <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-tight">
+                                    {movie.name}
+                                </h1>
+                                <h2 className="text-lg text-gray-400 font-light">{movie.origin_name}</h2>
+                            </div>
 
-                        <div className="pt-4 grid grid-cols-2 gap-4 text-sm text-gray-500 font-mono">
-                            <p>Đạo diễn: <span className="text-white">{movie.actor[0] || "Đang cập nhật"}</span></p>
-                            <p>Quốc gia: <span className="text-white">{movie.country[0]?.name}</span></p>
+                            {/* META TAGS */}
+                            <div className="flex flex-wrap gap-3 pt-2">
+                                <span className="bg-primary/20 text-primary text-xs font-bold px-3 py-1.5 rounded-full">
+                                    {movie.year}
+                                </span>
+                                <span className="bg-white/10 text-gray-300 text-xs font-bold px-3 py-1.5 rounded-full">
+                                    ⏱ {movie.time}
+                                </span>
+                                <span className="bg-white/10 text-gray-300 text-xs font-bold px-3 py-1.5 rounded-full">
+                                    {movie.quality}
+                                </span>
+                                <span className="bg-white/10 text-gray-300 text-xs font-bold px-3 py-1.5 rounded-full">
+                                    {movie.lang}
+                                </span>
+                            </div>
+
+                            {/* DESCRIPTION */}
+                            <div className="border-t border-white/5 pt-6">
+                                <h3 className="text-gray-400 text-sm font-bold mb-3 uppercase tracking-wider">Nội dung</h3>
+                                <p className="text-gray-400 leading-relaxed text-sm md:text-base">
+                                    {movie.content}
+                                </p>
+                            </div>
+
+                            {/* INFO GRID */}
+                            <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
+                                <div>
+                                    <h4 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Đạo diễn</h4>
+                                    <p className="text-white text-sm">{movie.actor[0] || "Đang cập nhật"}</p>
+                                </div>
+                                <div>
+                                    <h4 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Quốc gia</h4>
+                                    <p className="text-white text-sm">{movie.country[0]?.name}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* CỘT PHẢI: DANH SÁCH TẬP (No Icon Style) */}
-                    <div className="bg-surface/50 p-6 border border-white/5 h-fit backdrop-blur-sm">
-                        <h3 className="text-white font-bold mb-4 border-b border-white/10 pb-2 flex justify-between items-center">
-                            CHỌN TẬP
-                            <span className="text-primary text-xs font-mono">{episodes.length} TẬP</span>
-                        </h3>
-                        
-                        <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                            {episodes.map((ep) => {
-                                const isActive = currentEpisode?.slug === ep.slug;
-                                return (
-                                    <Link 
-                                        key={ep.slug} 
-                                        href={`/phim/${slug}?tap=${ep.slug}`}
-                                        scroll={false} // Giữ nguyên vị trí không scroll lại
-                                    >
-                                        <div className={`
-                                            text-center py-3 text-xs font-bold transition-all duration-300 border
-                                            ${isActive 
-                                                ? "bg-primary text-black border-primary scale-105" 
-                                                : "bg-black/40 text-gray-400 border-white/10 hover:border-white hover:text-white"
-                                            }
-                                        `}>
-                                            {ep.name}
-                                        </div>
-                                    </Link>
-                                );
-                            })}
+                    {/* RIGHT SECTION: EPISODE LIST */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-6 bg-surface/50 border border-white/5 rounded-xl p-6 backdrop-blur-sm max-h-[600px] overflow-hidden flex flex-col">
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                                <h3 className="text-white font-bold text-lg uppercase tracking-wide">Tập phim</h3>
+                                <span className="text-primary text-xs font-bold bg-primary/20 px-2 py-1 rounded-full">
+                                    {episodes.length}
+                                </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-2 overflow-y-auto pr-2 flex-1">
+                                {episodes.map((ep) => {
+                                    const isActive = currentEpisode?.slug === ep.slug;
+                                    const epNumber = ep.name.match(/\d+/)?.[0] || ep.name;
+                                    return (
+                                        <Link 
+                                            key={ep.slug} 
+                                            href={`/phim/${slug}?tap=${ep.slug}`}
+                                            scroll={false}
+                                        >
+                                            <button className={`
+                                                w-full py-2.5 text-xs font-bold transition-all duration-200 border rounded-lg
+                                                ${isActive 
+                                                    ? "bg-primary text-black border-primary shadow-lg shadow-primary/50" 
+                                                    : "bg-black/40 text-gray-300 border-white/10 hover:border-white/30 hover:bg-white/5"
+                                                }
+                                            `}>
+                                                {epNumber}
+                                            </button>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 

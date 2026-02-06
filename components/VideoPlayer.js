@@ -10,7 +10,6 @@ export default function VideoPlayer({ url, slug, episodeName }) {
   const artRef = useRef(null);
   const playerInstance = useRef(null); // Dùng để kiểm soát instance
   const [user, setUser] = useState(null);
-  const [cinemaMode, setCinemaMode] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   // 1. Lấy User
@@ -210,52 +209,32 @@ export default function VideoPlayer({ url, slug, episodeName }) {
   ];
 
   return (
-    <div className={`w-full aspect-video overflow-hidden rounded-lg border shadow-[0_0_30px_rgba(0,255,65,0.2)] transition-all duration-500 ${
-      cinemaMode 
-        ? "border-primary/50 bg-black fixed inset-0 aspect-auto z-50 rounded-none" 
-        : "border-white/10 bg-black"
-    }`}>
-      {/* Nút Cinema Mode */}
-      <button
-        onClick={() => setCinemaMode(!cinemaMode)}
-        className={`absolute top-4 right-4 z-50 px-3 py-2 text-xs font-bold transition-all duration-300 ${
-          cinemaMode
-            ? "bg-primary text-black hover:bg-white"
-            : "bg-black/60 text-primary border border-primary/50 hover:bg-black hover:border-primary"
-        }`}
-      >
-        {cinemaMode ? "✕ EXIT" : "🎬 CINEMA"}
-      </button>
+    <div className="w-full aspect-video overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl shadow-primary/10 relative group">
+      {/* Video Player */}
+      <div ref={artRef} className="w-full h-full" />
 
-      {/* Nút Shortcuts */}
+      {/* Shortcuts Button */}
       <button
         onClick={() => setShowShortcuts(!showShortcuts)}
-        className="absolute top-4 right-24 z-50 px-3 py-2 text-xs font-bold bg-black/60 text-gray-400 border border-white/20 hover:text-white hover:border-white transition-all duration-300"
+        className="absolute top-4 right-4 z-40 px-3 py-2 text-xs font-bold bg-black/50 text-gray-300 border border-white/20 hover:text-white hover:border-white transition-all duration-300 backdrop-blur-sm"
+        title="Hiển thị phím tắt"
       >
         {showShortcuts ? "✕" : "?"}
       </button>
 
       {/* Shortcuts Help Panel */}
       {showShortcuts && (
-        <div className="absolute top-16 right-4 z-50 bg-black/95 border border-primary/30 rounded-lg p-4 w-64 backdrop-blur-sm">
+        <div className="absolute top-16 right-4 z-40 bg-black/95 border border-white/20 rounded-lg p-4 w-72 backdrop-blur-md shadow-xl">
           <h3 className="text-primary font-bold mb-4 text-sm">PHÍM TẮT</h3>
-          <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs">
             {shortcuts.map((item, i) => (
-              <div key={i} className="flex justify-between">
-                <span className="bg-primary/20 text-primary px-2 py-1 rounded font-bold">{item.key}</span>
-                <span className="text-gray-400 text-right flex-1 ml-2 pt-1">{item.action}</span>
+              <div key={i} className="flex gap-2 items-center">
+                <span className="bg-primary/20 text-primary px-2 py-1 rounded-sm font-bold text-center flex-shrink-0">{item.key}</span>
+                <span className="text-gray-400 text-xs">{item.action}</span>
               </div>
             ))}
           </div>
         </div>
-      )}
-
-      {/* Video Player */}
-      <div ref={artRef} className="w-full h-full" />
-
-      {/* Cinema Mode Background */}
-      {cinemaMode && (
-        <div className="fixed inset-0 -z-10 bg-black" />
       )}
     </div>
   );
