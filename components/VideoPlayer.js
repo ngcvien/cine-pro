@@ -153,7 +153,6 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
         },
       },
       lang: "vi",
-      autoSize: true, 
       lock: true,
     });
 
@@ -253,8 +252,14 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
   };
 
   return (
-    <div className="w-full aspect-video bg-black rounded-lg overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,255,65,0.2)]">
-      <div ref={artRef} className="w-full h-full" />
+  <div className="w-full max-w-5xl mx-auto">
+    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,255,65,0.2)]">
+      <div
+        ref={artRef}
+        className="absolute inset-0"
+      />
     </div>
-  );
+  </div>
+);
+
 }

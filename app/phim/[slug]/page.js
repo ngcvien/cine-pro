@@ -43,7 +43,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
     const currentEpisode = episodes.find(e => e.slug === tap) || episodes[0];
 
     return (
-        <div className="min-h-screen bg-background pb-20">
+        <div className=" bg-background pb-20">
             {/* BACKGROUND BLUR */}
             <div className="fixed inset-0 z-0 opacity-15 pointer-events-none">
                 <img src={movie.poster_url} className="w-full h-full object-cover blur-3xl" alt={movie.name} />
