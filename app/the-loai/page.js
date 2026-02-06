@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-// 1. DANH SÁCH THỂ LOẠI CỐ ĐỊNH (Không cần gọi API nữa -> Web nhanh như gió)
 const STATIC_CATEGORIES = [
   { name: "Hành Động", slug: "hanh-dong" },
   { name: "Tình Cảm", slug: "tinh-cam" },
@@ -24,7 +23,6 @@ const STATIC_CATEGORIES = [
   { name: "Kinh Điển", slug: "kinh-dien" },
 ];
 
-// 2. Metadata giao diện (Mô tả, Màu sắc, Bóng đổ)
 const GENRE_METADATA = {
   "hanh-dong": { desc: "Kịch tính • Nghẹt thở", color: "from-red-600 to-orange-600", shadow: "shadow-red-900/20" },
   "tinh-cam": { desc: "Lãng mạn • Sâu lắng", color: "from-pink-500 to-rose-600", shadow: "shadow-pink-900/20" },
@@ -50,25 +48,16 @@ const GENRE_METADATA = {
 
 const DEFAULT_META = { desc: "Tuyển tập đặc sắc", color: "from-gray-700 to-gray-900", shadow: "shadow-gray-900/20" };
 
-export const metadata = {
-  title: "Khám Phá Thể Loại - CinePro",
-};
+export const metadata = { title: "Khám Phá Thể Loại - CinePro" };
 
 export default function CategoriesPage() {
-  // Không cần gọi API, dùng luôn biến STATIC_CATEGORIES
   const categories = STATIC_CATEGORIES;
 
   return (
-    <div className="min-h-screen bg-[#050505] relative overflow-hidden pt-28 pb-20">
-      
-      {/* Background Decor */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-
-      <div className="container mx-auto px-4 md:px-8 relative z-10">
+    // Đã xóa background decoration ở đây vì layout.js đã lo rồi
+    <div className="container mx-auto px-4 md:px-8 pt-28 pb-20 relative z-10">
         
-        {/* Header Tối giản */}
+        {/* Header */}
         <div className="mb-12">
           <h1 className="text-4xl md:text-6xl font-display font-black text-white tracking-tighter uppercase">
             DANH MỤC <span className="text-primary">PHIM</span>
@@ -85,26 +74,21 @@ export default function CategoriesPage() {
                 <Link 
                   key={cat.slug} 
                   href={`/the-loai/${cat.slug}`}
-                  className={`group relative h-36 rounded-xl overflow-hidden bg-[#121212] border border-white/5 hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.shadow}`}
+                  className={`group relative h-36 rounded-xl overflow-hidden bg-[#121212]/50 backdrop-blur-sm border border-white/5 hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.shadow}`}
                 >
-                    {/* 1. Hiệu ứng Gradient nền khi hover */}
                     <div className={`absolute inset-0 bg-gradient-to-r ${meta.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out`} />
                     
-                    {/* 2. CHỮ CHÌM KHỔNG LỒ (Watermark) */}
+                    {/* Watermark */}
                     <div className="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-20 transition-opacity duration-300 select-none pointer-events-none">
                         <span className="text-7xl font-black uppercase tracking-tighter text-white whitespace-nowrap">
                             {cat.name}
                         </span>
                     </div>
 
-                    {/* 3. Nội dung chính */}
                     <div className="absolute inset-0 p-6 flex flex-col justify-end z-10">
-                        {/* Tên Thể Loại */}
                         <h3 className="text-2xl font-black text-white uppercase tracking-wider group-hover:translate-x-2 transition-transform duration-300">
                             {cat.name}
                         </h3>
-                        
-                        {/* Dòng mô tả & Thanh gạch ngang */}
                         <div className="flex items-center gap-3 mt-1 opacity-60 group-hover:opacity-100 group-hover:text-black/80 transition-all duration-300 group-hover:translate-x-2 delay-75">
                             <div className="h-[2px] w-6 bg-primary group-hover:bg-black"></div>
                             <p className="text-xs font-bold uppercase tracking-widest">
@@ -116,7 +100,6 @@ export default function CategoriesPage() {
               );
             })}
         </div>
-      </div>
     </div>
   );
 }
