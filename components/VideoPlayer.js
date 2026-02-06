@@ -46,7 +46,7 @@ export default function VideoPlayer({ url, slug, episodeName }) {
           break;
         case "c":
           // Bật/tắt subtitle
-          if (player.subtitles.length > 0) {
+          if (player.subtitles && player.subtitles.length > 0) {
             player.subtitle = player.subtitle === player.subtitles[0] ? "" : player.subtitles[0];
           }
           break;
