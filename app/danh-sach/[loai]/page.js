@@ -4,7 +4,7 @@ const TITLES = {
     "phim-le": "PHIM LẺ",
     "phim-bo": "PHIM BỘ",
     "hoat-hinh": "PHIM HOẠT HÌNH",
-    "tv-shows": "CHƯƠNG TRÌNH TV"
+    "tv-shows": "CHƯƠNG TRÌNH TV",
 };
 
 async function getMoviesByCategory(category) {

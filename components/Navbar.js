@@ -3,8 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "../lib/firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import SearchBox from "./SearchBox"; // Import thanh tìm kiếm bạn vừa tạo
+import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth"; // Thêm 2 hàm này
+import SearchBox from "./SearchBox";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,17 +12,15 @@ export default function Navbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   
-  const pathname = usePathname(); // Để biết đang ở trang nào
+  const pathname = usePathname();
   const router = useRouter();
   const profileRef = useRef(null);
 
-  // 1. Lắng nghe trạng thái đăng nhập
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
 
-  // 2. Lắng nghe sự kiện cuộn trang (để đổi màu nền navbar)
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0);
@@ -31,7 +29,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 3. Đóng menu profile khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -42,6 +39,18 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // --- 1. HÀM ĐĂNG NHẬP GOOGLE (MỚI) ---
+  const handleLogin = async () => {
+    try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        // Đăng nhập xong thì đóng menu mobile nếu đang mở
+        setShowMobileMenu(false); 
+    } catch (error) {
+        console.error("Lỗi đăng nhập:", error);
+    }
+  };
+
   // Xử lý đăng xuất
   const handleLogout = async () => {
     await signOut(auth);
@@ -49,7 +58,6 @@ export default function Navbar() {
     router.push("/");
   };
 
-  // Danh sách Link Menu
   const navLinks = [
     { name: "Trang Chủ", href: "/" },
     { name: "Phim Lẻ", href: "/danh-sach/phim-le" },
@@ -67,16 +75,14 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between gap-4">
         
-        {/* --- 1. LOGO & DESKTOP MENU --- */}
+        {/* LOGO & DESKTOP MENU */}
         <div className="flex items-center gap-8 md:gap-12">
-          {/* LOGO */}
           <Link href="/" className="group flex items-center gap-1">
             <span className="text-3xl md:text-4xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-400 group-hover:scale-105 transition-transform">
               CINE<span className="text-white">PRO</span>
             </span>
           </Link>
 
-          {/* DESKTOP LINKS */}
           <ul className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
@@ -96,18 +102,16 @@ export default function Navbar() {
           </ul>
         </div>
 
-        {/* --- 2. SEARCH & USER ACTION --- */}
+        {/* SEARCH & USER ACTION */}
         <div className="flex items-center gap-4 md:gap-6 flex-1 justify-end">
             
-            {/* THANH TÌM KIẾM (Hiện trên PC, ẩn trên Mobile để đưa vào menu) */}
             <div className="hidden md:block w-full max-w-[300px]">
                 <SearchBox />
             </div>
 
-            {/* USER PROFILE */}
             {user ? (
+                // --- ĐÃ ĐĂNG NHẬP (Hiện Avatar) ---
                 <div className="relative" ref={profileRef}>
-                    {/* Avatar Button */}
                     <button 
                         onClick={() => setShowProfileMenu(!showProfileMenu)}
                         className="flex items-center gap-2 focus:outline-none"
@@ -121,7 +125,6 @@ export default function Navbar() {
                         </div>
                     </button>
 
-                    {/* Dropdown Menu */}
                     {showProfileMenu && (
                         <div className="absolute right-0 mt-3 w-56 bg-[#121212] border border-white/10 rounded-lg shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                              <div className="px-4 py-3 border-b border-white/10 mb-2">
@@ -158,14 +161,17 @@ export default function Navbar() {
                     )}
                 </div>
             ) : (
-                <Link href="/dang-nhap">
-                    <button className="bg-primary hover:bg-green-400 text-black font-extrabold text-sm px-5 py-2.5 rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(0,255,65,0.4)]">
-                        ĐĂNG NHẬP
-                    </button>
-                </Link>
+                // --- CHƯA ĐĂNG NHẬP (Nút gọi hàm Popup) ---
+                // Đã sửa từ Link thành button onClick={handleLogin}
+                <button 
+                    onClick={handleLogin}
+                    className="bg-primary hover:bg-green-400 text-black font-extrabold text-sm px-5 py-2.5 rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(0,255,65,0.4)]"
+                >
+                    ĐĂNG NHẬP
+                </button>
             )}
 
-            {/* HAMBURGER BUTTON (Mobile Only) */}
+            {/* HAMBURGER BUTTON */}
             <button 
                 className="lg:hidden text-white p-1"
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -179,20 +185,17 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* --- 3. MOBILE MENU OVERLAY --- */}
-      {/* Hiển thị khi bấm nút Hamburger */}
+      {/* MOBILE MENU */}
       <div 
         className={`lg:hidden fixed inset-x-0 top-[64px] md:top-[80px] bg-background/95 backdrop-blur-xl border-b border-white/10 transition-all duration-300 overflow-hidden ${
             showMobileMenu ? "max-h-screen opacity-100 py-6" : "max-h-0 opacity-0 py-0"
         }`}
       >
          <div className="container mx-auto px-4 space-y-6">
-            {/* Search Box Mobile */}
             <div className="mb-6">
                 <SearchBox />
             </div>
 
-            {/* Mobile Links */}
             <ul className="space-y-4">
                 {navLinks.map((link) => {
                   const isActive = pathname === link.href;
@@ -208,7 +211,6 @@ export default function Navbar() {
                     </li>
                   );
                 })}
-                {/* Link Tủ Phim Mobile */}
                 {user && (
                     <li>
                          <Link 
@@ -222,14 +224,15 @@ export default function Navbar() {
                 )}
             </ul>
 
-             {/* Login Button Mobile (nếu chưa đăng nhập) */}
              {!user && (
                  <div className="pt-4 border-t border-white/10">
-                     <Link href="/dang-nhap" onClick={() => setShowMobileMenu(false)}>
-                        <button className="w-full bg-white/10 text-white font-bold py-3 rounded-lg hover:bg-primary hover:text-black transition-colors">
-                            ĐĂNG NHẬP TÀI KHOẢN
-                        </button>
-                     </Link>
+                     {/* Đã sửa nút đăng nhập Mobile luôn */}
+                     <button 
+                        onClick={handleLogin}
+                        className="w-full bg-white/10 text-white font-bold py-3 rounded-lg hover:bg-primary hover:text-black transition-colors"
+                     >
+                        ĐĂNG NHẬP TÀI KHOẢN
+                     </button>
                  </div>
              )}
          </div>
