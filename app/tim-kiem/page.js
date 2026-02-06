@@ -1,5 +1,7 @@
 import MovieCard from "../../components/MovieCard";
 
+export const dynamic = 'force-dynamic';
+
 async function searchMovies(keyword) {
   if (!keyword) return null;
   try {

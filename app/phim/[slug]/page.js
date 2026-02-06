@@ -30,10 +30,11 @@ export default async function MovieDetailPage({ params, searchParams }) {
     }
 
     const movie = data.movie;
-    const episodes = data.episodes[0]?.server_data || []; // Lấy danh sách tập từ server đầu tiên
+    const episodes = data.episodes[0]?.server_data || [];
 
-    // Xác định tập đang xem (Nếu không chọn thì lấy tập đầu tiên)
+    // Xác định tập đang xem và index của nó
     const currentEpisode = episodes.find(e => e.slug === tap) || episodes[0];
+    const currentEpisodeIndex = episodes.findIndex(e => e.slug === currentEpisode?.slug);
 
     return (
         <div className="min-h-screen bg-background pb-20">
@@ -56,10 +57,12 @@ export default async function MovieDetailPage({ params, searchParams }) {
                     {/* VIDEO PLAYER SECTION */}
                     <div className="space-y-2">
                         {currentEpisode?.link_m3u8 ? (
-                            <VideoPlayer 
-                                url={currentEpisode.link_m3u8} 
-                                slug={slug} 
+                            <VideoPlayer
+                                url={currentEpisode.link_m3u8}
+                                slug={slug}
                                 episodeName={currentEpisode.name}
+                                episodes={episodes}
+                                currentEpisodeIndex={currentEpisodeIndex}
                             />
                         ) : (
                             <div className="aspect-video bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-gray-500 rounded-xl border border-white/10">
