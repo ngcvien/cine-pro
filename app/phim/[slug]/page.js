@@ -12,6 +12,11 @@ async function getMovieDetail(slug) {
   }
 }
 
+export const metadata = {
+  title: "Xem Phim - Cine Pro",
+  description: "Xem phim trực tuyến miễn phí với chất lượng cao"
+};
+
 export default async function MovieDetailPage({ params, searchParams }) {
     // Await params và searchParams trước khi sử dụng (Yêu cầu của Next.js mới)
     const { slug } = await params;
@@ -33,7 +38,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
         <div className="min-h-screen bg-background pb-20">
             {/* BACKGROUND BLUR */}
             <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
-                 <img src={movie.poster_url} className="w-full h-full object-cover blur-3xl" />
+                 <img src={movie.poster_url} className="w-full h-full object-cover blur-3xl" alt={movie.name} />
             </div>
 
             <div className="relative z-10 container mx-auto px-4 pt-4">
