@@ -5,139 +5,115 @@ import Hls from "hls.js";
 import { auth, db } from "../lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
-export default function VideoPlayer({ url, slug, episodeName }) {
+export default function VideoPlayer({ url, slug, episodeName, episodes = [] }) {
   const artRef = useRef(null);
-  const playerInstance = useRef(null); // Dùng để kiểm soát instance
-  const canvasRef = useRef(null);
+  const playerInstance = useRef(null);
   const [user, setUser] = useState(null);
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  const [hoverPreview, setHoverPreview] = useState({ show: false, x: 0, time: 0, thumbnail: null });
+  const router = useRouter();
 
-  // 0. Xử lý hover progress bar và capture frame
-  const handleProgressBarHover = (e) => {
-    if (!playerInstance.current || !artRef.current) return;
-    
-    const player = playerInstance.current;
-    const video = player.video;
-    const rect = artRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percent = x / rect.width;
-    const time = percent * video.duration;
+  // Tính toán tập
+  const currentEpIndex = episodes.findIndex((ep) => ep.name === episodeName);
+  const nextEp = episodes[currentEpIndex + 1];
+  const prevEp = episodes[currentEpIndex - 1];
 
-    if (time >= 0 && time <= video.duration) {
-      captureFrame(video, time, x);
-      setHoverPreview({
-        show: true,
-        x: Math.max(80, Math.min(x - 40, rect.width - 80)),
-        time: time,
-        thumbnail: null
-      });
-    }
-  };
-
-  const handleProgressBarLeave = () => {
-    setHoverPreview({ ...hoverPreview, show: false });
-  };
-
-  const captureFrame = (video, time, x) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const originalTime = video.currentTime;
-    video.currentTime = time;
-
-    video.onloadeddata = () => {
-      const ctx = canvas.getContext("2d");
-      canvas.width = 160;
-      canvas.height = 90;
-      ctx.drawImage(video, 0, 0, 160, 90);
-      
-      setHoverPreview(prev => ({
-        ...prev,
-        thumbnail: canvas.toDataURL("image/jpeg", 0.7),
-        x: Math.max(80, Math.min(x - 40, window.innerWidth - 80))
-      }));
-
-      video.currentTime = originalTime;
-      video.onloadeddata = null;
-    };
-  };
-
-  // 1. Lấy User
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
 
-  // 2. Xử lý phím tắt
+  // --- 1. LOGIC XỬ LÝ PHÍM TẮT TOÀN CỤC (GLOBAL HOTKEYS) ---
+  // Đoạn này giúp phím tắt hoạt động ngay cả khi chưa bấm vào player
   useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (!playerInstance.current) return;
-      const player = playerInstance.current;
-      const video = player.video;
-      
-      // Tránh conflict với các phím khác
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    const handleGlobalKeyDown = (e) => {
+        // QUAN TRỌNG: Nếu đang gõ phím vào ô Tìm kiếm (Input) thì KHÔNG chạy phím tắt video
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
-      switch (e.key.toLowerCase()) {
-        case " ":
-          e.preventDefault();
-          if (video.paused) {
-            player.play();
-          } else {
-            player.pause();
-          }
-          break;
-        case "f":
-          player.fullscreen = !player.fullscreen;
-          break;
-        case "m":
-          player.muted = !player.muted;
-          break;
-        case "c":
-          // Bật/tắt subtitle
-          if (player.subtitles && player.subtitles.length > 0) {
-            player.subtitle = player.subtitle === player.subtitles[0] ? "" : player.subtitles[0];
-          }
-          break;
-        case "arrowup":
-          e.preventDefault();
-          player.volume = Math.min(1, player.volume + 0.1);
-          break;
-        case "arrowdown":
-          e.preventDefault();
-          player.volume = Math.max(0, player.volume - 0.1);
-          break;
-        case "arrowleft":
-          e.preventDefault();
-          player.seek = player.currentTime - 5;
-          break;
-        case "arrowright":
-          e.preventDefault();
-          player.seek = player.currentTime + 5;
-          break;
-        case "?":
-        case "/":
-          setShowShortcuts(!showShortcuts);
-          break;
-        default:
-          break;
-      }
+        // Nếu player chưa sẵn sàng thì thôi
+        if (!playerInstance.current) return;
+        const art = playerInstance.current;
+
+        switch (e.key) {
+            case ' ': // Phím Space (Khoảng trắng)
+            case 'k':
+            case 'K':
+                e.preventDefault(); // Chặn cuộn trang
+                art.toggle(); // Play/Pause
+                art.notice.show = art.playing ? "Tạm dừng" : "Tiếp tục";
+                break;
+            
+            case 'ArrowRight': // Mũi tên phải
+                e.preventDefault();
+                art.forward = 10; // Tua tới 10s
+                break;
+
+            case 'ArrowLeft': // Mũi tên trái
+                e.preventDefault();
+                art.backward = 10; // Lùi 10s
+                break;
+
+            case 'ArrowUp': // Mũi tên lên
+                e.preventDefault(); // Chặn cuộn trang
+                art.volume = Math.min(art.volume + 0.1, 1);
+                art.notice.show = `Âm lượng: ${Math.round(art.volume * 100)}%`;
+                break;
+
+            case 'ArrowDown': // Mũi tên xuống
+                e.preventDefault(); // Chặn cuộn trang
+                art.volume = Math.max(art.volume - 0.1, 0);
+                art.notice.show = `Âm lượng: ${Math.round(art.volume * 100)}%`;
+                break;
+
+            case 'f': // Phím F: Fullscreen
+            case 'F':
+                art.fullscreen = !art.fullscreen;
+                break;
+
+            case 'm': // Phím M: Mute
+            case 'M':
+                art.muted = !art.muted;
+                art.notice.show = art.muted ? "Đã tắt tiếng" : "Đã bật tiếng";
+                break;
+
+            case 'n': // Phím N: Next tập
+            case 'N':
+                if (nextEp) {
+                    art.notice.show = "Đang chuyển tập tiếp theo...";
+                    router.push(`/phim/${slug}?tap=${nextEp.slug}`);
+                } else {
+                    art.notice.show = "Đây là tập cuối cùng";
+                }
+                break;
+
+            case 'p': // Phím P: Previous tập
+            case 'P':
+                if (prevEp) {
+                    art.notice.show = "Đang quay lại tập trước...";
+                    router.push(`/phim/${slug}?tap=${prevEp.slug}`);
+                }
+                break;
+                
+            default:
+                break;
+        }
     };
 
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [showShortcuts]);
+    // Gắn sự kiện vào cửa sổ trình duyệt
+    window.addEventListener('keydown', handleGlobalKeyDown);
 
+    // Dọn dẹp sự kiện khi thoát trang
+    return () => {
+        window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [nextEp, prevEp, router, slug]); // Cập nhật khi tập phim thay đổi
+
+
+  // --- 2. KHỞI TẠO PLAYER (GIỮ NGUYÊN) ---
   useEffect(() => {
-    if (playerInstance.current) {
-        return;
-    }
-
+    if (playerInstance.current) return;
     if (!artRef.current) return;
 
-    // Khởi tạo Artplayer
     const art = new Artplayer({
       container: artRef.current,
       url: url,
@@ -145,7 +121,7 @@ export default function VideoPlayer({ url, slug, episodeName }) {
       volume: 0.7,
       isLive: false,
       muted: false,
-      autoplay: false, 
+      autoplay: false,
       autoOrientation: true,
       pip: true,
       fullscreen: true,
@@ -153,6 +129,41 @@ export default function VideoPlayer({ url, slug, episodeName }) {
       miniProgressBar: true,
       theme: "#00FF41",
       
+      // Tắt hotkey mặc định của Artplayer để dùng bộ Global ở trên (tránh xung đột)
+      hotkey: false, 
+
+      controls: [
+        {
+          name: 'prev-episode',
+          position: 'left',
+          index: 10,
+          html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>`,
+          tooltip: 'Tập trước (P)',
+          style: {
+             display: prevEp ? 'flex' : 'none',
+             marginRight: '10px',
+             cursor: 'pointer',
+          },
+          click: function () {
+            if (prevEp) router.push(`/phim/${slug}?tap=${prevEp.slug}`);
+          },
+        },
+        {
+          name: 'next-episode',
+          position: 'left',
+          index: 11,
+          html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>`,
+          tooltip: 'Tập tiếp theo (N)',
+          style: {
+             display: nextEp ? 'flex' : 'none',
+             cursor: 'pointer',
+          },
+          click: function () {
+             if (nextEp) router.push(`/phim/${slug}?tap=${nextEp.slug}`);
+          },
+        }
+      ],
+
       customType: {
         m3u8: function (video, url) {
           if (Hls.isSupported()) {
@@ -167,7 +178,6 @@ export default function VideoPlayer({ url, slug, episodeName }) {
           }
         },
       },
-      
       lang: "vi",
       autoSize: true, 
       lock: true,
@@ -177,37 +187,24 @@ export default function VideoPlayer({ url, slug, episodeName }) {
 
     art.on("ready", async () => {
       let shouldPlayImmediately = true;
-
       if (user && slug) {
         try {
           const docRef = doc(db, "users", user.uid, "history", slug);
           const docSnap = await getDoc(docRef);
-
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (data.episode === episodeName && data.seconds > 10) {
-              shouldPlayImmediately = false; 
-              
+              shouldPlayImmediately = false;
               art.seek = data.seconds;
               art.notice.show = `Đang phát tiếp từ ${formatTime(data.seconds)}`;
-              
-              setTimeout(() => {
-                  art.play(); 
-              }, 300);
+              setTimeout(() => { art.play(); }, 300);
             }
           }
-        } catch (error) {
-          console.error("Lỗi history:", error);
-        }
+        } catch (error) { console.error(error); }
       }
-
-      // Nếu không có lịch sử thì play từ đầu luôn
-      if (shouldPlayImmediately) {
-          art.play();
-      }
+      if (shouldPlayImmediately) art.play();
     });
 
-    // Lưu lịch sử
     art.on("video:timeupdate", async () => {
         if (!user || !slug) return;
         const currentTime = art.currentTime;
@@ -221,41 +218,29 @@ export default function VideoPlayer({ url, slug, episodeName }) {
         }
     });
 
-    // Thêm event listener cho progress bar hover
-    setTimeout(() => {
-      const progressBar = artRef.current?.querySelector(".art-progress-bar");
-      if (progressBar) {
-        progressBar.addEventListener("mousemove", handleProgressBarHover);
-        progressBar.addEventListener("mouseleave", handleProgressBarLeave);
-      }
-    }, 1000);
+    art.on("video:ended", () => {
+        if (nextEp) {
+            art.notice.show = "Đang chuyển sang tập tiếp theo...";
+            setTimeout(() => {
+                router.push(`/phim/${slug}?tap=${nextEp.slug}`);
+            }, 2000); 
+        }
+    });
 
-    // --- CLEANUP ---
     return () => {
-      const progressBar = artRef.current?.querySelector(".art-progress-bar");
-      if (progressBar) {
-        progressBar.removeEventListener("mousemove", handleProgressBarHover);
-        progressBar.removeEventListener("mouseleave", handleProgressBarLeave);
-      }
-      
       if (playerInstance.current) {
         const player = playerInstance.current;
-        
         if (player.video) {
             player.video.pause();
             player.video.src = "";
             player.video.load();
         }
-
-        if (player.hls) {
-            player.hls.destroy();
-        }
-
+        if (player.hls) player.hls.destroy();
         player.destroy(true); 
         playerInstance.current = null;
       }
     };
-  }, [url, user, slug, episodeName, handleProgressBarHover, handleProgressBarLeave]);
+  }, [url, user, slug, episodeName, episodes, nextEp, prevEp, router]);
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
@@ -263,71 +248,9 @@ export default function VideoPlayer({ url, slug, episodeName }) {
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
 
-  const shortcuts = [
-    { key: "SPACE", action: "Phát / Dừng" },
-    { key: "F", action: "Toàn màn hình" },
-    { key: "M", action: "Tắt tiếng" },
-    { key: "C", action: "Phụ đề" },
-    { key: "↑", action: "Tăng âm lượng" },
-    { key: "↓", action: "Giảm âm lượng" },
-    { key: "→", action: "Tua nhanh 5s" },
-    { key: "←", action: "Tua lại 5s" },
-    { key: "?", action: "Hiển thị phím tắt" },
-  ];
-
   return (
-    <div className="w-full aspect-video overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl shadow-primary/10 relative group">
-      {/* Video Player */}
+    <div className="w-full aspect-video bg-black rounded-lg overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,255,65,0.2)]">
       <div ref={artRef} className="w-full h-full" />
-
-      {/* Hidden Canvas for Frame Capture */}
-      <canvas ref={canvasRef} className="hidden" />
-
-      {/* Video Hover Preview Tooltip */}
-      {hoverPreview.show && hoverPreview.thumbnail && (
-        <div 
-          className="fixed z-50 pointer-events-none"
-          style={{
-            left: `${hoverPreview.x}px`,
-            bottom: `${window.innerHeight - artRef.current?.getBoundingClientRect().top + 10}px`
-          }}
-        >
-          <div className="bg-black/95 border border-primary/50 rounded-lg overflow-hidden shadow-xl">
-            <img 
-              src={hoverPreview.thumbnail} 
-              alt="preview" 
-              className="w-40 h-22.5"
-            />
-            <div className="bg-black/50 px-3 py-1 text-center text-xs font-bold text-primary">
-              {formatTime(hoverPreview.time)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Shortcuts Button */}
-      <button
-        onClick={() => setShowShortcuts(!showShortcuts)}
-        className="absolute top-4 right-4 z-40 px-3 py-2 text-xs font-bold bg-black/50 text-gray-300 border border-white/20 hover:text-white hover:border-white transition-all duration-300 backdrop-blur-sm"
-        title="Hiển thị phím tắt"
-      >
-        {showShortcuts ? "✕" : "?"}
-      </button>
-
-      {/* Shortcuts Help Panel */}
-      {showShortcuts && (
-        <div className="absolute top-16 right-4 z-40 bg-black/95 border border-white/20 rounded-lg p-4 w-72 backdrop-blur-md shadow-xl">
-          <h3 className="text-primary font-bold mb-4 text-sm">PHÍM TẮT</h3>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            {shortcuts.map((item, i) => (
-              <div key={i} className="flex gap-2 items-center">
-                <span className="bg-primary/20 text-primary px-2 py-1 rounded-sm font-bold text-center flex-shrink-0">{item.key}</span>
-                <span className="text-gray-400 text-xs">{item.action}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
