@@ -9,8 +9,60 @@ import { onAuthStateChanged } from "firebase/auth";
 export default function VideoPlayer({ url, slug, episodeName }) {
   const artRef = useRef(null);
   const playerInstance = useRef(null); // Dùng để kiểm soát instance
+  const canvasRef = useRef(null);
   const [user, setUser] = useState(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [hoverPreview, setHoverPreview] = useState({ show: false, x: 0, time: 0, thumbnail: null });
+
+  // 0. Xử lý hover progress bar và capture frame
+  const handleProgressBarHover = (e) => {
+    if (!playerInstance.current || !artRef.current) return;
+    
+    const player = playerInstance.current;
+    const video = player.video;
+    const rect = artRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percent = x / rect.width;
+    const time = percent * video.duration;
+
+    if (time >= 0 && time <= video.duration) {
+      captureFrame(video, time, x);
+      setHoverPreview({
+        show: true,
+        x: Math.max(80, Math.min(x - 40, rect.width - 80)),
+        time: time,
+        thumbnail: null
+      });
+    }
+  };
+
+  const handleProgressBarLeave = () => {
+    setHoverPreview({ ...hoverPreview, show: false });
+  };
+
+  const captureFrame = (video, time, x) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const originalTime = video.currentTime;
+    video.currentTime = time;
+
+    video.onloadeddata = () => {
+      const ctx = canvas.getContext("2d");
+      canvas.width = 160;
+      canvas.height = 90;
+      ctx.drawImage(video, 0, 0, 160, 90);
+      
+      setHoverPreview(prev => ({
+        ...prev,
+        thumbnail: canvas.toDataURL("image/jpeg", 0.7),
+        x: Math.max(80, Math.min(x - 40, window.innerWidth - 80))
+      }));
+
+      video.currentTime = originalTime;
+      video.onloadeddata = null;
+    };
+  };
 
   // 1. Lấy User
   useEffect(() => {
@@ -169,8 +221,23 @@ export default function VideoPlayer({ url, slug, episodeName }) {
         }
     });
 
+    // Thêm event listener cho progress bar hover
+    setTimeout(() => {
+      const progressBar = artRef.current?.querySelector(".art-progress-bar");
+      if (progressBar) {
+        progressBar.addEventListener("mousemove", handleProgressBarHover);
+        progressBar.addEventListener("mouseleave", handleProgressBarLeave);
+      }
+    }, 1000);
+
     // --- CLEANUP ---
     return () => {
+      const progressBar = artRef.current?.querySelector(".art-progress-bar");
+      if (progressBar) {
+        progressBar.removeEventListener("mousemove", handleProgressBarHover);
+        progressBar.removeEventListener("mouseleave", handleProgressBarLeave);
+      }
+      
       if (playerInstance.current) {
         const player = playerInstance.current;
         
@@ -188,7 +255,7 @@ export default function VideoPlayer({ url, slug, episodeName }) {
         playerInstance.current = null;
       }
     };
-  }, [url, user, slug, episodeName]);
+  }, [url, user, slug, episodeName, handleProgressBarHover, handleProgressBarLeave]);
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
@@ -212,6 +279,31 @@ export default function VideoPlayer({ url, slug, episodeName }) {
     <div className="w-full aspect-video overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl shadow-primary/10 relative group">
       {/* Video Player */}
       <div ref={artRef} className="w-full h-full" />
+
+      {/* Hidden Canvas for Frame Capture */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      {/* Video Hover Preview Tooltip */}
+      {hoverPreview.show && hoverPreview.thumbnail && (
+        <div 
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: `${hoverPreview.x}px`,
+            bottom: `${window.innerHeight - artRef.current?.getBoundingClientRect().top + 10}px`
+          }}
+        >
+          <div className="bg-black/95 border border-primary/50 rounded-lg overflow-hidden shadow-xl">
+            <img 
+              src={hoverPreview.thumbnail} 
+              alt="preview" 
+              className="w-40 h-22.5"
+            />
+            <div className="bg-black/50 px-3 py-1 text-center text-xs font-bold text-primary">
+              {formatTime(hoverPreview.time)}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Shortcuts Button */}
       <button
