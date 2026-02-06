@@ -3,6 +3,15 @@ import HeroSection from "../components/HeroSection";
 import WatchingNow from "../components/WatchingNow";
 import Link from "next/link";
 
+function normalizePosterUrl(movie: any) {
+  return {
+    ...movie,
+    poster_url: movie.poster_url?.startsWith('http') 
+      ? movie.poster_url 
+      : `https://phimimg.com/${movie.poster_url}`
+  };
+}
+
 async function getNewMovies() {
   try {
     const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=1", {
@@ -22,8 +31,7 @@ async function getNewMovies() {
 
 async function getSingleMovies() {
   try {
-    // Thử endpoint phim lẻ, nếu lỗi fallback sang phim mới
-    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=2", {
+    const res = await fetch("https://phimapi.com/v1/api/danh-sach/phim-le?page=1", {
       next: { revalidate: 60 },
     });
     
@@ -37,8 +45,7 @@ async function getSingleMovies() {
 
 async function getSeriesMovies() {
   try {
-    // Sử dụng endpoint khác thay vì phim-bo
-    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=3", {
+    const res = await fetch("https://phimapi.com/v1/api/danh-sach/phim-bo?page=1", {
       next: { revalidate: 60 },
     });
     
@@ -52,7 +59,7 @@ async function getSeriesMovies() {
 
 async function getHotMovies() {
   try {
-    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=4", {
+    const res = await fetch("https://phimapi.com/danh-sach/hoat-hinh?page=1", {
       next: { revalidate: 60 },
     });
     
@@ -91,9 +98,16 @@ export default async function Home() {
     getHotMovies()
   ]);
   
+  console.log("Data structure:", {
+    movies: data?.items?.length || 0,
+    singles: singleMovies?.data?.items?.length || 0,
+    series: seriesMovies?.data?.items?.length || 0,
+    hots: hotMovies?.items?.length || 0,
+  });
+  
   const movies = data?.items || [];
-  const singles = singleMovies?.items || [];
-  const series = seriesMovies?.items || [];
+  const singles = singleMovies?.data?.items || [];
+  const series = seriesMovies?.data?.items || [];
   const hots = hotMovies?.items || [];
 
   return (
@@ -158,7 +172,7 @@ export default async function Home() {
         {singles.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {singles.map((movie: any) => (
-              <MovieCard key={movie._id} movie={movie} />
+              <MovieCard key={movie._id} movie={normalizePosterUrl(movie)} />
             ))}
           </div>
         ) : (
@@ -190,7 +204,7 @@ export default async function Home() {
         {series.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {series.map((movie: any) => (
-              <MovieCard key={movie._id} movie={movie} />
+              <MovieCard key={movie._id} movie={normalizePosterUrl(movie)} />
             ))}
           </div>
         ) : (

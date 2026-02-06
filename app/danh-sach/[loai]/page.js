@@ -1,6 +1,7 @@
 import MovieCard from "../../../components/MovieCard";
 
 const TITLES = {
+    "phim-moi-cap-nhat": "PHIM MỚI CẬP NHẬT",
     "phim-le": "PHIM LẺ",
     "phim-bo": "PHIM BỘ",
     "hoat-hinh": "PHIM HOẠT HÌNH",
@@ -9,7 +10,14 @@ const TITLES = {
 
 async function getMoviesByCategory(category) {
     try {
-        const res = await fetch(`https://phimapi.com/v1/api/danh-sach/${category}?limit=24`, { next: { revalidate: 3600 } });
+        let url;
+        if (category === "phim-le" || category === "phim-bo") {
+            url = `https://phimapi.com/v1/api/danh-sach/${category}?page=1`;
+        } else {
+            url = `https://phimapi.com/danh-sach/${category}?page=1`;
+        }
+        
+        const res = await fetch(url, { next: { revalidate: 3600 } });
         if (!res.ok) return null;
         return res.json();
     } catch (error) {
@@ -20,7 +28,14 @@ async function getMoviesByCategory(category) {
 export default async function CategoryPage({ params }) {
     const { loai } = await params;
     const data = await getMoviesByCategory(loai);
-    const movies = data?.data?.items || [];
+    
+    // Handle different response structures
+    let movies = [];
+    if (loai === "phim-le" || loai === "phim-bo") {
+        movies = data?.data?.items || [];
+    } else {
+        movies = data?.items || [];
+    }
     
     const title = TITLES[loai] || loai.toUpperCase().replace("-", " ");
 
@@ -38,15 +53,22 @@ export default async function CategoryPage({ params }) {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                {movies.map((movie) => (
-                    <MovieCard 
-                        key={movie._id} 
-                        movie={{
-                            ...movie,
-                            poster_url: `https://phimimg.com/${movie.poster_url}` 
-                        }} 
-                    />
-                ))}
+                {movies.map((movie) => {
+                    // Check if poster_url is already a full URL
+                    const posterUrl = movie.poster_url?.startsWith('http') 
+                        ? movie.poster_url 
+                        : `https://phimimg.com/${movie.poster_url}`;
+                    
+                    return (
+                        <MovieCard 
+                            key={movie._id} 
+                            movie={{
+                                ...movie,
+                                poster_url: posterUrl
+                            }} 
+                        />
+                    );
+                })}
             </div>
         </div>
     );
