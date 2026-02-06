@@ -61,6 +61,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
                                 slug={slug} 
                                 episodeName={currentEpisode.name}
                                 episodes={episodes}
+                                episodeSlug={currentEpisode.slug}
                             />
                         ) : (
                             <div className="aspect-video bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-gray-500 rounded-xl border border-white/10">

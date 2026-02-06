@@ -5,13 +5,14 @@ import Hls from "hls.js";
 import { auth, db } from "../lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function VideoPlayer({ url, slug, episodeName, episodes = [] }) {
+export default function VideoPlayer({ url, slug, episodeName, episodes = [], episodeSlug }) {
   const artRef = useRef(null);
   const playerInstance = useRef(null);
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Tính toán tập
   const currentEpIndex = episodes.findIndex((ep) => ep.name === episodeName);
@@ -193,6 +194,13 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [] }) {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
+            const currentTapParam = searchParams.get('tap');
+            
+            if (!currentTapParam && data.episode_slug && data.episode_slug !== episodeSlug) {
+                art.notice.show = `Đang chuyển đến ${data.episode}`;
+                router.replace(`/phim/${slug}?tap=${data.episode_slug}`);
+                return; 
+            }
             if (data.episode === episodeName && data.seconds > 10) {
               shouldPlayImmediately = false;
               art.seek = data.seconds;
@@ -212,6 +220,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [] }) {
            await setDoc(doc(db, "users", user.uid, "history", slug), {
              slug: slug,
              episode: episodeName,
+             episode_slug: episodeSlug,
              seconds: currentTime,
              last_watched: serverTimestamp()
            }, { merge: true });
@@ -240,7 +249,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [] }) {
         playerInstance.current = null;
       }
     };
-  }, [url, user, slug, episodeName, episodes, nextEp, prevEp, router]);
+  }, [url, user, slug, episodeName, episodes, nextEp, prevEp, router, searchParams]);
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
