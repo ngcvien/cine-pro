@@ -14,7 +14,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Tính toán tập
+  // Tính toán tập trước/sau
   const currentEpIndex = episodes.findIndex((ep) => ep.name === episodeName);
   const nextEp = episodes[currentEpIndex + 1];
   const prevEp = episodes[currentEpIndex - 1];
@@ -24,61 +24,45 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
     return () => unsub();
   }, []);
 
-  // --- 1. LOGIC XỬ LÝ PHÍM TẮT TOÀN CỤC (GLOBAL HOTKEYS) ---
-  // Đoạn này giúp phím tắt hoạt động ngay cả khi chưa bấm vào player
+  // --- GLOBAL HOTKEYS ---
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
-        // QUAN TRỌNG: Nếu đang gõ phím vào ô Tìm kiếm (Input) thì KHÔNG chạy phím tắt video
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
-
-        // Nếu player chưa sẵn sàng thì thôi
         if (!playerInstance.current) return;
         const art = playerInstance.current;
 
         switch (e.key) {
-            case ' ': // Phím Space (Khoảng trắng)
-            case 'k':
-            case 'K':
-                e.preventDefault(); // Chặn cuộn trang
-                art.toggle(); // Play/Pause
+            case ' ': case 'k': case 'K':
+                e.preventDefault();
+                art.toggle();
                 art.notice.show = art.playing ? "Tạm dừng" : "Tiếp tục";
                 break;
-            
-            case 'ArrowRight': // Mũi tên phải
+            case 'ArrowRight':
                 e.preventDefault();
-                art.forward = 10; // Tua tới 10s
+                art.forward = 10;
                 break;
-
-            case 'ArrowLeft': // Mũi tên trái
+            case 'ArrowLeft':
                 e.preventDefault();
-                art.backward = 10; // Lùi 10s
+                art.backward = 10;
                 break;
-
-            case 'ArrowUp': // Mũi tên lên
-                e.preventDefault(); // Chặn cuộn trang
+            case 'ArrowUp':
+                e.preventDefault();
                 art.volume = Math.min(art.volume + 0.1, 1);
                 art.notice.show = `Âm lượng: ${Math.round(art.volume * 100)}%`;
                 break;
-
-            case 'ArrowDown': // Mũi tên xuống
-                e.preventDefault(); // Chặn cuộn trang
+            case 'ArrowDown':
+                e.preventDefault();
                 art.volume = Math.max(art.volume - 0.1, 0);
                 art.notice.show = `Âm lượng: ${Math.round(art.volume * 100)}%`;
                 break;
-
-            case 'f': // Phím F: Fullscreen
-            case 'F':
+            case 'f': case 'F':
                 art.fullscreen = !art.fullscreen;
                 break;
-
-            case 'm': // Phím M: Mute
-            case 'M':
+            case 'm': case 'M':
                 art.muted = !art.muted;
                 art.notice.show = art.muted ? "Đã tắt tiếng" : "Đã bật tiếng";
                 break;
-
-            case 'n': // Phím N: Next tập
-            case 'N':
+            case 'n': case 'N':
                 if (nextEp) {
                     art.notice.show = "Đang chuyển tập tiếp theo...";
                     router.push(`/phim/${slug}?tap=${nextEp.slug}`);
@@ -86,31 +70,22 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
                     art.notice.show = "Đây là tập cuối cùng";
                 }
                 break;
-
-            case 'p': // Phím P: Previous tập
-            case 'P':
+            case 'p': case 'P':
                 if (prevEp) {
                     art.notice.show = "Đang quay lại tập trước...";
                     router.push(`/phim/${slug}?tap=${prevEp.slug}`);
                 }
                 break;
-                
-            default:
-                break;
+            default: break;
         }
     };
-
-    // Gắn sự kiện vào cửa sổ trình duyệt
     window.addEventListener('keydown', handleGlobalKeyDown);
-
-    // Dọn dẹp sự kiện khi thoát trang
     return () => {
         window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [nextEp, prevEp, router, slug]); // Cập nhật khi tập phim thay đổi
+  }, [nextEp, prevEp, router, slug]);
 
-
-  // --- 2. KHỞI TẠO PLAYER (GIỮ NGUYÊN) ---
+  // --- INIT PLAYER ---
   useEffect(() => {
     if (playerInstance.current) return;
     if (!artRef.current) return;
@@ -129,10 +104,8 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
       fullscreenWeb: true,
       miniProgressBar: true,
       theme: "#00FF41",
+      hotkey: false,
       
-      // Tắt hotkey mặc định của Artplayer để dùng bộ Global ở trên (tránh xung đột)
-      hotkey: false, 
-
       controls: [
         {
           name: 'prev-episode',
@@ -186,44 +159,66 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
 
     playerInstance.current = art;
 
+    // --- LOGIC: TẢI LỊCH SỬ THÔNG MINH ---
     art.on("ready", async () => {
       let shouldPlayImmediately = true;
+
       if (user && slug) {
         try {
           const docRef = doc(db, "users", user.uid, "history", slug);
           const docSnap = await getDoc(docRef);
+
           if (docSnap.exists()) {
             const data = docSnap.data();
             const currentTapParam = searchParams.get('tap');
             
+            // 1. Logic chuyển hướng: Vào từ Home -> Nhảy đến tập đang xem dở
             if (!currentTapParam && data.episode_slug && data.episode_slug !== episodeSlug) {
                 art.notice.show = `Đang chuyển đến ${data.episode}`;
                 router.replace(`/phim/${slug}?tap=${data.episode_slug}`);
-                return; 
+                return;
             }
-            if (data.episode === episodeName && data.seconds > 10) {
+
+            // 2. LOGIC MỚI: TÌM ĐÚNG GIÂY CỦA TẬP NÀY
+            // Kiểm tra xem trong 'details' có lưu tập này chưa?
+            // Nếu có thì lấy, nếu không thì mặc định là 0
+            const specificTime = data.details ? (data.details[episodeSlug] || 0) : 0;
+            
+            // Nếu tìm thấy thời gian của tập này > 10s thì tua
+            if (specificTime > 10) {
               shouldPlayImmediately = false;
-              art.seek = data.seconds;
-              art.notice.show = `Đang phát tiếp từ ${formatTime(data.seconds)}`;
+              art.seek = specificTime;
+              art.notice.show = `Đang phát tiếp từ ${formatTime(specificTime)}`;
               setTimeout(() => { art.play(); }, 300);
             }
           }
         } catch (error) { console.error(error); }
       }
+      
       if (shouldPlayImmediately) art.play();
     });
 
+    // --- LOGIC: LƯU LỊCH SỬ THÔNG MINH ---
     art.on("video:timeupdate", async () => {
         if (!user || !slug) return;
         const currentTime = art.currentTime;
+        
+        // Lưu mỗi 5 giây
         if (currentTime > 0 && Math.floor(currentTime) % 5 === 0) {
            await setDoc(doc(db, "users", user.uid, "history", slug), {
+             // 1. Thông tin chung (Dùng cho Tủ Phim hiển thị tập mới nhất)
              slug: slug,
              episode: episodeName,
-             episode_slug: episodeSlug,
-             seconds: currentTime,
-             last_watched: serverTimestamp()
-           }, { merge: true });
+             episode_slug: episodeSlug || '', 
+             seconds: currentTime, // Thời gian của tập mới nhất
+             last_watched: serverTimestamp(),
+             
+             // 2. THÊM MỚI: Lưu chi tiết thời gian cho TỪNG tập
+             // Cấu trúc này giúp lưu: { "tap-1": 120, "tap-2": 500 }
+             details: {
+                 [episodeSlug]: currentTime 
+             }
+           }, { merge: true }); // merge: true cực quan trọng để không mất dữ liệu các tập khác
         }
     });
 
@@ -249,7 +244,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
         playerInstance.current = null;
       }
     };
-  }, [url, user, slug, episodeName, episodes, nextEp, prevEp, router, searchParams]);
+  }, [url, user, slug, episodeName, episodes, nextEp, prevEp, router, episodeSlug, searchParams]);
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);

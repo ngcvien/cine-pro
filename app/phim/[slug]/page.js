@@ -4,24 +4,24 @@ import EpisodeList from "../../../components/EpisodeList";
 
 // Hàm lấy dữ liệu chi tiết phim
 async function getMovieDetail(slug) {
-  try {
-    const res = await fetch(`https://phimapi.com/phim/${slug}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return res.json();
-  } catch (error) {
-    return null;
-  }
+    try {
+        const res = await fetch(`https://phimapi.com/phim/${slug}`, { cache: "no-store" });
+        if (!res.ok) return null;
+        return res.json();
+    } catch (error) {
+        return null;
+    }
 }
 
 export const metadata = {
-  title: "Xem Phim - Cine Pro",
-  description: "Xem phim trực tuyến miễn phí với chất lượng cao"
+    title: "Xem Phim - Cine Pro",
+    description: "Xem phim trực tuyến miễn phí với chất lượng cao"
 };
 
 export default async function MovieDetailPage({ params, searchParams }) {
-    // Await params và searchParams trước khi sử dụng (Yêu cầu của Next.js mới)
+    // Await params và searchParams trước khi sử dụng
     const { slug } = await params;
-    const { tap } = await searchParams; // Lấy tập phim từ URL (ví dụ ?tap=Tap-01)
+    const { tap } = await searchParams;
 
     const data = await getMovieDetail(slug);
 
@@ -30,16 +30,23 @@ export default async function MovieDetailPage({ params, searchParams }) {
     }
 
     const movie = data.movie;
-    const episodes = data.episodes[0]?.server_data || []; // Lấy danh sách tập từ server đầu tiên
+    const episodes = data.episodes[0]?.server_data || [];
 
-    // Xác định tập đang xem (Nếu không chọn thì lấy tập đầu tiên)
+    // --- SỬA LỖI: DI CHUYỂN LOGIC TÍNH THỜI GIAN VÀO ĐÂY ---
+    // Lúc này biến 'movie' đã có dữ liệu rồi nên mới tính toán được
+    const timeString = movie.time || "";
+    const timeMatch = timeString.match(/\d+/);
+    const totalDuration = timeMatch ? parseInt(timeMatch[0]) : 0;
+    // --------------------------------------------------------
+
+    // Xác định tập đang xem
     const currentEpisode = episodes.find(e => e.slug === tap) || episodes[0];
 
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* BACKGROUND BLUR */}
             <div className="fixed inset-0 z-0 opacity-15 pointer-events-none">
-                 <img src={movie.poster_url} className="w-full h-full object-cover blur-3xl" alt={movie.name} />
+                <img src={movie.poster_url} className="w-full h-full object-cover blur-3xl" alt={movie.name} />
             </div>
 
             <div className="relative z-10 container mx-auto px-4 md:px-8 pt-6">
@@ -52,13 +59,13 @@ export default async function MovieDetailPage({ params, searchParams }) {
 
                 {/* MAIN CONTENT */}
                 <div className="space-y-8 max-w-5xl mx-auto">
-                    
+
                     {/* VIDEO PLAYER SECTION */}
                     <div className="space-y-2">
                         {currentEpisode?.link_m3u8 ? (
-                            <VideoPlayer 
-                                url={currentEpisode.link_m3u8} 
-                                slug={slug} 
+                            <VideoPlayer
+                                url={currentEpisode.link_m3u8}
+                                slug={slug}
                                 episodeName={currentEpisode.name}
                                 episodes={episodes}
                                 episodeSlug={currentEpisode.slug}
@@ -72,10 +79,12 @@ export default async function MovieDetailPage({ params, searchParams }) {
                     </div>
 
                     {/* EPISODE LIST */}
-                    <EpisodeList 
-                        episodes={episodes} 
+                    <EpisodeList
+                        episodes={episodes}
                         currentEpisode={currentEpisode}
                         slug={slug}
+                        poster={movie.poster_url}
+                        totalDuration={totalDuration}
                     />
 
                     {/* MOVIE DETAILS */}
@@ -94,7 +103,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
                                 {movie.year}
                             </span>
                             <span className="bg-white/10 text-gray-300 text-xs font-bold px-3 py-1.5 rounded-full">
-                                ⏱ {movie.time}
+                                {movie.time}
                             </span>
                             <span className="bg-white/10 text-gray-300 text-xs font-bold px-3 py-1.5 rounded-full">
                                 {movie.quality}
