@@ -55,7 +55,7 @@ export default async function MovieDetailPage({ params }) {
 
     // Link Xem Phim
     const firstEpisodeSlug = data.episodes?.[0]?.server_data?.[0]?.slug;
-    const watchLink = firstEpisodeSlug ? `/phim/${slug}/xem` : "#";
+    const watchLink = firstEpisodeSlug ? `/phim/${slug}` : "#";
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white pb-20 font-sans selection:bg-primary selection:text-black">

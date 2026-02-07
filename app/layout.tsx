@@ -1,7 +1,8 @@
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import { Inter, Outfit } from "next/font/google";
-import React from "react"; // Import React để dùng type
+import React from "react"; 
+import Footer from "../components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -39,6 +40,7 @@ export default function RootLayout({
         <main className="relative z-0 ">
             {children}
         </main>
+        <Footer />
         
       </body>
     </html>

@@ -89,6 +89,9 @@ export default function HeroSection({ movies = [] }) {
                 <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 backdrop-blur-sm">
                    {currentMovie?.quality || "FHD"}
                 </span>
+                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 backdrop-blur-sm">
+                   {currentMovie?.episode_current || "FULL"}
+                </span>
               </div>
 
               {/* Tên Phim */}
