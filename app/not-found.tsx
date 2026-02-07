@@ -89,14 +89,20 @@ export default function NotFound() {
   );
 }
 
-// --- Component phụ: Hạt bụi trôi nổi ---
+// 1. Định nghĩa kiểu dữ liệu cho hạt bụi
+interface Particle {
+    x: number;
+    y: number;
+    duration: number;
+    delay: number;
+}
+
 function FloatingParticles() {
-    // State để lưu trữ các hạt, khởi tạo rỗng để tránh mismatch SSR
-    const [particles, setParticles] = useState([]);
+    // 2. Gán kiểu dữ liệu cho useState: <Particle[]>
+    const [particles, setParticles] = useState<Particle[]>([]);
 
     useEffect(() => {
-        // Chỉ tạo hạt sau khi component đã mount trên client
-        const newParticles = Array.from({ length: 15 }).map(() => ({
+        const newParticles: Particle[] = Array.from({ length: 15 }).map(() => ({
             x: Math.random() * 100,
             y: Math.random() * 100,
             duration: Math.random() * 10 + 10,
@@ -111,13 +117,13 @@ function FloatingParticles() {
                 <motion.div
                     key={i}
                     initial={{ 
-                        x: particle.x + "vw", 
-                        y: particle.y + "vh",
+                        x: `${particle.x}vw`, 
+                        y: `${particle.y}vh`,
                         opacity: 0 
                     }}
                     animate={{ 
-                        y: [null, Math.random() * -100], // Bay lên (vẫn ngẫu nhiên mỗi lần animate nhưng không gây lỗi hydration vì animation chạy trên client)
-                        opacity: [0, 0.5, 0] // Hiện rồi ẩn
+                        y: [null, -100], // Bay lên trên
+                        opacity: [0, 0.5, 0] 
                     }}
                     transition={{ 
                         duration: particle.duration, 
