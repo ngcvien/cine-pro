@@ -1,108 +1,184 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Play, Info } from "lucide-react";
 import Link from "next/link";
 
-export default function HeroSection({ featuredMovie }) {
+export default function HeroSection({ movies = [] }) {
+  // Lấy tối đa 5 phim
+  const heroMovies = movies.slice(0, 5);
+  
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Tự động chuyển slide (6s)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % heroMovies.length);
+    }, 6000); 
+
+    return () => clearInterval(timer);
+  }, [heroMovies.length]);
+
+  const selectSlide = (index) => {
+    setCurrentIndex(index);
+  };
+
+  if (heroMovies.length === 0) return null;
+
+  const currentMovie = heroMovies[currentIndex];
+
+  // Hàm lấy ảnh
+  const getPoster = (movie) => { // Ảnh nền to (ưu tiên thumb ngang)
+    if (!movie) return "";
+    return movie.poster_url?.includes("http")
+      ? movie.thumb_url
+      : `https://phimimg.com/${movie.thumb_url}`; 
+  };
+
+  const getSmallPoster = (movie) => { // Ảnh nhỏ (ưu tiên poster dọc)
+      if (!movie) return "";
+      return movie.poster_url?.includes("http")
+        ? movie.poster_url
+        : `https://phimimg.com/${movie.poster_url}`; 
+  };
+
   return (
-    <div className="relative w-full h-[600px] md:h-[700px] mb-16 overflow-hidden rounded-2xl group">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src={
-            featuredMovie?.poster_url?.includes("http")
-              ? featuredMovie.thumb_url
-              : `https://phimimg.com/${featuredMovie?.thumb_url}`
-          }
-          alt={featuredMovie?.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+    <div className="relative w-full h-[550px] md:h-[700px] mb-12 overflow-hidden group rounded-b-lg ">
+      
+      {/* --- 1. BACKGROUND --- */}
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1 }}
+          className="absolute inset-0 z-0"
+        >
+          <img
+            src={getPoster(currentMovie)}
+            alt={currentMovie?.name}
+            className="w-full h-full object-cover"
+          />
+          {/* Lớp phủ Gradient để làm rõ chữ */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* --- 2. NỘI DUNG CHÍNH (BÊN TRÁI) --- */}
+      <div className="absolute inset-0 container mx-auto px-4 md:px-8 flex items-center z-10">
+        <div className="max-w-2xl pt-10 md:pt-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentMovie?._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Tags */}
+              <div className="flex items-center gap-3 mb-4">
+                <span className="bg-primary text-black font-black text-[10px] md:text-xs px-3 py-1 rounded shadow-lg shadow-primary/20">
+                  #{currentIndex + 1} TRENDING
+                </span>
+                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 backdrop-blur-sm">
+                   {currentMovie?.year}
+                </span>
+                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 backdrop-blur-sm">
+                   {currentMovie?.quality || "FHD"}
+                </span>
+              </div>
+
+              {/* Tên Phim */}
+              <h1 className="text-3xl md:text-6xl font-black text-white mb-2 leading-tight tracking-tight uppercase drop-shadow-lg">
+                {currentMovie?.name}
+              </h1>
+              <h2 className="text-lg md:text-2xl text-primary font-bold italic mb-6 opacity-90">
+                 {currentMovie?.origin_name}
+              </h2>
+
+              {/* Mô tả ngắn */}
+              <p className="text-gray-300 text-sm md:text-base mb-8 line-clamp-3 leading-relaxed max-w-lg hidden md:block text-justify">
+                 {currentMovie?.content?.replace(/<[^>]+>/g, '')}
+              </p>
+
+              {/* Nút bấm */}
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/phim/${currentMovie?.slug}`}
+                  className="flex items-center gap-2 bg-primary hover:bg-white hover:text-black text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-black text-sm md:text-base transition-all hover:scale-105 shadow-[0_0_20px_rgba(74,222,128,0.4)]"
+                >
+                  <Play size={20} fill="currentColor" />
+                  XEM NGAY
+                </Link>
+
+                <Link
+                  href={`/chi-tiet/${currentMovie?.slug}`}
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base backdrop-blur-md transition-all"
+                >
+                  <Info size={20} />
+                  CHI TIẾT
+                </Link>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-2xl"
-        >
-          {/* Category Badge */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 mb-4"
-          >
-            <span className="text-xs font-black bg-primary text-black px-3 py-1 rounded-full">
-              PHIM NỔI BẬT
-            </span>
-            <span className="text-xs font-bold text-gray-300">{featuredMovie?.year || "2024"}</span>
-          </motion.div>
-
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tighter leading-tight"
-          >
-            {featuredMovie?.name}
-          </motion.h1>
-
-          {/* Description */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-gray-300 text-sm md:text-base mb-6 leading-relaxed max-w-xl"
-          >
-            {featuredMovie?.origin_name || "Phim đặc sắc từ CinePro"}
-          </motion.p>
-
-          {/* Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center gap-4 mb-8 text-sm font-mono text-gray-400"
-          >
-            <span className="border-l-2 border-primary pl-3">
-              {featuredMovie?.episode_current || "FULL"}
-            </span>
-            <span>HD Quality</span>
-            <span className="flex items-center gap-1">
-              ⭐ 8.5/10
-            </span>
-          </motion.div>
-
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center gap-4"
-          >
-            <Link
-              href={`/phim/${featuredMovie?.slug}`}
-              className="flex items-center gap-2 bg-primary text-black px-8 py-3 font-black text-sm md:text-base hover:bg-white hover:shadow-[0_0_20px_rgba(0,255,65,0.4)] transition-all duration-300 hover:scale-105 rounded-lg"
+      {/* --- 3. DANH SÁCH POSTER NHỎ (GÓC DƯỚI PHẢI) --- */}
+      <div className="absolute bottom-8 right-4 md:right-8 z-20 hidden md:flex items-end gap-3">
+        {heroMovies.map((movie, index) => {
+          const isActive = index === currentIndex;
+          return (
+            <div 
+              key={movie._id}
+              onClick={() => selectSlide(index)}
+              className={`relative cursor-pointer transition-all duration-300 rounded-lg overflow-hidden group/item ${
+                isActive 
+                  ? "w-20 h-28 border-2 border-primary shadow-[0_0_15px_rgba(0,0,0,0.5)] scale-110 z-10" 
+                  : "w-16 h-24 border border-white/30 opacity-60 hover:opacity-100 hover:scale-105"
+              }`}
             >
-              <Play size={20} fill="currentColor" />
-              XEM NGAY
-            </Link>
+              {/* Ảnh Poster */}
+              <img 
+                src={getSmallPoster(movie)} 
+                className="w-full h-full object-cover" 
+                alt="" 
+              />
+              
+              {/* Overlay đen mờ khi không active */}
+              {!isActive && (
+                <div className="absolute inset-0 bg-black/20 group-hover/item:bg-transparent transition-colors" />
+              )}
 
-            <Link
-              href={`/chi-tiet/${featuredMovie?.slug}`}
-              className="flex items-center gap-2 border-2 border-white/30 text-white px-8 py-3 font-bold text-sm md:text-base hover:border-primary hover:text-primary transition-all duration-300 rounded-lg hover:bg-primary/5"
-            >
-              <Info size={20} />
-              CHI TIẾT
-            </Link>
-          </motion.div>
-        </motion.div>
+              {/* Thanh thời gian chạy (Chỉ hiện khi Active) */}
+              {isActive && (
+                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/50">
+                    <motion.div 
+                        key={currentIndex} // Reset animation khi đổi slide
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 6, ease: "linear" }}
+                        className="h-full bg-primary"
+                    />
+                 </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Dots cho Mobile (Thay thế list poster trên điện thoại) */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 md:hidden z-20">
+          {heroMovies.map((_, idx) => (
+              <button 
+                key={idx}
+                onClick={() => selectSlide(idx)}
+                className={`h-1.5 rounded-full transition-all ${idx === currentIndex ? "w-6 bg-primary" : "w-1.5 bg-white/30"}`}
+              />
+          ))}
       </div>
     </div>
   );

@@ -4,233 +4,171 @@ import WatchingNow from "../components/WatchingNow";
 import ContinueWatching from "../components/ContinueWatching";
 import Link from "next/link";
 
+// Hàm chuẩn hóa URL ảnh (để tránh lỗi ảnh 404)
 function normalizePosterUrl(movie: any) {
   return {
     ...movie,
     poster_url: movie.poster_url?.startsWith('http') 
       ? movie.poster_url 
-      : `https://phimimg.com/${movie.poster_url}`
+      : `https://phimimg.com/${movie.poster_url}`,
+    thumb_url: movie.thumb_url?.startsWith('http')
+      ? movie.thumb_url
+      : `https://phimimg.com/${movie.thumb_url}`
   };
 }
 
+// 1. Lấy Phim Mới (Dùng cho Hero Section + List Phim Mới)
 async function getNewMovies() {
   try {
     const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=1", {
       next: { revalidate: 60 }, 
     });
-    
-    if (!res.ok) {
-      throw new Error("Không thể tải danh sách phim");
-    }
-    
+    if (!res.ok) throw new Error("Failed");
     return res.json();
   } catch (error) {
-    console.error(error);
     return null;
   }
 }
 
+// 2. Lấy Phim Lẻ
 async function getSingleMovies() {
   try {
     const res = await fetch("https://phimapi.com/v1/api/danh-sach/phim-le?page=1", {
-      next: { revalidate: 60 },
+      next: { revalidate: 3600 }, // Cache lâu hơn chút (1 tiếng)
     });
-    
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
-    console.error("Single movies error:", error);
     return null;
   }
 }
 
+// 3. Lấy Phim Bộ
 async function getSeriesMovies() {
   try {
     const res = await fetch("https://phimapi.com/v1/api/danh-sach/phim-bo?page=1", {
-      next: { revalidate: 60 },
+      next: { revalidate: 3600 },
     });
-    
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
-    console.error("Series movies error:", error);
     return null;
   }
 }
 
-async function getHotMovies() {
+// 4. Lấy Hoạt Hình
+async function getCartoonMovies() {
   try {
-    const res = await fetch("https://phimapi.com/danh-sach/hoat-hinh?page=1", {
-      next: { revalidate: 60 },
+    const res = await fetch("https://phimapi.com/v1/api/danh-sach/hoat-hinh?page=1", {
+      next: { revalidate: 3600 },
     });
-    
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
-    console.error("Hot movies error:", error);
-    return null;
-  }
-}
-
-async function getFeaturedMovie() {
-  try {
-    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=1", {
-      next: { revalidate: 60 },
-    });
-    
-    if (!res.ok) {
-      throw new Error("Không thể tải phim nổi bật");
-    }
-    
-    const data = await res.json();
-    return data?.items?.[0] || null;
-  } catch (error) {
-    console.error(error);
     return null;
   }
 }
 
 export default async function Home() {
-  const [data, featuredMovie, singleMovies, seriesMovies, hotMovies] = await Promise.all([
+  // Gọi song song tất cả API để tiết kiệm thời gian
+  const [newData, singleData, seriesData, cartoonData] = await Promise.all([
     getNewMovies(),
-    getFeaturedMovie(),
     getSingleMovies(),
     getSeriesMovies(),
-    getHotMovies()
+    getCartoonMovies()
   ]);
   
-  console.log("Data structure:", {
-    movies: data?.items?.length || 0,
-    singles: singleMovies?.data?.items?.length || 0,
-    series: seriesMovies?.data?.items?.length || 0,
-    hots: hotMovies?.items?.length || 0,
-  });
-  
-  const movies = data?.items || [];
-  const singles = singleMovies?.data?.items || [];
-  const series = seriesMovies?.data?.items || [];
-  const hots = hotMovies?.items || [];
+  // Chuẩn hóa dữ liệu
+  const newMovies = newData?.items?.map(normalizePosterUrl) || [];
+  const singleMovies = singleData?.data?.items?.map(normalizePosterUrl) || [];
+  const seriesMovies = seriesData?.data?.items?.map(normalizePosterUrl) || [];
+  const cartoonMovies = cartoonData?.data?.items?.map(normalizePosterUrl) || [];
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-8 space-y-16">
-      {/* Hero Section */}
-      {featuredMovie && <HeroSection featuredMovie={featuredMovie} />}
+    <div className="container mx-auto px-4 md:px-1 space-y-16 pb-20">
+      
+      {/* 1. HERO SECTION (Truyền toàn bộ danh sách phim mới vào để chạy Slide) */}
+      {newMovies.length > 0 && <HeroSection movies={newMovies} />}
 
-      {/* Watching Now Section */}
+      {/* 2. WATCHING NOW (Phim đang xem - Client Component) */}
       <WatchingNow />
 
-      {/* Continue Watching Section */}
+      {/* 3. CONTINUE WATCHING (Tiếp tục xem - Client Component) */}
       <ContinueWatching />
 
-      {/* New Movies Section */}
-      <div>
-        <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
-              PHIM MỚI <span className="text-primary">CẬP NHẬT</span>
-            </h2>
-            <p className="text-gray-500 text-sm md:text-base mt-2 font-mono">
-              DANH SÁCH CÁC BỘ PHIM VỪA ĐƯỢC THÊM VÀO HỆ THỐNG.
-            </p>
-          </div>
-          
-          <Link href="/danh-sach/phim-moi-cap-nhat" className="hidden md:block">
-            <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
-              XEM TẤT CẢ
-            </span>
-          </Link>
-        </div>
+      {/* 4. PHIM MỚI CẬP NHẬT */}
+      <MovieSection 
+        title="PHIM MỚI" 
+        subtitle="CẬP NHẬT" 
+        description="DANH SÁCH CÁC BỘ PHIM VỪA ĐƯỢC THÊM VÀO HỆ THỐNG."
+        link="/danh-sach/phim-moi-cap-nhat"
+        movies={newMovies}
+      />
 
-        {movies.length > 0 ? (
-          <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar">
-              {movies.map((movie: any) => (
-                <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
-                  <MovieCard movie={movie} />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="text-gray-500">Đang tải dữ liệu hoặc lỗi kết nối...</p>
-          </div>
-        )}
-      </div>
+      {/* 5. PHIM LẺ */}
+      <MovieSection 
+        title="PHIM" 
+        subtitle="LẺ" 
+        description="CÁC BỘ PHIM ĐIỆN ẢNH HẤP DẪN NHẤT."
+        link="/danh-sach/phim-le"
+        movies={singleMovies}
+      />
 
-      {/* Single Movies Section */}
-      <div>
-        <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
-              PHIM <span className="text-primary">LẺ</span>
-            </h2>
-            <p className="text-gray-500 text-sm md:text-base mt-2 font-mono">
-              CÁC BỘ PHIM HOÀN CHỈNH VỚI MỘT TẬP DUY NHẤT.
-            </p>
-          </div>
-          
-          <Link href="/danh-sach/phim-le" className="hidden md:block">
-            <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
-              XEM TẤT CẢ
-            </span>
-          </Link>
-        </div>
+      {/* 6. PHIM BỘ */}
+      <MovieSection 
+        title="PHIM" 
+        subtitle="BỘ" 
+        description="CÁC SERIES PHIM DÀI TẬP ĐÌNH ĐÁM."
+        link="/danh-sach/phim-bo"
+        movies={seriesMovies}
+      />
 
-        {singles.length > 0 ? (
-          <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar">
-              {singles.map((movie: any) => (
-                <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
-                  <MovieCard movie={normalizePosterUrl(movie)} />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="text-gray-500">Đang tải dữ liệu hoặc lỗi kết nối...</p>
-          </div>
-        )}
-      </div>
-
-      {/* Series Movies Section */}
-      <div>
-        <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
-              PHIM <span className="text-primary">BỘ</span>
-            </h2>
-            <p className="text-gray-500 text-sm md:text-base mt-2 font-mono">
-              CÁC SERIES PHIM VỚI NHIỀU TẬP LIÊN TIẾP.
-            </p>
-          </div>
-          
-          <Link href="/danh-sach/phim-bo" className="hidden md:block">
-            <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
-              XEM TẤT CẢ
-            </span>
-          </Link>
-        </div>
-
-        {series.length > 0 ? (
-          <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-            <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar">
-              {series.map((movie: any) => (
-                <div key={movie._id} className="flex-shrink-0 w-40 md:w-48 lg:w-56">
-                  <MovieCard movie={normalizePosterUrl(movie)} />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="text-gray-500">Đang tải dữ liệu hoặc lỗi kết nối...</p>
-          </div>
-        )}
-      </div>
-
+       {/* 7. HOẠT HÌNH */}
+       <MovieSection 
+        title="HOẠT" 
+        subtitle="HÌNH" 
+        description="THẾ GIỚI ANIME VÀ HOẠT HÌNH ĐẶC SẮC."
+        link="/danh-sach/hoat-hinh"
+        movies={cartoonMovies}
+      />
       
     </div>
   );
+}
+
+// --- Component phụ để tái sử dụng giao diện Section ---
+function MovieSection({ title, subtitle, description, link, movies }: any) {
+    if (!movies || movies.length === 0) return null;
+
+    return (
+        <div>
+            <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
+                <div>
+                <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
+                    {title} <span className="text-primary">{subtitle}</span>
+                </h2>
+                <p className="text-gray-500 text-[10px] md:text-sm mt-2 font-mono uppercase tracking-widest">
+                    {description}
+                </p>
+                </div>
+                
+                <Link href={link} className="hidden md:block group">
+                <span className="text-xs font-bold text-gray-500 group-hover:text-primary transition-colors flex items-center gap-1">
+                    XEM TẤT CẢ <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </span>
+                </Link>
+            </div>
+
+            <div className="-mx-4 px-4 md:-mx-8 md:px-8">
+                {/* Thanh cuộn ngang ẩn scrollbar */}
+                <div className="flex gap-4 overflow-x-auto pb-8 scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {movies.map((movie: any) => (
+                        <div key={movie._id} className="flex-shrink-0 w-[160px] md:w-[200px]">
+                            <MovieCard movie={movie} />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
 }

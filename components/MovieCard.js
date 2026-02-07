@@ -46,9 +46,11 @@ export default function MovieCard({ movie }) {
           </p>
 
           {/* Nút giả lập (Thay cho icon Play) */}
-          <div className="mt-4 w-full py-2 border border-white/20 text-center text-xs font-bold text-white group-hover:border-primary group-hover:text-primary transition-colors">
+          <a href={`/phim/${movie.slug}`}>
+            <div className="mt-4 w-full py-2 border border-white/20 text-center text-xs font-bold text-white group-hover:border-primary group-hover:text-primary transition-colors">
             XEM NGAY
           </div>
+          </a>
         </div>
 
         {/* 3. NHÃN TẬP MỚI (Luôn hiện) */}

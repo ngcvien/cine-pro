@@ -23,6 +23,16 @@ module.exports = {
         display: ['var(--font-manrope)', 'ui-sans-serif', 'system-ui'],
       },
     },
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '1rem',
+        md: '2rem',
+        lg: '2.5rem',
+        xl: '3rem',
+      },
+    },
   },
   plugins: [],
 };
