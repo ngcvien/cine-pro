@@ -21,7 +21,7 @@ export default async function SearchPage({ searchParams }) {
   const total = movies.length;
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-8">
+    <div className="container mx-auto px-4 py-8 md:px-8 m-15">
       <div className="mb-12 border-b border-white/10 pb-6">
         <p className="text-gray-500 text-sm font-mono mb-2">KẾT QUẢ TÌM KIẾM CHO:</p>
         <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter">

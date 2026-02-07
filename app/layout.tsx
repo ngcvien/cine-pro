@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="vi" className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="vi" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning={true}>
       <body className="bg-[#050505] text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen relative">
         
         {/* --- GLOBAL BACKGROUND --- */}
@@ -36,7 +36,7 @@ export default function RootLayout({
 
         <Navbar />
 
-        <main className="relative z-0 pt-15">
+        <main className="relative z-0 ">
             {children}
         </main>
         

@@ -58,7 +58,7 @@ export default function ContinueWatching() {
         </div>
 
         {watchHistory.length > 0 && (
-          <Link href="/ho-so" className="hidden md:block">
+          <Link href="/tu-phim" className="hidden md:block">
             <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
               XEM LỊCH SỬ
             </span>

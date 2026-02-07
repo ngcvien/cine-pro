@@ -12,8 +12,8 @@ export default function HeroSection({ featuredMovie }) {
         <img
           src={
             featuredMovie?.poster_url?.includes("http")
-              ? featuredMovie.poster_url
-              : `https://phimimg.com/${featuredMovie?.poster_url}`
+              ? featuredMovie.thumb_url
+              : `https://phimimg.com/${featuredMovie?.thumb_url}`
           }
           alt={featuredMovie?.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -95,7 +95,7 @@ export default function HeroSection({ featuredMovie }) {
             </Link>
 
             <Link
-              href={`/phim/${featuredMovie?.slug}`}
+              href={`/chi-tiet/${featuredMovie?.slug}`}
               className="flex items-center gap-2 border-2 border-white/30 text-white px-8 py-3 font-bold text-sm md:text-base hover:border-primary hover:text-primary transition-all duration-300 rounded-lg hover:bg-primary/5"
             >
               <Info size={20} />

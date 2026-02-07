@@ -53,7 +53,7 @@ export default function HistoryPage() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-8 min-h-screen">
+    <div className="container mx-auto px-4 py-8 md:px-8 min-h-screen m-15">
       <div className="mb-8 border-b border-white/10 pb-4 flex items-end justify-between">
         <div>
             <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter">
