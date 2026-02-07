@@ -5,9 +5,12 @@ import { auth, db } from "../lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
+const EPISODE_DISPLAY_LIMIT = 16;
+
 export default function EpisodeList({ episodes, currentEpisode, slug, totalDuration }) {
   const [historyDetails, setHistoryDetails] = useState({});
   const [user, setUser] = useState(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
@@ -31,6 +34,9 @@ export default function EpisodeList({ episodes, currentEpisode, slug, totalDurat
       return Math.min(percent, 100);
   };
 
+  const displayEpisodes = showAll ? episodes : episodes.slice(0, EPISODE_DISPLAY_LIMIT);
+  const hasMore = episodes.length > EPISODE_DISPLAY_LIMIT;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-white/10 pb-4">
@@ -43,7 +49,7 @@ export default function EpisodeList({ episodes, currentEpisode, slug, totalDurat
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-3">
-        {episodes.map((ep) => {
+        {displayEpisodes.map((ep) => {
           const isActive = currentEpisode?.slug === ep.slug;
           const epNumber = ep.name.match(/\d+/)?.[0] || ep.name;
           const percent = getProgress(ep.slug);
@@ -80,6 +86,18 @@ export default function EpisodeList({ episodes, currentEpisode, slug, totalDurat
           );
         })}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={() => setShowAll(!showAll)}
+            className="px-6 py-2.5 rounded-lg font-bold text-sm uppercase tracking-wide bg-white/5 hover:bg-primary hover:text-black border border-white/10 text-white transition-all duration-300"
+          >
+            {showAll ? "Thu gọn" : `Xem tất cả (${episodes.length} tập)`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

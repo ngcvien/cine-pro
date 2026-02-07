@@ -13,6 +13,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
   const artRef = useRef(null);
   const playerInstance = useRef(null);
   const [user, setUser] = useState(null);
+  const [isChangingEpisode, setIsChangingEpisode] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -86,6 +87,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
         case 'n': case 'N':
           if (nextEp) {
             art.notice.show = "Đang chuyển tập tiếp theo...";
+            setIsChangingEpisode(true);
             router.push(`/phim/${slug}?tap=${nextEp.slug}`);
           } else {
             art.notice.show = "Đây là tập cuối cùng";
@@ -94,6 +96,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
         case 'p': case 'P':
           if (prevEp) {
             art.notice.show = "Đang quay lại tập trước...";
+            setIsChangingEpisode(true);
             router.push(`/phim/${slug}?tap=${prevEp.slug}`);
           }
           break;
@@ -105,6 +108,11 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, [nextEp, prevEp, router, slug]);
+
+  // Tắt overlay khi đã load xong tập mới
+  useEffect(() => {
+    setIsChangingEpisode(false);
+  }, [url, episodeSlug]);
 
   // --- INIT PLAYER ---
   useEffect(() => {
@@ -126,23 +134,26 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
       miniProgressBar: true,
       theme: "#00FF41",
       hotkey: false,
-
+      setting: true,          
+      playbackRate: true,    
+      aspectRatio: true,      
+      flip: true,
       controls: [
-        {
-          name: 'prev-episode',
-          position: 'left',
-          index: 10,
-          html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>`,
-          tooltip: 'Tập trước (P)',
-          style: {
-            display: prevEp ? 'flex' : 'none',
-            marginRight: '10px',
-            cursor: 'pointer',
-          },
-          click: function () {
-            if (prevEp) router.push(`/phim/${slug}?tap=${prevEp.slug}`);
-          },
-        },
+        // {
+        //   name: 'prev-episode',
+        //   position: 'left',
+        //   index: 10,
+        //   html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>`,
+        //   tooltip: 'Tập trước (P)',
+        //   style: {
+        //     display: prevEp ? 'flex' : 'none',
+        //     marginRight: '10px',
+        //     cursor: 'pointer',
+        //   },
+        //   click: function () {
+        //     if (prevEp) router.push(`/phim/${slug}?tap=${prevEp.slug}`);
+        //   },
+        // },
         {
           name: 'next-episode',
           position: 'left',
@@ -151,11 +162,14 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
           tooltip: 'Tập tiếp theo (N)',
           style: {
             display: nextEp ? 'flex' : 'none',
-            marginRight: '15px',
+            marginRight: '10px',
             cursor: 'pointer',
           },
           click: function () {
-            if (nextEp) router.push(`/phim/${slug}?tap=${nextEp.slug}`);
+            if (nextEp) {
+              setIsChangingEpisode(true);
+              router.push(`/phim/${slug}?tap=${nextEp.slug}`);
+            }
           },
         },
         {
@@ -164,7 +178,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
           index: 12,
           html: `<svg width="22" height="22" viewBox="0 0 24 24" style="fill:none; stroke:#ffffff; stroke-width:2;" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
           tooltip: 'Lùi 5s (J)',
-          style: { marginRight: '5px', cursor: 'pointer' },
+          style: { cursor: 'pointer' },
           click: function () {
             art.backward = 5;
             art.notice.show = "Lùi 5 giây";
@@ -201,6 +215,8 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
       },
       lang: "vi",
       lock: true,
+      autoSize: false,
+
     });
 
     playerInstance.current = art;
@@ -271,6 +287,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
     art.on("video:ended", () => {
       if (nextEp) {
         art.notice.show = "Đang chuyển sang tập tiếp theo...";
+        setIsChangingEpisode(true);
         setTimeout(() => {
           router.push(`/phim/${slug}?tap=${nextEp.slug}`);
         }, 2000);
