@@ -113,20 +113,37 @@ export default async function MovieDetailPage({ params }) {
                             </h2>
                         </div>
 
-                        {/* Meta Tags (Rating, Time, Tags) */}
+                        {/* Meta Tags: TMDB rating, trạng thái, loại phim, time, lang, thể loại */}
                         <div className="flex flex-wrap items-center gap-4 py-4 border-y border-white/10">
-                            <div className="flex items-center gap-1 text-yellow-500 font-black text-lg">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                <span>8.5</span> {/* API chưa có rating, fake tạm cho đẹp */}
-                            </div>
-                            <span className="text-gray-500">|</span>
+                            {(movie.tmdb?.vote_average != null) && (
+                                <>
+                                    <div className="flex items-center gap-1 text-yellow-500 font-black text-lg" title={movie.tmdb?.vote_count ? `${movie.tmdb.vote_count} đánh giá` : ""}>
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                        <span>{Number(movie.tmdb.vote_average).toFixed(1)}</span>
+                                        {movie.tmdb?.vote_count != null && <span className="text-gray-500 font-normal text-sm">({movie.tmdb.vote_count})</span>}
+                                    </div>
+                                    <span className="text-gray-500">|</span>
+                                </>
+                            )}
+                            {movie.status && (
+                                <>
+                                    <span className="bg-white/10 text-gray-300 text-xs font-bold px-2 py-1 rounded">{movie.status === "ongoing" ? "Đang chiếu" : movie.status === "completed" ? "Hoàn thành" : movie.status}</span>
+                                    <span className="text-gray-500">|</span>
+                                </>
+                            )}
+                            {movie.type && (
+                                <>
+                                    <span className="text-gray-300 font-medium">{movie.type}</span>
+                                    <span className="text-gray-500">|</span>
+                                </>
+                            )}
                             <span className="text-gray-300 font-medium">{movie.time}</span>
                             <span className="text-gray-500">|</span>
                             <span className="text-gray-300 font-medium">{movie.lang}</span>
                             <span className="text-gray-500">|</span>
-                            <div className="flex gap-2">
-                                {movie.category.map(c => (
-                                    <Link key={c.id} href={`/the-loai/${c.slug}`} className="bg-white/10 hover:bg-white/20 text-xs font-bold px-2 py-1 rounded text-gray-300 transition-colors">
+                            <div className="flex flex-wrap gap-2">
+                                {movie.category?.map((c, i) => (
+                                    <Link key={c.slug ? `${c.slug}-${i}` : i} href={`/the-loai/${c.slug}`} className="bg-white/10 hover:bg-white/20 text-xs font-bold px-2 py-1 rounded text-gray-300 transition-colors">
                                         {c.name}
                                     </Link>
                                 ))}
@@ -146,10 +163,12 @@ export default async function MovieDetailPage({ params }) {
 
                         {/* Bảng thông tin chi tiết */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 bg-white/5 p-6 rounded-xl border border-white/5">
-                            <InfoRow label="Đạo diễn" value={movie.director?.join(", ")} />
-                            <InfoRow label="Quốc gia" value={movie.country[0]?.name} />
-                            <InfoRow label="Số tập" value={`${movie.episode_current} / ${movie.episode_total}`} />
-                            <InfoRow label="Cập nhật" value={new Date().toLocaleDateString('vi-VN')} />
+                            <InfoRow label="Đạo diễn" value={Array.isArray(movie.director) ? movie.director.filter(Boolean).join(", ") : movie.director} />
+                            <InfoRow label="Quốc gia" value={movie.country?.map((c) => c?.name).filter(Boolean).join(", ")} />
+                            <InfoRow label="Số tập" value={[movie.episode_current, movie.episode_total].every((v) => v != null) ? `${movie.episode_current} / ${movie.episode_total}` : null} />
+                            <InfoRow label="Lượt xem" value={movie.view != null ? `${Number(movie.view).toLocaleString("vi")}` : null} />
+                            {movie.notify && <InfoRow label="Thông báo" value={movie.notify} />}
+                            <InfoRow label="Cập nhật" value={movie.modified?.time ? new Date(movie.modified.time).toLocaleDateString("vi-VN") : null} />
                         </div>
                     </div>
                 </div>
@@ -165,26 +184,8 @@ export default async function MovieDetailPage({ params }) {
                     <ActorList actors={movie.actor} />
 
                 </div>
-                {/* --- SECTION 3: TRAILER (Nếu có link trailer youtube trong content - logic giả định hoặc nhúng tĩnh) --- */}
-                {/* Vì API phimapi thường không trả link trailer riêng, ta có thể tạo section placeholder hoặc ẩn đi */}
-                <div className="mb-16">
-                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-primary rounded-full"></span>
-                        Trailer Chính Thức
-                    </h3>
-                    <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-white/10 relative group">
-                        {/* Giả lập Trailer: Nếu có link thật thì iframe, không thì hiện ảnh backdrop + nút play */}
-                        <img src={movie.poster_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" alt="trailer" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <a href={`https://www.youtube.com/results?search_query=trailer+${movie.name}`} target="_blank" className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(220,38,38,0.6)] hover:scale-110 transition-transform cursor-pointer">
-                                <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                            </a>
-                        </div>
-                        <p className="absolute bottom-4 left-0 right-0 text-center text-gray-400 text-sm">
-                            Bấm để tìm trailer trên Youtube
-                        </p>
-                    </div>
-                </div>
+                {/* --- SECTION 3: TRAILER (nhúng từ movie.trailer_url) --- */}
+                <TrailerSection trailerUrl={movie.trailer_url} posterUrl={movie.poster_url} movieName={movie.name} />
 
                 {/* --- SECTION 4: PHIM LIÊN QUAN (RELATED) --- */}
                 <div className="mb-16">
@@ -249,6 +250,58 @@ export default async function MovieDetailPage({ params }) {
                     </div>
                 </div>
 
+            </div>
+        </div>
+    );
+}
+
+// Lấy video ID từ URL YouTube (watch?v=, youtu.be/, embed/)
+function getYoutubeVideoId(url) {
+    if (!url || typeof url !== "string") return null;
+    const trimmed = url.trim();
+    const watchMatch = trimmed.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+    if (watchMatch) return watchMatch[1];
+    const shortMatch = trimmed.match(/(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (shortMatch) return shortMatch[1];
+    const embedMatch = trimmed.match(/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    if (embedMatch) return embedMatch[1];
+    return null;
+}
+
+// Component: Trailer nhúng YouTube hoặc placeholder
+function TrailerSection({ trailerUrl, posterUrl, movieName }) {
+    const videoId = getYoutubeVideoId(trailerUrl);
+
+    return (
+        <div className="mb-16">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <span className="w-1.5 h-8 bg-primary rounded-full"></span>
+                Trailer Chính Thức
+            </h3>
+            <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-white/10 relative">
+                {videoId ? (
+                    <iframe
+                        src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+                        title={`Trailer ${movieName}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                    />
+                ) : (
+                    <div className="relative w-full h-full group">
+                        <img src={posterUrl} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" alt="trailer" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                            {trailerUrl ? (
+                                <a href={trailerUrl} target="_blank" rel="noopener noreferrer" className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(220,38,38,0.6)] hover:scale-110 transition-transform cursor-pointer">
+                                    <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                </a>
+                            ) : null}
+                            <p className="text-center text-gray-400 text-sm">
+                                {trailerUrl ? "Mở trailer trên YouTube" : "Chưa có trailer"}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
