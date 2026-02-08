@@ -1,10 +1,22 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 
-export default function HistoryItem({ item }) {
+export default function HistoryItem({ item, onDelete }) {
   const [movie, setMovie] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    if (menuOpen) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [menuOpen]);
 
   useEffect(() => {
     const fetchInfo = async () => {
@@ -36,9 +48,58 @@ export default function HistoryItem({ item }) {
     ? `/phim/${item.slug}?tap=${item.episode_slug}` 
     : `/phim/${item.slug}`;
 
+  const historyId = item.id || item.slug;
+
   return (
-    <Link href={hrefLink} className="group relative block flex-shrink-0 w-40 md:w-48">
+    <div className="group relative flex-shrink-0 w-40 md:w-48">
+      <Link href={hrefLink} className="block">
       <div className="relative w-full aspect-[2/3] overflow-hidden rounded border border-white/10 group-hover:border-primary transition-colors bg-surface">
+        {onDelete && (
+          <div ref={menuRef} className="absolute top-2 right-2 z-10">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMenuOpen((v) => !v);
+              }}
+              className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center transition-colors border border-white/10"
+              title="Tùy chọn"
+              aria-label="Tùy chọn"
+              aria-expanded={menuOpen}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="6" r="1.5" />
+                <circle cx="12" cy="12" r="1.5" />
+                <circle cx="12" cy="18" r="1.5" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div
+                className="absolute right-0 top-full mt-1 min-w-[160px] py-1 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMenuOpen(false);
+                    onDelete(historyId);
+                  }}
+                  className="w-full px-2 py-2.5 text-left text-sm text-gray-300 hover:bg-white/10 hover:text-white flex items-center gap-2 transition-colors rounded-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 text-white-400">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                  Xóa khỏi tủ phim  
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <img
           src={movie.poster_url}
           alt={movie.name}
@@ -72,6 +133,7 @@ export default function HistoryItem({ item }) {
           <span>{Math.round(stats.percent)}%</span>
         </p>
       </div>
-    </Link>
+      </Link>
+    </div>
   );
 }

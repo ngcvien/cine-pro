@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import MovieCard from "../components/MovieCard";
 import HeroSection from "../components/HeroSection";
 import WatchingNow from "../components/WatchingNow";
@@ -15,6 +17,75 @@ function normalizePosterUrl(movie: any) {
       ? movie.thumb_url
       : `https://phimimg.com/${movie.thumb_url}`
   };
+}
+
+// Đọc danh sách slug phim "hot" từ file JSON (bạn chỉnh file data/hero-slugs.json để đổi phim hiển thị)
+function getHeroSlugs(): string[] {
+  try {
+    const filePath = path.join(process.cwd(), "data", "hero-slugs.json");
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((s) => typeof s === "string" && s.trim()) : [];
+  } catch {
+    return [];
+  }
+}
+
+// Lấy chi tiết phim theo slug từ API, trả về đúng format HeroSection cần
+async function getHeroMovies(): Promise<any[]> {
+  const slugs = getHeroSlugs();
+  if (slugs.length === 0) return [];
+
+  const results = await Promise.all(
+    slugs.map(async (slug) => {
+      try {
+        const res = await fetch(`https://phimapi.com/phim/${slug}`, {
+          next: { revalidate: 3600 },
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const movie = data?.movie;
+        if (!movie?.slug) return null;
+        const normalized = normalizePosterUrl({
+          ...movie,
+          _id: movie._id || movie.slug,
+        });
+        return normalized;
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  return results.filter(Boolean);
+}
+
+// Bổ sung quality + episode_current cho các phim hero (API danh sách không trả về 2 trường này)
+async function enrichMoviesWithDetail(movies: any[], limit: number = 5): Promise<any[]> {
+  const toEnrich = movies.slice(0, limit);
+  const enriched = await Promise.all(
+    toEnrich.map(async (movie) => {
+      if (!movie?.slug) return movie;
+      try {
+        const res = await fetch(`https://phimapi.com/phim/${movie.slug}`, {
+          next: { revalidate: 3600 },
+        });
+        if (!res.ok) return movie;
+        const data = await res.json();
+        const detail = data?.movie;
+        if (!detail) return movie;
+        return {
+          ...movie,
+          quality: detail.quality ?? movie.quality,
+          episode_current: detail.episode_current ?? movie.episode_current,
+          content: detail.content ?? movie.content,
+        };
+      } catch {
+        return movie;
+      }
+    })
+  );
+  return [...enriched, ...movies.slice(limit)];
 }
 
 // 1. Lấy Phim Mới (Dùng cho Hero Section + List Phim Mới)
@@ -84,11 +155,17 @@ export default async function Home() {
   const seriesMovies = seriesData?.data?.items?.map(normalizePosterUrl) || [];
   const cartoonMovies = cartoonData?.data?.items?.map(normalizePosterUrl) || [];
 
+  // 5 phim đầu (cho Hero) gọi thêm API chi tiết để có quality + episode_current (API danh sách không trả về)
+  const newMoviesWithHeroDetail: any[] =
+    newMovies.length > 0 ? await enrichMoviesWithDetail(newMovies, 5) : [];
+
   return (
     <div className="container mx-auto px-4 md:px-1 space-y-16 pb-20">
       
-      {/* 1. HERO SECTION (Truyền toàn bộ danh sách phim mới vào để chạy Slide) */}
-      {newMovies.length > 0 && <HeroSection movies={newMovies} />}
+      {/* 1. HERO SECTION (Truyền danh sách đã bổ sung quality, episode_current) */}
+      {newMoviesWithHeroDetail.length > 0 && (
+        <HeroSection movies={newMoviesWithHeroDetail as any} />
+      )}
 
       {/* 2. WATCHING NOW (Phim đang xem - Client Component) */}
       <WatchingNow />
@@ -102,7 +179,7 @@ export default async function Home() {
         subtitle="CẬP NHẬT" 
         description="DANH SÁCH CÁC BỘ PHIM VỪA ĐƯỢC THÊM VÀO HỆ THỐNG."
         link="/danh-sach/phim-moi-cap-nhat"
-        movies={newMovies}
+        movies={(newMoviesWithHeroDetail.length > 0 ? newMoviesWithHeroDetail : newMovies) as any}
       />
 
       {/* 5. PHIM LẺ */}
@@ -152,7 +229,7 @@ function MovieSection({ title, subtitle, description, link, movies }: any) {
                 </p>
                 </div>
                 
-                <Link href={link} className="hidden md:block group">
+                <Link href={link} className="block group flex-shrink-0">
                 <span className="text-xs font-bold text-gray-500 group-hover:text-primary transition-colors flex items-center gap-1">
                     XEM TẤT CẢ <span className="group-hover:translate-x-1 transition-transform">→</span>
                 </span>

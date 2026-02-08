@@ -43,6 +43,25 @@ export default function HeroSection({ movies = [] }) {
         : `https://phimimg.com/${movie.poster_url}`; 
   };
 
+  // Giới hạn cốt truyện theo số từ 
+  const limitWords = (text, maxWords = 20) => {
+    if (!text) return "";
+    const plain = (typeof text === "string" ? text : "").replace(/<[^>]+>/g, "").trim();
+    if (!plain) return "";
+    const words = plain.split(/\s+/).filter(Boolean);
+    if (words.length <= maxWords) return plain;
+    return words.slice(0, maxWords).join(" ") + "…";
+  };
+
+  // Cốt truyện: ưu tiên content, fallback description / desc / summary (API có thể dùng tên khác)
+  const rawPlot =
+    currentMovie?.content ||
+    currentMovie?.description ||
+    currentMovie?.desc ||
+    currentMovie?.summary ||
+    "";
+  const plotText = limitWords(rawPlot, 40);
+
   return (
     <div className="relative w-full h-[550px] md:h-[700px] mb-12 overflow-hidden group rounded-b-lg ">
       
@@ -102,10 +121,14 @@ export default function HeroSection({ movies = [] }) {
                  {currentMovie?.origin_name}
               </h2>
 
-              {/* Mô tả ngắn */}
-              <p className="text-gray-300 text-sm md:text-base mb-8 line-clamp-3 leading-relaxed max-w-lg hidden md:block text-justify">
-                 {currentMovie?.content?.replace(/<[^>]+>/g, '')}
-              </p>
+              {/* Cốt truyện (giới hạn từ) */}
+              {plotText && (
+                <div className="mb-8 hidden md:block max-w-lg">
+                  <p className="text-gray-300 text-sm md:text-base leading-relaxed text-justify">
+                    {plotText}
+                  </p>
+                </div>
+              )}
 
               {/* Nút bấm */}
               <div className="flex items-center gap-4">
