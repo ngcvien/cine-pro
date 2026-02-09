@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { Search, Bell, Menu, X, LogOut, User, Film, FolderHeart, ChevronDown } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { auth } from "../lib/firebase"; // Import Auth
-import { onAuthStateChanged, signOut } from "firebase/auth"; // Import hàm xử lý
+import { auth } from "../lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import SearchBox from "./SearchBox";
 
 export default function Navbar() {
@@ -21,6 +21,10 @@ export default function Navbar() {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const userMenuRef = useRef(null);
 
+    const loginUrl = pathname === "/login"
+        ? "/login"
+        : `/login?redirect=${encodeURIComponent(pathname)}`;
+
     useEffect(() => {
         // Lắng nghe trạng thái đăng nhập
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -34,7 +38,7 @@ export default function Navbar() {
     const handleLogout = async () => {
         try {
             await signOut(auth);
-            router.push("/login"); // Đá về trang login sau khi đăng xuất
+            router.push("/login");
         } catch (error) {
             console.error("Lỗi đăng xuất:", error);
         }
@@ -70,6 +74,21 @@ export default function Navbar() {
         { name: "Viễn Tưởng", slug: "vien-tuong" },
     ];
 
+    const countries = [
+        { name: 'Việt Nam', slug: 'viet-nam', code: 'VN' },
+        { name: 'Trung Quốc', slug: 'trung-quoc', code: 'CN' },
+        { name: 'Hàn Quốc', slug: 'han-quoc', code: 'KR' },
+        { name: 'Thái Lan', slug: 'thai-lan', code: 'TH' },
+        { name: 'Âu Mỹ', slug: 'au-my', code: 'US' },
+        { name: 'Nhật Bản', slug: 'nhat-ban', code: 'JP' },
+        { name: 'Ấn Độ', slug: 'an-do', code: 'IN' },
+        { name: 'Hồng Kông', slug: 'hong-kong', code: 'HK' },
+        { name: 'Đài Loan', slug: 'dai-loan', code: 'TW' },
+        { name: 'Anh', slug: 'anh', code: 'GB' },
+        { name: 'Pháp', slug: 'phap', code: 'FR' },
+        { name: 'Canada', slug: 'canada', code: 'CA' },
+    ];
+
     // Các link chính khác
     const mainLinks = [
         { name: "Phim Lẻ", href: "/danh-sach/phim-le" },
@@ -77,6 +96,8 @@ export default function Navbar() {
         { name: "TV Shows", href: "/danh-sach/tv-shows" },
         { name: "Hoạt Hình", href: "/danh-sach/hoat-hinh" },
         { name: "Chiếu Rạp", href: "/danh-sach/phim-chieu-rap" },
+        { name: "Bộ lọc", href: "/filter" },
+
 
     ];
 
@@ -145,6 +166,62 @@ export default function Navbar() {
                                 </div>
                             </div>
                         </li>
+
+                        {/* 3. Quốc Gia */}
+                        <li className="relative group py-4"> {/* py-4 để mở rộng vùng hover */}
+                            <button
+                                className={`flex items-center gap-1 text-sm font-bold uppercase tracking-wide transition-colors 
+        ${pathname.includes('/quoc-gia') ? "text-primary" : "text-gray-300 group-hover:text-white"}`}
+                            >
+                                Quốc Gia
+                                <svg
+                                    className="w-4 h-4 transition-transform group-hover:rotate-180"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {/* Dropdown Content */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-[480px] backdrop-blur-xl bg-black/90 border border-white/10 rounded-lg shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
+
+                                {/* Header (Optional) */}
+                                <div className="px-4 py-3 border-b border-white/10 bg-white/5">
+                                    <span className="text-xs font-bold text-gray-400 uppercase">Chọn quốc gia</span>
+                                </div>
+
+                                {/* Grid Layout cho nhiều quốc gia */}
+                                <div className="p-4 grid grid-cols-3 gap-2">
+                                    {countries.map((country) => (
+                                        <Link
+                                            key={country.slug}
+                                            href={`/quoc-gia/${country.slug}`}
+                                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-all group/item"
+                                        >
+                                            {/* Cờ (Dùng text hoặc icon ảnh) */}
+                                            <span className="text-xs opacity-50 font-mono group-hover/item:opacity-100 group-hover/item:text-primary transition-opacity">
+                                                {country.code}
+                                            </span>
+                                            <span className="truncate">{country.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+
+                                {/* Footer Link */}
+                                <div className="border-t border-white/10 bg-white/5">
+                                    <Link
+                                        href="/filter" // Trang danh sách tất cả quốc gia (nếu có)
+                                        className="block px-4 py-3 text-center text-sm font-bold text-primary hover:text-white hover:bg-primary/20 transition-colors"
+                                    >
+                                        XEM TẤT CẢ QUỐC GIA
+                                    </Link>
+                                </div>
+                            </div>
+                        </li>
+
+
                     </ul>
                 </div>
 
@@ -220,7 +297,7 @@ export default function Navbar() {
                     ) : (
                         // 3. CHƯA ĐĂNG NHẬP -> Hiện nút Đăng nhập
                         <Link
-                            href="/login"
+                            href={loginUrl}
                             className="bg-primary hover:bg-white text-black font-bold px-5 py-2 rounded-md transition-all text-sm shadow-[0_0_15px_rgba(74,222,128,0.3)] hover:scale-105 whitespace-nowrap"
                         >
                             Đăng nhập
@@ -262,3 +339,4 @@ export default function Navbar() {
         </nav>
     );
 }
+

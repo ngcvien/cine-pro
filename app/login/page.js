@@ -8,7 +8,7 @@ import {
   fetchSignInMethodsForEmail 
 } from "firebase/auth";
 import { auth, googleProvider, facebookProvider } from "../../lib/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { onAuthStateChanged } from "firebase/auth";
@@ -18,6 +18,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false); // Loading cho nút bấm
   const [redirecting, setRedirecting] = useState(false); // Loading khi đang chuyển trang
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/";
 
   // --- 1. LOGIC CHUYỂN TRANG DUY NHẤT (QUAN TRỌNG) ---
   useEffect(() => {
@@ -25,11 +27,11 @@ export default function LoginPage() {
       if (u) {
         // Nếu thấy có user -> Bật màn hình chờ -> Chuyển về trang chủ
         setRedirecting(true);
-        router.push("/");
+        router.push(redirectUrl);
       }
     });
     return () => unsub();
-  }, [router]);
+  }, [router, redirectUrl]);
 
   // --- 2. XỬ LÝ GOOGLE ---
   const handleGoogleLogin = async () => {

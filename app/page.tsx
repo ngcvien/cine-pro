@@ -6,6 +6,18 @@ import WatchingNow from "../components/WatchingNow";
 import ContinueWatching from "../components/ContinueWatching";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import RankedMovieCard from "../components/RankedMovieCard";
+import CircularMovieCard from '../components/CircularMovieCard';
+import MagazineMovieCard from '../components/MagazineMovieCard';
+import StackedMovieCard from '../components/StackedMovieCard';
+import VietnameseCinemaSection from "../components/VietnameseCinemaSection";
+import {
+  NeonGlowSection,
+  BrutalistSection,
+  GradientMeshSection,
+  GlassMorphismSection
+} from "../components/MovieSections"
+
 
 // Hàm chuẩn hóa URL ảnh (để tránh lỗi ảnh 404)
 function normalizePosterUrl(movie: any) {
@@ -89,6 +101,32 @@ export async function enrichMoviesWithDetail(movies: any[], limit: number = 5): 
   return [...enriched, ...movies.slice(limit)];
 }
 
+// Lấy phim theo thể loại
+async function getCategories(category: string) {
+  try {
+    const res = await fetch(`https://phimapi.com/v1/api/the-loai/${category}?page=1`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    return null;
+  }
+}
+
+// lấy phim theo danh sách
+async function getCatalog(category: string) {
+  try {
+    const res = await fetch(`https://phimapi.com/v1/api/danh-sach/${category}?page=1`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    return null;
+  }
+}
+
 // 1. Lấy Phim Mới (Dùng cho Hero Section + List Phim Mới)
 async function getNewMovies() {
   try {
@@ -106,7 +144,19 @@ async function getNewMovies() {
 async function getSingleMovies() {
   try {
     const res = await fetch("https://phimapi.com/v1/api/danh-sach/phim-le?page=1", {
-      next: { revalidate: 3600 }, // Cache lâu hơn chút (1 tiếng)
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getVietnamMovies() {
+  try {
+    const res = await fetch("https://phimapi.com//v1/api/quoc-gia/viet-nam?page=1", {
+      next: { revalidate: 3600 },
     });
     if (!res.ok) return null;
     return await res.json();
@@ -143,11 +193,15 @@ async function getCartoonMovies() {
 
 export default async function Home() {
   // Gọi song song tất cả API để tiết kiệm thời gian
-  const [newData, singleData, seriesData, cartoonData] = await Promise.all([
+  const [newData, singleData, seriesData, cartoonData, vietnamData, documentData, horrorData, lovesData] = await Promise.all([
     getNewMovies(),
     getSingleMovies(),
     getSeriesMovies(),
-    getCartoonMovies()
+    getCartoonMovies(),
+    getVietnamMovies(),
+    getCategories("tai-lieu"),
+    getCategories("kinh-di"),
+    getCategories("tinh-cam"),
   ]);
 
   // Chuẩn hóa dữ liệu
@@ -155,6 +209,10 @@ export default async function Home() {
   const singleMovies = singleData?.data?.items?.map(normalizePosterUrl) || [];
   const seriesMovies = seriesData?.data?.items?.map(normalizePosterUrl) || [];
   const cartoonMovies = cartoonData?.data?.items?.map(normalizePosterUrl) || [];
+  const vietnamMovies = vietnamData?.data?.items?.map(normalizePosterUrl) || [];
+  const documentMovies = documentData?.data?.items?.map(normalizePosterUrl) || [];
+  const horrorMovies = horrorData?.data?.items?.map(normalizePosterUrl) || [];
+  const lovesMovies = lovesData?.data?.items?.map(normalizePosterUrl) || [];
 
   // 5 phim đầu (cho Hero) gọi thêm API chi tiết để có quality + episode_current (API danh sách không trả về)
   const newMoviesWithHeroDetail: any[] =
@@ -175,40 +233,86 @@ export default async function Home() {
       <ContinueWatching />
 
       {/* 4. PHIM MỚI CẬP NHẬT */}
-      <MovieSection
-        title="PHIM MỚI"
-        subtitle="CẬP NHẬT"
+      {/* <MovieSection
+        title="NÓNG HỔI"
+        subtitle="VỪA THỔI VỪA XEM"
         description="DANH SÁCH CÁC BỘ PHIM VỪA ĐƯỢC THÊM VÀO HỆ THỐNG."
         link="/danh-sach/phim-moi-cap-nhat"
         movies={(newMoviesWithHeroDetail.length > 0 ? newMoviesWithHeroDetail : newMovies) as any}
+      /> */}
+      <GlassMorphismSection
+        title="NÓNG HỔI"
+        subtitle="VỪA THỔI VỪA XEM"
+        description="DANH SÁCH CÁC BỘ PHIM VỪA ĐƯỢC THÊM VÀO HỆ THỐNG."
+        link="/danh-sach/phim-moi-cap-nhat"
+        movies={(newMoviesWithHeroDetail.length > 0 ? newMoviesWithHeroDetail : newMovies) as any}
+        CardComponent={StackedMovieCard}
       />
+
 
       {/* 5. PHIM LẺ */}
       <MovieSection
-        title="PHIM"
-        subtitle="LẺ"
-        description="CÁC BỘ PHIM ĐIỆN ẢNH HẤP DẪN NHẤT."
+        title="ĐÁNH NHANH"
+        subtitle="THẮNG GỌN"
+        description="90 phút thăng hoa cảm xúc cùng phim lẻ."
         link="/danh-sach/phim-le"
         movies={singleMovies}
+      // CardComponent={StackedMovieCard}
+      />
+
+
+      <VietnameseCinemaSection
+        title="PHIM"
+        subtitle="VIỆT NAM"
+        description="Tự hào điện ảnh Việt Nam - Xem ngay những bộ phim Việt xuất sắc nhất."
+        link="/quoc-gia/viet-nam"
+        movies={vietnamMovies}
+        CardComponent={MovieCard}
       />
 
       {/* 6. PHIM BỘ */}
       <MovieSection
-        title="PHIM"
-        subtitle="BỘ"
-        description="CÁC SERIES PHIM DÀI TẬP ĐÌNH ĐÁM."
+        title="CÀY XUYÊN ĐÊM"
+        subtitle="TEAM MẮT GẤU TRÚC"
+        description="Chuẩn bị sẵn khăn giấy và thuốc nhỏ mắt. Một khi đã nhấn Play là không thể lối thoát."
         link="/danh-sach/phim-bo"
         movies={seriesMovies}
       />
 
       {/* 7. HOẠT HÌNH */}
-      <MovieSection
-        title="HOẠT"
-        subtitle="HÌNH"
-        description="THẾ GIỚI ANIME VÀ HOẠT HÌNH ĐẶC SẮC."
+      <NeonGlowSection
+        title="WIBU LAND"
+        subtitle="THẾ GIỚI 2D"
+        description="Khi thế giới thực quá áp lực, hãy trốn vào đây. Waifu và Husbandu đang chờ bạn."
         link="/danh-sach/hoat-hinh"
         movies={cartoonMovies}
+        CardComponent={MagazineMovieCard}
       />
+
+      <MovieSection
+        title="XEM"
+        subtitle="ĐỂ HIỂU"
+        description="SỰ THẬT, KIẾN THỨC VÀ GÓC NHÌN THỰC TẾ."
+        link="/the-loai/tai-lieu"
+        movies={documentMovies}
+      />
+
+      <MovieSection
+        title="TẮT ĐÈN"
+        subtitle="ĐỪNG NHÌN RA SAU"
+        description="Khuyến cáo không xem khi ở nhà một mình. Chúng tôi không chịu trách nhiệm nếu bạn mất ngủ."
+        link="/the-loai/kinh-di"
+        movies={horrorMovies}
+      />
+
+      <MovieSection
+        title="TÌNH BỂ BÌNH"
+        subtitle="NGỌT HƠN ĐƯỜNG"
+        description="Cẩu lương ngập mặt. Chống chỉ định cho hội FA lâu năm vì xem xong sẽ muốn có người yêu."
+        link="/the-loai/tinh-cam"
+        movies={lovesMovies}
+      CardComponent={StackedMovieCard}
+/>
 
     </div>
   );
