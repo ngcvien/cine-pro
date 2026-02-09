@@ -145,7 +145,7 @@ export default function LoginPage() {
               )}
             </button>
 
-            <button
+            {/* <button
               onClick={handleFacebookLogin}
               disabled={loading || redirecting}
               className="w-full bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none shadow-lg shadow-blue-900/20"
@@ -160,7 +160,7 @@ export default function LoginPage() {
                   <span>Tiếp tục với Facebook</span>
                 </>
               )}
-            </button>
+            </button> */}
           </div>
 
           <div className="mt-8 text-xs text-gray-500/60 font-medium">
