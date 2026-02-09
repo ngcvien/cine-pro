@@ -106,7 +106,7 @@ export default function SearchBox() {
                         return (
                             <li key={movie._id}>
                                 <Link 
-                                    href={`/phim/${movie.slug}`} 
+                                    href={`/chi-tiet/${movie.slug}`} 
                                     className="flex items-center gap-3 px-4 py-2 hover:bg-white/10 transition-colors group"
                                     onClick={() => setShowDropdown(false)}
                                 >

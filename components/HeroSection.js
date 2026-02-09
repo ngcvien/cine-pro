@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Info } from "lucide-react";
 import Link from "next/link";
+import WatchLaterButton from "./WatchLaterButton";
 
 export default function HeroSection({ movies = [] }) {
   // Lấy tối đa 5 phim
@@ -61,6 +62,7 @@ export default function HeroSection({ movies = [] }) {
     currentMovie?.summary ||
     "";
   const plotText = limitWords(rawPlot, 40);
+  const movieTitle = limitWords(currentMovie?.name, 10);
 
   return (
     <div className="relative w-full h-[550px] md:h-[700px] mb-12 overflow-hidden group rounded-b-lg ">
@@ -87,7 +89,7 @@ export default function HeroSection({ movies = [] }) {
       </AnimatePresence>
 
       {/* --- 2. NỘI DUNG CHÍNH (BÊN TRÁI) --- */}
-      <div className="absolute inset-0 container mx-auto px-4 md:px-8 flex items-center z-10">
+      <div className="absolute inset-0 container mx-auto px-4 md:px-8 flex items-end pb-20 z-10">
         <div className="max-w-2xl pt-10 md:pt-0">
           <AnimatePresence mode="wait">
             <motion.div
@@ -115,7 +117,7 @@ export default function HeroSection({ movies = [] }) {
 
               {/* Tên Phim */}
               <h1 className="text-3xl md:text-6xl font-black text-white mb-2 leading-tight tracking-tight uppercase drop-shadow-lg">
-                {currentMovie?.name}
+                {movieTitle}
               </h1>
               <h2 className="text-lg md:text-2xl text-primary font-bold italic mb-6 opacity-90">
                  {currentMovie?.origin_name}
@@ -131,7 +133,7 @@ export default function HeroSection({ movies = [] }) {
               )}
 
               {/* Nút bấm */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 flex-wrap">
                 <Link
                   href={`/phim/${currentMovie?.slug}`}
                   className="flex items-center gap-2 bg-primary hover:bg-white hover:text-black text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-black text-sm md:text-base transition-all hover:scale-105 shadow-[0_0_20px_rgba(74,222,128,0.4)]"
@@ -139,7 +141,6 @@ export default function HeroSection({ movies = [] }) {
                   <Play size={20} fill="currentColor" />
                   XEM NGAY
                 </Link>
-
                 <Link
                   href={`/chi-tiet/${currentMovie?.slug}`}
                   className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base backdrop-blur-md transition-all"
@@ -147,6 +148,12 @@ export default function HeroSection({ movies = [] }) {
                   <Info size={20} />
                   CHI TIẾT
                 </Link>
+                <span className="w-px h-8 bg-white/20 hidden sm:block" aria-hidden />
+                <WatchLaterButton
+                  hero
+                  slug={currentMovie?.slug}
+                  movie={currentMovie}
+                />
               </div>
             </motion.div>
           </AnimatePresence>

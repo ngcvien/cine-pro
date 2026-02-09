@@ -1,5 +1,5 @@
 import MovieCard from "../../../components/MovieCard";
-import Pagination from "../../../components/Pagination"; // Import component mới
+import Pagination from "../../../components/Pagination"; 
 
 const TITLES = {
     "phim-moi-cap-nhat": "PHIM MỚI CẬP NHẬT",

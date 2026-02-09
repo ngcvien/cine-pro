@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { auth, db } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
@@ -15,7 +16,7 @@ export default function ContinueWatching() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      
+
       if (u) {
         try {
           const q = query(
@@ -58,11 +59,49 @@ export default function ContinueWatching() {
         </div>
 
         {watchHistory.length > 0 && (
-          <Link href="/tu-phim" className="block flex-shrink-0">
-            <span className="text-xs font-bold text-gray-500 cursor-pointer hover:text-primary transition-colors">
+          <Link
+            href="/tu-phim"
+            className="
+            relative group inline-flex items-center gap-2
+            rounded-xl px-3 py-2
+            border border-white/15
+            bg-white/5 backdrop-blur-md
+            overflow-hidden
+            transition-all duration-300
+            hover:border-primary/60 hover:bg-white/10
+          "
+          >
+            {/* Glow layer */}
+            <span
+              className="
+              absolute inset-0 rounded-xl opacity-0
+              bg-gradient-to-r from-primary/30 via-transparent to-primary/30
+              group-hover:opacity-100 transition-opacity duration-300
+            "
+            />
+
+            <span
+              className="
+              relative overflow-hidden max-w-0
+              group-hover:max-w-[8rem]
+              transition-[max-width] duration-300 ease-out
+              whitespace-nowrap text-xs font-bold
+              text-gray-400 group-hover:text-primary
+            "
+            >
               XEM LỊCH SỬ
             </span>
+
+            <ChevronRight
+              className="
+              relative w-4 h-4
+              text-gray-400 group-hover:text-primary
+              transition-transform duration-300
+              group-hover:translate-x-1
+            "
+            />
           </Link>
+
         )}
       </div>
 

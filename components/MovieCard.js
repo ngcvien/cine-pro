@@ -1,6 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import WatchLaterButton from "./WatchLaterButton";
+import HeroSection from "./HeroSection";
 
 export default function MovieCard({ movie }) {
   const router = useRouter();
@@ -18,6 +20,17 @@ export default function MovieCard({ movie }) {
     e.stopPropagation();
     router.push(`/phim/${movie.slug}`);
   }; 
+
+  const limitWords = (text, maxWords = 20) => {
+    if (!text) return "";
+    const plain = (typeof text === "string" ? text : "").replace(/<[^>]+>/g, "").trim();
+    if (!plain) return "";
+    const words = plain.split(/\s+/).filter(Boolean);
+    if (words.length <= maxWords) return plain;
+    return words.slice(0, maxWords).join(" ") + "…";
+  };
+
+  const movieTitle = limitWords(movie?.name, 15);
 
   return (
     <motion.div
@@ -46,7 +59,7 @@ export default function MovieCard({ movie }) {
             </span>
           </div>
           <h3 className="text-lg font-black leading-tight text-white uppercase tracking-tight mb-1">
-            {movie.name}
+            {movieTitle}
           </h3>
           <p className="text-xs text-gray-400 truncate font-mono">
             {movie.origin_name}
@@ -59,6 +72,11 @@ export default function MovieCard({ movie }) {
           </div>
         </div>
 
+        {/* Nút Xem sau (góc trái, tránh bấm mở chi tiết) */}
+        {/* <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+          <WatchLaterButton slug={movie.slug} movie={movie} />
+        </div> */}
+
         {/* Nhãn tập (luôn hiện) */}
         <div className="absolute top-2 right-2 bg-primary text-black text-[10px] font-black px-2 py-1">
           {movie.episode_current || "FULL"}
@@ -68,7 +86,7 @@ export default function MovieCard({ movie }) {
       {/* Chỉ mobile: ít thông tin bên dưới poster, bấm vào card vẫn vào /chi-tiet */}
       <div className="md:hidden mt-2 px-0.5">
         <h3 className="text-sm font-bold text-white truncate leading-tight">
-          {movie.name}
+          {movieTitle}
         </h3>
         <p className="text-[10px] text-gray-500 flex items-center gap-1.5 mt-0.5">
           <span>{movie.year || "—"}</span>

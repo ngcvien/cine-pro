@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ActorList from "../../../components/ActorList";
+import WatchLaterButton from "../../../components/WatchLaterButton";
 
 // --- 1. HÀM LẤY DỮ LIỆU ---
 
@@ -83,14 +84,26 @@ export default async function MovieDetailPage({ params }) {
                             </div>
                         </div>
 
-                        {/* Nút Xem Phim To */}
-                        <Link
-                            href={watchLink}
-                            className="w-full bg-primary hover:bg-green-400 text-black font-black py-4 rounded-xl text-center text-lg shadow-[0_0_20px_rgba(74,222,128,0.3)] transition-all hover:translate-y-[-2px] flex items-center justify-center gap-2"
-                        >
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                            XEM PHIM NGAY
-                        </Link>
+                        {/* Nút Xem Phim + Xem sau */}
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href={watchLink}
+                                className="flex-1 bg-primary hover:bg-green-400 text-black font-black py-4 rounded-xl text-center text-lg shadow-[0_0_20px_rgba(74,222,128,0.3)] transition-all hover:translate-y-[-2px] flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                XEM PHIM NGAY
+                            </Link>
+                            <WatchLaterButton
+                                slug={movie.slug}
+                                movie={{
+                                    name: movie.name,
+                                    origin_name: movie.origin_name,
+                                    poster_url: movie.poster_url,
+                                    thumb_url: movie.thumb_url,
+                                    year: movie.year,
+                                }}
+                            />
+                        </div>
                     </div>
 
                     {/* Cột Phải: Thông tin chi tiết */}
