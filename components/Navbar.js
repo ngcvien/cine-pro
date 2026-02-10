@@ -82,11 +82,11 @@ export default function Navbar() {
             const diff = touchEndX.current - touchStartX.current;
 
             // Vuốt từ trái qua phải để mở (chỉ khi menu đang đóng)
-            if (!isMobileMenuOpen && touchStartX.current < 50 && diff > 100) {
+            if (!isMobileMenuOpen && touchStartX.current < 300 && diff > 40) {
                 setIsMobileMenuOpen(true);
             }
             // Vuốt từ phải qua trái để đóng (chỉ khi menu đang mở)
-            else if (isMobileMenuOpen && diff < -100) {
+            else if (isMobileMenuOpen && diff < -40) {
                 setIsMobileMenuOpen(false);
             }
 
@@ -296,7 +296,7 @@ export default function Navbar() {
                             </button>
 
                             {isUserMenuOpen && (
-                                <div className="absolute right-0 top-full mt-2 w-56 bg-black/95 border border-white/10 rounded-lg shadow-2xl py-2 animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                                <div className="absolute right-0 top-full mt-2 w-56 bg-black/80 border backdrop-blur-md border-white/10 rounded-lg shadow-2xl py-2 animate-in fade-in slide-in-from-top-2 overflow-hidden">
                                     <div className="px-4 py-3 border-b border-white/10 mb-2">
                                         <p className="text-sm text-white font-bold truncate">{user.displayName || "Thành viên"}</p>
                                         <p className="text-xs text-gray-400 truncate">{user.email}</p>
@@ -313,7 +313,7 @@ export default function Navbar() {
 
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-500/10 transition-colors text-sm text-left font-bold"
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-gray-500 hover:bg-gray-500/10 transition-colors text-sm text-left font-bold"
                                     >
                                         <LogOut size={16} /> Đăng xuất
                                     </button>
@@ -333,10 +333,12 @@ export default function Navbar() {
     shadow-[0_0_15px_rgba(74,222,128,0.35)]
     hover:scale-105
 
-    animate-[pulse_1.5s_ease-in-out_infinite]
+    animate-[pulse_2s_ease-in-out_infinite]
   "
                         >
                             Đăng nhập
+                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping"></span>
+
                         </Link>
 
                     )}
@@ -358,7 +360,7 @@ export default function Navbar() {
                         width: '100vw',
                         height: '100vh',
                         backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                        backdropFilter: 'blur(4px)'
+                        backdropFilter: 'blur(10px)'
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                     aria-hidden="true"
@@ -367,7 +369,7 @@ export default function Navbar() {
                 {/* Slide Menu */}
                 <div
                     ref={mobileMenuRef}
-                    className={`lg:hidden fixed w-[85%] max-w-sm bg-[#0a0a0a] border-r border-white/10 shadow-2xl transition-transform duration-300 ease-out z-50 will-change-transform flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                    className={`lg:hidden fixed w-[85%] max-w-sm bg-[#0a0a0a]/80  border-r border-white/10 shadow-2xl transition-transform duration-300 ease-out z-50 will-change-transform flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
                         }`}
                     style={{
                         position: 'fixed',
@@ -396,19 +398,24 @@ export default function Navbar() {
 
                     {/* User Info (nếu đã đăng nhập) */}
                     {user && (
-                        <div className="p-4 border-b border-white/10 bg-white/5 flex-shrink-0">
-                            <div className="flex items-center gap-3">
-                                <img
-                                    src={user.photoURL || "https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png"}
-                                    alt="User"
-                                    className="w-12 h-12 rounded-lg object-cover border border-white/20"
-                                />
-                                <div className="flex-1">
-                                    <p className="text-sm text-white font-bold truncate">{user.displayName || "Thành viên"}</p>
-                                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                        <Link
+                            href="/ho-so"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            <div className="p-4 border-b border-white/10 bg-white/5 flex-shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src={user.photoURL || "https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png"}
+                                        alt="User"
+                                        className="w-12 h-12 rounded-lg object-cover border border-white/20"
+                                    />
+                                    <div className="flex-1">
+                                        <p className="text-sm text-white font-bold truncate">{user.displayName || "Thành viên"}</p>
+                                        <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     )}
 
                     {/* Menu Content */}
@@ -421,8 +428,8 @@ export default function Navbar() {
                                 href={link.href}
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className={`block px-4 py-3 rounded-lg font-bold text-sm transition-all ${pathname === link.href
-                                        ? "bg-primary/20 text-primary border border-primary/30"
-                                        : "text-gray-300 hover:bg-white/10 hover:text-white"
+                                    ? "bg-primary/20 text-primary border border-primary/30"
+                                    : "text-gray-300 hover:bg-white/10 hover:text-white"
                                     }`}
                             >
                                 {link.name}
@@ -456,11 +463,11 @@ export default function Navbar() {
                                         </Link>
                                     ))}
                                     <Link
-                                        href="/filter"
+                                        href="/the-loai"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                         className="block px-4 py-2 rounded-lg text-sm text-primary font-bold hover:bg-primary/20 transition-all mt-2"
                                     >
-                                        Xem tất cả →
+                                        Xem tất cả
                                     </Link>
                                 </div>
                             </div>
@@ -527,7 +534,7 @@ export default function Navbar() {
                                         handleLogout();
                                         setIsMobileMenuOpen(false);
                                     }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-all font-bold"
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-500 hover:bg-gray-500/10 transition-all font-bold"
                                 >
                                     <LogOut size={18} /> Đăng xuất
                                 </button>

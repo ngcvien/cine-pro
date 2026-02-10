@@ -25,14 +25,14 @@ export default function RootLayout({
         {/* --- GLOBAL BACKGROUND --- */}
         <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
             {/* Đốm sáng xanh lá */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-primary/5 rounded-full blur-[120px] opacity-30" />
+            <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-primary/2 rounded-full blur-[120px] opacity-70" />
             
             {/* Đốm sáng xanh dương */}
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-blue-600/5 rounded-full blur-[120px] opacity-30" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-blue-600/2 rounded-full blur-[120px] opacity-80" />
             
             {/* Lớp Noise & Overlay */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-100 contrast-150 mix-blend-overlay"></div>
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-black/0" />
         </div>
 
         <Navbar />

@@ -144,7 +144,7 @@ export default function MovieCabinetPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-24 pb-20 px-4 md:px-8 relative overflow-hidden">
+    <div className="min-h-screen text-white pt-24 pb-20 px-4 md:px-8 relative overflow-hidden">
       {/* Subtle background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>

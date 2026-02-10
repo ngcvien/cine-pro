@@ -158,9 +158,9 @@ export default function FilterPage() {
           `}>
 
                         {/* Header Mobile Menu */}
-                        <div className="flex justify-between items-center mb-6 lg:hidden">
-                            <h3 className="font-bold text-xl text-white">Bộ lọc</h3>
-                            <button onClick={() => setIsFilterOpen(false)} className="p-2 bg-white/10 rounded-full">
+                        <div className="flex justify-between items-center mb-2 lg:hidden">
+                            <h3 className="font-bold text-xl text-white mt-13">Bộ lọc</h3>
+                            <button onClick={() => setIsFilterOpen(false)} className="p-2 bg-white/10 mt-13 rounded-full">
                                 <X size={20} />
                             </button>
                         </div>
