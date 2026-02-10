@@ -1,0 +1,14 @@
+name: Check New Episodes
+on:
+  schedule:
+    - cron: '0 * * * *' # Chạy mỗi tiếng 1 lần (phút thứ 0)
+  workflow_dispatch: # Cho phép bấm chạy thủ công để test
+
+jobs:
+  cron-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call API Cron Job
+        run: |
+          curl -X GET ${{ secrets.VERCEL_DOMAIN }}/api/cron/check-new-episodes \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
