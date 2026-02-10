@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { auth } from "../lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import SearchBox from "./SearchBox";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -272,10 +273,11 @@ export default function Navbar() {
 
                     {/* Notification */}
                     {user && (
-                        <button className="text-gray-300 hover:text-white relative hidden md:block">
-                            <Bell size={22} />
-                            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                        </button>
+                        // <button className="text-gray-300 hover:text-white relative hidden md:block">
+                        //     <Bell size={22} />
+                        //     <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        // </button>
+                        <NotificationBell />
                     )}
 
                     {/* USER SECTION */}
