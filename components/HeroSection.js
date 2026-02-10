@@ -93,7 +93,7 @@ export default function HeroSection({ movies = [] }) {
         <div className="max-w-2xl pt-10 md:pt-0">
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentMovie?._id}
+              key={currentMovie?._id || currentMovie?.slug}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -166,7 +166,7 @@ export default function HeroSection({ movies = [] }) {
           const isActive = index === currentIndex;
           return (
             <div 
-              key={movie._id}
+              key={movie._id || movie.slug}
               onClick={() => selectSlide(index)}
               className={`relative cursor-pointer transition-all duration-300 rounded-lg overflow-hidden group/item ${
                 isActive 

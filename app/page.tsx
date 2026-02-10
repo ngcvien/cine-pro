@@ -1,5 +1,6 @@
 import fs from "fs";
 import { getMovieData } from "@/lib/movieService";
+import { getHeroMovies } from "@/lib/movieServiceServer";
 import path from "path";
 
 import MovieCard from "../components/MovieCard";
@@ -46,33 +47,7 @@ function getHeroSlugs(): string[] {
   }
 }
 
-// Lấy chi tiết phim theo slug từ API, trả về đúng format HeroSection cần
-async function getHeroMovies(): Promise<any[]> {
-  const slugs = getHeroSlugs();
-  if (slugs.length === 0) return [];
 
-  const results = await Promise.all(
-    slugs.map(async (slug) => {
-      try {
-        const data = await getMovieData(`phim/${slug}`,  {
-          next: { revalidate: 3600 }
-        });
-        if (!data || data.status !== "success") return null;
-        const movie = data?.movie;
-        if (!movie?.slug) return null;
-        const normalized = normalizePosterUrl({
-          ...movie,
-          _id: movie._id || movie.slug,
-        });
-        return normalized;
-      } catch {
-        return null;
-      }
-    })
-  );
-
-  return results.filter(Boolean);
-}
 
 // Bổ sung quality + episode_current cho các phim hero (API danh sách không trả về 2 trường này)
 export async function enrichMoviesWithDetail(movies: any[], limit: number = 5): Promise<any[]> {
@@ -138,7 +113,7 @@ async function getCartoonMovies() {
 
 export default async function Home() {
   // Gọi song song tất cả API để tiết kiệm thời gian
-  const [newData, singleData, seriesData, cartoonData, vietnamData, documentData, horrorData, lovesData] = await Promise.all([
+  const [newData, singleData, seriesData, cartoonData, vietnamData, documentData, horrorData, lovesData, heroMovies] = await Promise.all([
     getNewMovies(),
     getSingleMovies(),
     getSeriesMovies(),
@@ -147,6 +122,7 @@ export default async function Home() {
     getCategories("tai-lieu"),
     getCategories("kinh-di"),
     getCategories("tinh-cam"),
+    getHeroMovies()
   ]);
 
   // Chuẩn hóa dữ liệu
@@ -162,13 +138,15 @@ export default async function Home() {
   // 5 phim đầu (cho Hero) gọi thêm API chi tiết để có quality + episode_current (API danh sách không trả về)
   const newMoviesWithHeroDetail: any[] =
     newMovies.length > 0 ? await enrichMoviesWithDetail(newMovies, 5) : [];
+  
+  console.log("Hero Movies:", heroMovies);
 
   return (
     <div className="container mx-auto px-4 md:px-1 space-y-16 pb-20">
 
       {/* 1. HERO SECTION (Truyền danh sách đã bổ sung quality, episode_current) */}
-      {newMoviesWithHeroDetail.length > 0 && (
-        <HeroSection movies={newMoviesWithHeroDetail as any} />
+      {heroMovies.length > 0 && (
+        <HeroSection movies={heroMovies as any} />
       )}
 
       {/* 2. WATCHING NOW (Phim đang xem - Client Component) */}
