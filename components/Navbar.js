@@ -27,7 +27,9 @@ export default function Navbar() {
 
     useEffect(() => {
         // Lắng nghe trạng thái đăng nhập
+        console.log("Navbar: Bắt đầu lắng nghe Auth..."); // Log 1
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            console.log("Navbar: Trạng thái user thay đổi:", currentUser); // Log 2
             setUser(currentUser);
             setLoadingAuth(false);
         });
