@@ -1,16 +1,11 @@
 import MovieCard from "../../components/MovieCard";
 
 export const dynamic = 'force-dynamic';
+import { getMovieData } from "@/lib/movieService";
 
 async function searchMovies(keyword) {
   if (!keyword) return null;
-  try {
-    const res = await fetch(`https://phimapi.com/v1/api/tim-kiem?keyword=${keyword}&limit=20`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData(`/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=30`, { cache: "no-store" });
 }
 
 export default async function SearchPage({ searchParams }) {

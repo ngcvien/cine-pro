@@ -1,21 +1,11 @@
 import MovieCard from "../../../components/MovieCard";
 import Pagination from "../../../components/Pagination";
+import {getMovieData, getAllAPISources} from "@/lib/movieService";
 
-const API_CONFIG = {
-  baseUrl: "https://phimapi.com/v1/api/the-loai",
-  imgHost: "https://phimimg.com/",
-  revalidate: 3600,
-};
+const API_CONFIG = await getAllAPISources();
 
 async function getMoviesByGenre(slug, page = 1) {
-  try {
-    const res = await fetch(`${API_CONFIG.baseUrl}/${slug}?page=${page}&limit=24`, {
-      next: { revalidate: API_CONFIG.revalidate },
-    });
-    return res.ok ? res.json() : null;
-  } catch {
-    return null;
-  }
+  return await getMovieData(`v1/api/the-loai/${slug}?page=${page}&limit=24`);
 }
 
 export async function generateMetadata({ params }) {
@@ -33,6 +23,7 @@ export default async function GenreDetailPage({ params, searchParams }) {
   const { totalItems = 0, totalItemsPerPage = 24 } = data?.data?.params?.pagination || {};
   const totalPages = Math.max(1, Math.ceil(totalItems / totalItemsPerPage));
   const pageTitle = data?.data?.titlePage || slug.toUpperCase().replace(/-/g, " ");
+
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-8 pt-24">
@@ -62,7 +53,7 @@ export default async function GenreDetailPage({ params, searchParams }) {
               ...movie,
               poster_url: movie.poster_url?.startsWith("http")
                 ? movie.poster_url
-                : `${API_CONFIG.imgHost}${movie.poster_url}`,
+                : `${API_CONFIG.imageBaseUrl}/${movie.poster_url}`,
             }}
           />
         ))}

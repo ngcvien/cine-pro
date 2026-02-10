@@ -2,30 +2,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ActorList from "../../../components/ActorList";
 import WatchLaterButton from "../../../components/WatchLaterButton";
+import { i } from "framer-motion/client";
+import { getMovieData } from "@/lib/movieService";
 
 // --- 1. HÀM LẤY DỮ LIỆU ---
 
 // Lấy chi tiết phim
 async function getMovieDetail(slug) {
-    try {
-        const res = await fetch(`https://phimapi.com/phim/${slug}`, { next: { revalidate: 3600 } });
-        if (!res.ok) return null;
-        return res.json();
-    } catch (error) {
-        return null;
-    }
+    return await getMovieData(`/phim/${slug}`);
 }
 
 // Lấy phim liên quan (Dựa theo slug thể loại đầu tiên)
 async function getRelatedMovies(categorySlug) {
     if (!categorySlug) return [];
-    try {
-        const res = await fetch(`https://phimapi.com/v1/api/the-loai/${categorySlug}?limit=5`, { next: { revalidate: 3600 } });
-        const data = await res.json();
-        return data?.data?.items || [];
-    } catch (error) {
-        return [];
-    }
+    const data = await getMovieData(`v1/api/the-loai/${categorySlug}?limit=5`);
+    return data?.data?.items || [];
+
 }
 
 // Metadata SEO

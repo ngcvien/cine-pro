@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import MovieCard from "../../components/MovieCard";
 import { Filter, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {getMovieData} from "@/lib/movieService";
 
 export default function FilterPage() {
     const [movies, setMovies] = useState([]);
@@ -35,12 +36,10 @@ export default function FilterPage() {
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const [catRes, countryRes] = await Promise.all([
-                    fetch("https://phimapi.com/the-loai"),
-                    fetch("https://phimapi.com/quoc-gia")
+                const [catData, countryData] = await Promise.all([
+                    getMovieData("the-loai"),
+                    getMovieData("quoc-gia")
                 ]);
-                const catData = await catRes.json();
-                const countryData = await countryRes.json();
                 setCategories(catData || []);
                 setCountries(countryData || []);
             } catch (error) {
@@ -67,8 +66,8 @@ export default function FilterPage() {
                 if (filters.year) params.append("year", filters.year);
                 if (filters.sort_lang) params.append("sort_lang", filters.sort_lang);
 
-                const res = await fetch(`https://phimapi.com/v1/api/danh-sach/${filters.type_list}?${params.toString()}`);
-                const data = await res.json();
+                const endpoint = `/v1/api/danh-sach/${filters.type_list}?${params.toString()}`;
+                const data = await getMovieData(endpoint);
 
                 if (data.status === "success" || data.status === true) {
                     setMovies(data.data.items || []);

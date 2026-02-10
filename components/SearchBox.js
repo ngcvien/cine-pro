@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getMovieData } from "@/lib/movieService";
 
 export default function SearchBox() {
   const [query, setQuery] = useState("");
@@ -25,8 +26,7 @@ export default function SearchBox() {
       setShowDropdown(true);
       try {
         // Gọi API tìm kiếm
-        const res = await fetch(`https://phimapi.com/v1/api/tim-kiem?keyword=${query}&limit=5`);
-        const data = await res.json();
+        const data = await getMovieData(`/v1/api/tim-kiem?keyword=${encodeURIComponent(query)}&limit=10`, { cache: "no-store" });
         
         if (data.status === "success") {
           setResults(data.data.items || []);

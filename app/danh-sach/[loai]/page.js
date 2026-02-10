@@ -1,5 +1,6 @@
 import MovieCard from "../../../components/MovieCard";
-import Pagination from "../../../components/Pagination"; 
+import Pagination from "../../../components/Pagination";
+import { getMovieData } from "@/lib/movieService";
 
 const TITLES = {
     "phim-moi-cap-nhat": "PHIM MỚI CẬP NHẬT",
@@ -11,18 +12,10 @@ const TITLES = {
 };
 
 async function getMoviesByCategory(category, page = 1) {
-    try {
-        let url;
-        if (category === "phim-moi-cap-nhat") {
-            url = `https://phimapi.com/danh-sach/${category}?page=${page}`;
-        } else {
-            url = `https://phimapi.com/v1/api/danh-sach/${category}?page=${page}&limit=24`;
-        }
-        const res = await fetch(url, { next: { revalidate: 3600 } });
-        if (!res.ok) return null;
-        return res.json();
-    } catch (error) {
-        return null;
+    if (category === "phim-moi-cap-nhat") {
+        return await getMovieData(`/danh-sach/${category}?page=${page}&limit=24`);
+    } else {
+        return await getMovieData(`/v1/api/danh-sach/${category}?page=${page}&limit=24`);
     }
 }
 
@@ -65,9 +58,9 @@ export default async function CategoryPage({ params, searchParams }) {
                 </div>
                 {/* Hiển thị số trang nhỏ gọn ở góc */}
                 <div className="hidden md:block text-right">
-                     <span className="text-xs text-gray-500 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                    <span className="text-xs text-gray-500 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">
                         PAGE {currentPage} / {totalPages}
-                     </span>
+                    </span>
                 </div>
             </div>
 
@@ -89,7 +82,7 @@ export default async function CategoryPage({ params, searchParams }) {
                     );
                 })}
             </div>
-            
+
             {/* Empty State */}
             {movies.length === 0 && (
                 <div className="text-center py-20 text-gray-500">
@@ -98,10 +91,10 @@ export default async function CategoryPage({ params, searchParams }) {
             )}
 
             {/* --- THANH PHÂN TRANG MỚI --- */}
-            <Pagination 
-                currentPage={currentPage} 
-                totalPages={totalPages} 
-                basePath={`/danh-sach/${loai}`} 
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                basePath={`/danh-sach/${loai}`}
             />
         </div>
     );

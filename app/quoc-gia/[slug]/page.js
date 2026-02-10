@@ -1,20 +1,11 @@
 import MovieCard from "../../../components/MovieCard";
 import Pagination from "../../../components/Pagination";
 import { Star } from "lucide-react";
+import { getMovieData } from "@/lib/movieService";
 
 // Hàm lấy dữ liệu từ API
 async function getMoviesByCountry(slug, page = 1) {
-  try {
-    const res = await fetch(
-      `https://phimapi.com/v1/api/quoc-gia/${slug}?limit=24&page=${page}`,
-      { next: { revalidate: 3600 } }
-    );
-    if (!res.ok) throw new Error("Failed to fetch");
-    return res.json();
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
+    return await getMovieData(`/v1/api/quoc-gia/${slug}?limit=24&page=${page}`);
 }
 
 export async function generateMetadata({ params }) {

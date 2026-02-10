@@ -1,18 +1,13 @@
-import { NextResponse } from "next/server";
+import { getMovieData } from "@/lib/movieService";
 
-export async function GET(request, { params }) {
-  const { slug } = await params;
-  if (!slug) return NextResponse.json({ status: false }, { status: 400 });
+export default async function MovieDetail({ params }) {
+  const { slug } = params;
+  
+  // Thay thế fetch bằng getMovieData
+  const movieData = await getMovieData(`/phim/${slug}`);
 
-  try {
-    const res = await fetch(`https://phimapi.com/phim/${slug}`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return NextResponse.json({ status: false }, { status: res.status });
-    const data = await res.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("API phim proxy error:", error);
-    return NextResponse.json({ status: false }, { status: 502 });
+  if (!movieData || !movieData.movie) {
+    return <div>Không tìm thấy phim</div>;
   }
+  
 }

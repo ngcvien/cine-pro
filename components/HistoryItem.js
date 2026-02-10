@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
+import { getMovieData } from "@/lib/movieService";
 
 export default function HistoryItem({ item, onDelete }) {
   const [movie, setMovie] = useState(null);
@@ -20,13 +21,8 @@ export default function HistoryItem({ item, onDelete }) {
 
   useEffect(() => {
     const fetchInfo = async () => {
-      try {
-        const res = await fetch(`https://phimapi.com/phim/${item.slug}`);
-        const data = await res.json();
-        if (data.status) setMovie(data.movie);
-      } catch (error) {
-        console.error("Lỗi:", error);
-      }
+      const data = await getMovieData(`/phim/${item.slug}`);
+      if (data.status) setMovie(data.movie);
     };
     if (item.slug) fetchInfo();
   }, [item.slug]);

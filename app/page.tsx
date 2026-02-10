@@ -1,5 +1,7 @@
 import fs from "fs";
+import { getMovieData } from "@/lib/movieService";
 import path from "path";
+
 import MovieCard from "../components/MovieCard";
 import HeroSection from "../components/HeroSection";
 import WatchingNow from "../components/WatchingNow";
@@ -52,11 +54,10 @@ async function getHeroMovies(): Promise<any[]> {
   const results = await Promise.all(
     slugs.map(async (slug) => {
       try {
-        const res = await fetch(`https://phimapi.com/phim/${slug}`, {
-          next: { revalidate: 3600 },
+        const data = await getMovieData(`phim/${slug}`,  {
+          next: { revalidate: 3600 }
         });
-        if (!res.ok) return null;
-        const data = await res.json();
+        if (!data || data.status !== "success") return null;
         const movie = data?.movie;
         if (!movie?.slug) return null;
         const normalized = normalizePosterUrl({
@@ -80,11 +81,10 @@ export async function enrichMoviesWithDetail(movies: any[], limit: number = 5): 
     toEnrich.map(async (movie) => {
       if (!movie?.slug) return movie;
       try {
-        const res = await fetch(`https://phimapi.com/phim/${movie.slug}`, {
+        
+        const data = await getMovieData(`phim/${movie.slug}`,  {
           next: { revalidate: 3600 },
-        });
-        if (!res.ok) return movie;
-        const data = await res.json();
+        })
         const detail = data?.movie;
         if (!detail) return movie;
         return {
@@ -103,92 +103,37 @@ export async function enrichMoviesWithDetail(movies: any[], limit: number = 5): 
 
 // Lấy phim theo thể loại
 async function getCategories(category: string) {
-  try {
-    const res = await fetch(`https://phimapi.com/v1/api/the-loai/${category}?page=1`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData(`/v1/api/the-loai/${category}?page=1`);
 }
 
 // lấy phim theo danh sách
 async function getCatalog(category: string) {
-  try {
-    const res = await fetch(`https://phimapi.com/v1/api/danh-sach/${category}?page=1`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData(`/v1/api/danh-sach/${category}?page=1`);
 }
-
 // 1. Lấy Phim Mới (Dùng cho Hero Section + List Phim Mới)
 async function getNewMovies() {
-  try {
-    const res = await fetch("https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=1", {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) throw new Error("Failed");
-    return res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData("/danh-sach/phim-moi-cap-nhat?page=1", {
+      next: { revalidate: 60 } 
+  });
 }
 
 // 2. Lấy Phim Lẻ
 async function getSingleMovies() {
-  try {
-    const res = await fetch("https://phimapi.com/v1/api/danh-sach/phim-le?page=1", {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData("/v1/api/danh-sach/phim-le?page=1");
 }
 
 async function getVietnamMovies() {
-  try {
-    const res = await fetch("https://phimapi.com//v1/api/quoc-gia/viet-nam?page=1", {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData("/v1/api/quoc-gia/viet-nam?page=1");
 }
 
 // 3. Lấy Phim Bộ
 async function getSeriesMovies() {
-  try {
-    const res = await fetch("https://phimapi.com/v1/api/danh-sach/phim-bo?page=1", {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData("/v1/api/danh-sach/phim-bo?page=1");
 }
 
 // 4. Lấy Hoạt Hình
 async function getCartoonMovies() {
-  try {
-    const res = await fetch("https://phimapi.com/v1/api/danh-sach/hoat-hinh?page=1", {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
+  return await getMovieData("/v1/api/danh-sach/hoat-hinh?page=1");
 }
 
 export default async function Home() {
@@ -311,8 +256,8 @@ export default async function Home() {
         description="Cẩu lương ngập mặt. Chống chỉ định cho hội FA lâu năm vì xem xong sẽ muốn có người yêu."
         link="/the-loai/tinh-cam"
         movies={lovesMovies}
-      CardComponent={StackedMovieCard}
-/>
+        CardComponent={StackedMovieCard}
+      />
 
     </div>
   );

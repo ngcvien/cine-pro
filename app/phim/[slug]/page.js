@@ -1,17 +1,12 @@
 import Link from "next/link";
 import VideoPlayer from "../../../components/VideoPlayer";
 import EpisodeList from "../../../components/EpisodeList";
-import ActorList from "../../../components/ActorList"; // <--- 1. IMPORT CÁI NÀY
+import ActorList from "../../../components/ActorList"; 
+import { getMovieData } from "@/lib/movieService";
 
 // Hàm lấy dữ liệu chi tiết phim
 async function getMovieDetail(slug) {
-    try {
-        const res = await fetch(`https://phimapi.com/phim/${slug}`, { cache: "no-store" });
-        if (!res.ok) return null;
-        return res.json();
-    } catch (error) {
-        return null;
-    }
+    return await getMovieData(`/phim/${slug}`, { cache: "no-store" });
 }
 
 export const metadata = {
