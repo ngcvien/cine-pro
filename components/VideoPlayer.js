@@ -59,11 +59,23 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
           break;
         case 'ArrowRight':
           e.preventDefault();
+          if (e.ctrlKey) {
+            e.preventDefault();    
+            art.forward = 30;
+            art.notice.show = "Tới 30 giây";
+            break;
+          }
           art.forward = 5;
           art.notice.show = "Tới 5 giây";
           break;
         case 'ArrowLeft':
           e.preventDefault();
+          if (e.ctrlKey) {
+            e.preventDefault();    
+            art.backward = 30;
+            art.notice.show = "Lùi 30 giây";
+            break;
+          }
           art.backward = 5;
           art.notice.show = "Lùi 5 giây";
           break;
@@ -100,6 +112,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
             router.push(`/phim/${slug}?tap=${prevEp.slug}`);
           }
           break;
+        
         default: break;
       }
     };
