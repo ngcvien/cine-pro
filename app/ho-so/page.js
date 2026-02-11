@@ -60,6 +60,8 @@ export default function ProfilePage() {
     }
   };
 
+  console.log("Avt: "+ user?.photoURL)
+
   if (loading) return null;
 
   return (
@@ -70,7 +72,7 @@ export default function ProfilePage() {
         <div className="relative group">
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-gradient-to-tr from-primary to-green-600 shadow-2xl">
                 <img 
-                    src={user?.photoURL || "https://api.dicebear.com/9.x/initials/svg?seed=User"} 
+                    src={user?.photoURL || "https://t3.ftcdn.net/jpg/08/05/28/22/360_F_805282248_LHUxw7t2pnQ7x8lFEsS2IZgK8IGFXePS.jpg"} 
                     alt="Avatar" 
                     className="w-full h-full rounded-full object-cover bg-black" 
                 />
