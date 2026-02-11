@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY', // Chặn không cho web khác nhúng iframe
+            value: 'SAMEORIGIN', // Chặn không cho web khác nhúng iframe
           },
           {
             key: 'X-Content-Type-Options',
@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin', // Bảo mật thông tin người dùng đi từ đâu tới
+          },
+          {
+            // Cho phép Popup đăng nhập giao tiếp với trang chính
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups', 
           },
         ],
       },
