@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { dbAdmin } from "@/lib/firebase-admin";
 import { getMovieData } from "@/lib/movieService";
+import { enrichMoviesWithDetail } from "@/app/page"
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-    // Check bảo mật Cron Secret (như cũ)
+    // Check bảo mật Cron Secret
     const authHeader = request.headers.get('authorization');
       if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,60 +19,66 @@ export async function GET(request) {
         const data = await getMovieData("/danh-sach/phim-moi-cap-nhat?page=1");
         if (!data || !data.items) return NextResponse.json({ message: "Không lấy được data phim." });
 
-        const newMovies = data.items;
+
+        console.log(data);
+        const dataWithDetails = await enrichMoviesWithDetail(data.items, data.items.length);
+        const newMovies = dataWithDetails;
         const batch = dbAdmin.batch();
         let notificationCount = 0;
 
         // 2. Duyệt từng phim mới
-        // 2. Duyệt từng phim mới
         for (const movie of newMovies) {
-            // Dùng let thay vì const để có thể gán lại giá trị mặc định nếu thiếu
-            let { slug, name, episode_current, poster_url } = movie;
+            const { slug, name, poster_url } = movie;
 
-            // --- SỬA LỖI TẠI ĐÂY ---
-            // 1. Kiểm tra nếu thiếu episode_current thì gán mặc định là "Mới"
-            if (!episode_current) {
-                episode_current = "!";
+            // Xử lý tên tập an toàn
+            let episodeInfo = movie.episode_current;
+            if (!episodeInfo) {
+                if (movie.quality) episodeInfo = `Bản ${movie.quality}`;
+                else episodeInfo = "Mới cập nhật";
             }
+            const episodeString = String(episodeInfo);
 
-            // 2. Đảm bảo nó là String trước khi replace (đôi khi API trả về số)
-            const episodeString = String(episode_current);
-            // -----------------------
-
+            // Tìm user đang theo dõi
             const querySnapshot = await dbAdmin.collectionGroup("watch_later")
                 .where("slug", "==", slug)
                 .get();
 
             if (querySnapshot.empty) continue;
 
-            querySnapshot.forEach(doc => {
-                // Lấy ID user từ document cha (users/{userId}/watch_later/{slug})
+            for (const doc of querySnapshot.docs) {
                 const userId = doc.ref.parent.parent?.id;
 
                 if (userId) {
-                    // Xử lý chuỗi an toàn
-                    const safeEpisode = episodeString.replace(/[^a-zA-Z0-9]/g, '-');
-
-                    // Tạo ID thông báo duy nhất
-                    const notificationId = `${userId}_${slug}_${safeEpisode}`;
+                    // Tạo ID duy nhất cho tập này
+                    const safeIdContent = episodeString.replace(/[^a-zA-Z0-9]/g, '-');
+                    const notificationId = `${userId}_${slug}_${safeIdContent}`;
 
                     const notiRef = dbAdmin.collection("notifications").doc(notificationId);
 
+                    // Kiểm tra xem thông báo này đã tồn tại chưa
+                    const notiSnap = await notiRef.get();
+
+                    if (notiSnap.exists) {
+                        console.log(`Skip: Đã báo ${name} - ${episodeString} cho user ${userId}`);
+                        continue;
+                    }
+
+                    // Nếu chưa có thì mới thêm vào batch để tạo mới
                     batch.set(notiRef, {
                         userId: userId,
                         movieSlug: slug,
                         movieName: name,
-                        title: "Phim bạn theo dõi có tập mới!",
-                        message: `${name} vừa cập nhật ${episodeString}`,
-                        poster: poster_url || "", // Fallback nếu thiếu ảnh
+                        title: "Phim hóng có tập mới!",
+                        message: `${name} - ${episodeString}`,
+                        poster: poster_url || "",
                         type: "new_episode",
                         isRead: false,
                         createdAt: new Date()
-                    }, { merge: true });
+                    }); 
 
                     notificationCount++;
                 }
-            });
+            }
         }
         // 4. Ghi vào DB
         if (notificationCount > 0) {

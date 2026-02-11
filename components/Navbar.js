@@ -83,7 +83,7 @@ export default function Navbar() {
             const diff = touchEndX.current - touchStartX.current;
 
             // Vuốt từ trái qua phải để mở (chỉ khi menu đang đóng)
-            if (!isMobileMenuOpen && touchStartX.current < 300 && diff > 40) {
+            if (!isMobileMenuOpen && touchStartX.current < 100 && diff > 40) {
                 setIsMobileMenuOpen(true);
             }
             // Vuốt từ phải qua trái để đóng (chỉ khi menu đang mở)

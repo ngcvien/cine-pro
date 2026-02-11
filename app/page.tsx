@@ -51,6 +51,8 @@ function getHeroSlugs(): string[] {
 
 // Bổ sung quality + episode_current cho các phim hero (API danh sách không trả về 2 trường này)
 export async function enrichMoviesWithDetail(movies: any[], limit: number = 5): Promise<any[]> {
+  console.log("Enriching movies with detail for first", limit, "movies.");
+  console.log("Movies to enrich:", movies.slice(0, limit).map(m => m.slug));
   const toEnrich = movies.slice(0, limit);
   const enriched = await Promise.all(
     toEnrich.map(async (movie) => {
@@ -139,7 +141,7 @@ export default async function Home() {
   const newMoviesWithHeroDetail: any[] =
     newMovies.length > 0 ? await enrichMoviesWithDetail(newMovies, 5) : [];
   
-  console.log("Hero Movies:", heroMovies);
+  // console.log("Hero Movies:", heroMovies);
 
   return (
     <div className="container mx-auto px-4 md:px-1 space-y-16 pb-20">
