@@ -3,7 +3,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import VideoPlayer from "./VideoPlayer";
-import { Search } from "lucide-react"; // Cần cài lucide-react hoặc dùng svg icon
+import { Search } from "lucide-react"; 
+import { auth, db } from "@/lib/firebase"; // Import Firebase
+import { doc, onSnapshot } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 const formatServerName = (name) => {
     if (!name) return "Server Chính";
@@ -13,13 +16,55 @@ const formatServerName = (name) => {
 export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
     const router = useRouter();
     const [selectedServerIndex, setSelectedServerIndex] = useState(0);
+    const [user, setUser] = useState(null);
     
-    // --- STATE MỚI CHO TÌM KIẾM & PHÂN TRANG ---
-    const [searchQuery, setSearchQuery] = useState("");
-    const [currentChunk, setCurrentChunk] = useState(0); // 0 = 1-50, 1 = 51-100
-    const EPISODES_PER_CHUNK = 50; // Giới hạn hiển thị 50 tập mỗi tab
+    // --- STATE CHO PROGRESS BAR (Lịch sử xem) ---
+    const [historyDetails, setHistoryDetails] = useState({}); 
 
-    // 1. Load server & Xác định trang chứa tập hiện tại
+    // --- STATE CHO TÌM KIẾM & PHÂN TRANG ---
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentChunk, setCurrentChunk] = useState(0); 
+    const EPISODES_PER_CHUNK = 50; 
+
+    // 1. Tính toán tổng thời lượng phim (để tính %)
+    // Logic giống EpisodeList: Parse số phút từ chuỗi (vd: "45 phút/tập" -> 45)
+    const totalDuration = useMemo(() => {
+        if (!movie?.time) return 0;
+        const match = movie.time.match(/\d+/);
+        return match ? parseInt(match[0]) : 0; 
+    }, [movie]);
+
+    // 2. Lắng nghe User & Lịch sử xem (REALTIME)
+    useEffect(() => {
+        const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            if (currentUser) {
+                // Lắng nghe thay đổi trong document history của phim này
+                const docRef = doc(db, "users", currentUser.uid, "history", movie.slug);
+                const unsubDoc = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        // Lấy field 'details' chứa thời gian từng tập
+                        setHistoryDetails(docSnap.data().details || {});
+                    }
+                });
+                return () => unsubDoc();
+            } else {
+                setHistoryDetails({});
+            }
+        });
+        return () => unsubAuth();
+    }, [movie.slug]);
+
+    // 3. Hàm tính % tiến trình (Copy từ EpisodeList.js)
+    const getProgress = (epSlug) => {
+        const seconds = historyDetails[epSlug] || 0;
+        if (!totalDuration || totalDuration === 0) return 0;
+        // Công thức: (Số giây đã xem / 60) chia cho Tổng số phút
+        let percent = ((seconds / 60) / totalDuration) * 100;
+        return Math.min(percent, 100);
+    };
+
+    // 4. Load server cũ từ localStorage
     useEffect(() => {
         const savedType = localStorage.getItem("preferred_server_type");
         if (savedType) {
@@ -28,16 +73,13 @@ export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
         }
     }, [episodes]);
 
-    // Dữ liệu Server hiện tại
     const currentServerData = episodes[selectedServerIndex];
     if (!currentServerData) return null;
 
-    // Tìm tập hiện tại
     let currentEpisode = currentServerData.server_data.find(e => e.slug === currentEpSlug);
     if (!currentEpisode) currentEpisode = currentServerData.server_data[0];
 
-    // --- LOGIC TỰ ĐỘNG CHUYỂN TAB KHI VÀO TRANG ---
-    // Ví dụ: Đang xem tập 60 -> Tự nhảy sang tab [51-100]
+    // 5. Logic Auto-Chunking (Tự nhảy tab)
     useEffect(() => {
         if (currentEpisode && !searchQuery) {
             const epIndex = currentServerData.server_data.findIndex(e => e.slug === currentEpisode.slug);
@@ -46,54 +88,41 @@ export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
                 setCurrentChunk(chunkIndex);
             }
         }
-    }, [currentEpisode, searchQuery, selectedServerIndex]); // Chạy lại khi đổi tập hoặc đổi server
+    }, [currentEpisode, searchQuery, selectedServerIndex]); 
 
-    // --- LOGIC LỌC TẬP PHIM (SEARCH + CHUNK) ---
+    // 6. Logic Lọc tập
     const displayEpisodes = useMemo(() => {
         const allEps = currentServerData.server_data;
-
-        // 1. Nếu đang tìm kiếm -> Hiện tất cả kết quả khớp
         if (searchQuery.trim()) {
             return allEps.filter(ep => 
                 ep.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                 ep.slug.includes(searchQuery.toLowerCase())
             );
         }
-
-        // 2. Nếu không tìm kiếm -> Cắt theo chunk (Range)
         const start = currentChunk * EPISODES_PER_CHUNK;
         const end = start + EPISODES_PER_CHUNK;
         return allEps.slice(start, end);
-
     }, [currentServerData, searchQuery, currentChunk]);
 
-    // Tạo danh sách các tab khoảng (1-50, 51-100...)
     const totalChunks = Math.ceil(currentServerData.server_data.length / EPISODES_PER_CHUNK);
-    const chunkList = Array.from({ length: totalChunks }, (_, i) => {
-        const start = i * EPISODES_PER_CHUNK + 1;
-        const end = Math.min((i + 1) * EPISODES_PER_CHUNK, currentServerData.server_data.length);
-        return { index: i, label: `${start}-${end}` };
-    });
+    const chunkList = Array.from({ length: totalChunks }, (_, i) => ({
+        index: i, 
+        label: `${i * EPISODES_PER_CHUNK + 1}-${Math.min((i + 1) * EPISODES_PER_CHUNK, currentServerData.server_data.length)}`
+    }));
 
     const handleServerChange = (index) => {
         setSelectedServerIndex(index);
         const type = episodes[index].server_name.includes("Thuyết Minh") ? "Thuyết Minh" : "Vietsub";
         localStorage.setItem("preferred_server_type", type);
-        
-        // Reset search khi đổi server
         setSearchQuery(""); 
-
-        // Logic check tập tồn tại (như cũ)
+        
         const newServerData = episodes[index];
         const hasEp = newServerData.server_data.find(e => e.slug === currentEpisode.slug);
-        if (!hasEp) {
-            router.push(`/phim/${movie.slug}?tap=${newServerData.server_data[0].slug}`);
-        }
+        if (!hasEp) router.push(`/phim/${movie.slug}?tap=${newServerData.server_data[0].slug}`);
     };
 
     return (
         <div className="space-y-6">
-            
             {/* VIDEO PLAYER */}
             <div className="w-full">
                 {currentEpisode?.link_m3u8 ? (
@@ -113,17 +142,13 @@ export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
                 )}
             </div>
 
-            {/* CONTAINER ĐIỀU KHIỂN */}
-            <div className="bg-[#121212] p-5 rounded-2xl border border-white/10 shadow-xl">
+            {/* CONTROLS */}
+            <div className="bg-[#121212]/40 p-5 rounded-2xl border border-white/10 shadow-xl">
                 
-                {/* 1. THANH CÔNG CỤ: CHỌN SERVER + TÌM KIẾM */}
+                {/* TOOLBAR */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-white/10 pb-4">
-                    
-                    {/* Chọn Server */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-                        <span className="text-primary font-bold text-sm uppercase whitespace-nowrap mr-2">
-                             Server:
-                        </span>
+                        <span className="text-primary font-bold text-sm uppercase whitespace-nowrap mr-2">Server:</span>
                         {episodes.map((server, index) => (
                             <button
                                 key={index}
@@ -139,22 +164,21 @@ export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
                         ))}
                     </div>
 
-                    {/* Ô Tìm Kiếm Tập */}
                     <div className="relative w-full md:w-64">
                         <input 
                             type="text" 
-                            placeholder="Tìm tập nhanh (vd: 15)..." 
+                            placeholder="Tìm tập nhanh..." 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg py-2 pl-9 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors"
+                            className="w-full bg-black/40 border border-white/10 rounded-lg py-2 pl-9 pr-4 text-sm text-white focus:outline-none focus:border-primary/50"
                         />
                         <Search className="absolute left-3 top-2.5 text-gray-500 w-4 h-4" />
                     </div>
                 </div>
 
-                {/* 2. THANH CHỌN KHOẢNG (RANGE) - Chỉ hiện khi KHÔNG tìm kiếm và phim dài > 50 tập */}
+                {/* RANGE TABS (CHIA NHỎ TẬP) */}
                 {!searchQuery && totalChunks > 1 && (
-                    <div className="flex flex-wrap gap-2 mb-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex flex-wrap gap-2 mb-4">
                         {chunkList.map((chunk) => (
                             <button
                                 key={chunk.index}
@@ -171,43 +195,55 @@ export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
                     </div>
                 )}
 
-                {/* 3. DANH SÁCH TẬP (GRID) */}
+                {/* LIST EPISODES */}
                 <div>
-                    <h3 className="text-white font-bold text-sm mb-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                            Danh sách tập ({searchQuery ? `Kết quả cho "${searchQuery}"` : chunkList[currentChunk]?.label || "All"})
-                        </div>
-                        <span className="text-xs text-gray-500 font-normal">
-                            Tổng: {currentServerData.server_data.length} tập
-                        </span>
+                    <h3 className="text-white font-bold text-sm mb-3 flex justify-between">
+                        <span>Danh sách tập | Tập hiện tại: {currentEpisode?.name || "Chưa chọn tập"}</span>
+                        <span className="text-xs text-gray-500 font-normal">Tổng: {currentServerData.server_data.length} tập</span>
                     </h3>
                     
                     {displayEpisodes.length > 0 ? (
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar p-1">
                             {displayEpisodes.map((ep) => {
                                 const isCurrent = currentEpisode?.slug === ep.slug;
+                                
+                                // Tính % tiến trình
+                                const percent = getProgress(ep.slug);
+
                                 return (
                                     <button
                                         key={ep.slug}
                                         onClick={() => router.push(`/phim/${movie.slug}?tap=${ep.slug}`)}
                                         className={`
-                                            group relative px-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 border
+                                            relative group px-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 border overflow-hidden
                                             ${isCurrent 
                                                 ? "bg-primary/20 border-primary text-primary shadow-[inset_0_0_10px_rgba(74,222,128,0.2)]" 
                                                 : "bg-[#1f1f1f] border-transparent text-gray-400 hover:bg-[#2a2a2a] hover:text-white hover:border-white/20"
                                             }
                                         `}
                                     >
-                                        {ep.name.replace("Tập ", "")} {/* Rút gọn tên hiển thị nếu muốn */}
+                                        <span className="relative z-10">{ep.name.replace("Tập ", "")}</span>
+                                        
+                                        {/* --- THANH TIẾN TRÌNH (Y HỆT EPISODELIST.JS) --- */}
+                                        {percent > 0 && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-700/50">
+                                                <div 
+                                                  className={`h-full ${isCurrent ? 'bg-primary shadow-[0_0_5px_#00FF41]' : 'bg-gray-400'}`} 
+                                                  style={{ width: `${percent}%` }}
+                                                />
+                                            </div>
+                                        )}
+                                        
+                                        {/* Icon đang phát (giữ lại cho đẹp) */}
+                                        {isCurrent && (
+                                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-[0_0_5px_#4ade80]"></span>
+                                        )}
                                     </button>
                                 );
                             })}
                         </div>
                     ) : (
-                        <div className="text-center py-8 text-gray-500 text-sm italic">
-                            Không tìm thấy tập nào khớp với "{searchQuery}"
-                        </div>
+                        <div className="text-center py-8 text-gray-500 text-sm italic">Không tìm thấy tập nào</div>
                     )}
                 </div>
             </div>

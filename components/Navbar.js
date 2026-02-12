@@ -179,7 +179,7 @@ export default function Navbar() {
                     <ul className="hidden lg:flex items-center gap-6">
                         {mainLinks.map((link) => (
                             <li key={link.name}>
-                                <Link href={link.href} className={`text-sm font-bold uppercase tracking-wide transition-colors ${pathname === link.href ? "text-primary" : "text-gray-300 hover:text-white"}`}>
+                                <Link href={link.href} className={`text-sm text-center font-bold uppercase flex items-center tracking-wide transition-colors ${pathname === link.href ? "text-primary" : "text-gray-300 hover:text-white"}`}>
                                     {link.name}
                                 </Link>
                             </li>
@@ -262,10 +262,10 @@ export default function Navbar() {
                         {showSearch ? (
                             <div className="w-full md:w-[300px] flex items-center gap-2">
                                 <SearchBox autoFocus />
-                                <button onClick={() => setShowSearch(false)} className="text-gray-400 hover:text-white md:hidden">Hủy</button>
+                                <button onClick={() => setShowSearch(false)} className="text-gray-400 hover:text-white ">Hủy</button>
                             </div>
                         ) : (
-                            <button onClick={() => setShowSearch(true)} className="text-gray-300 hover:text-white">
+                            <button onClick={() => setShowSearch(true)} className="flex items-center text-gray-300 hover:text-white">
                                 <Search size={22} />
                             </button>
                         )}

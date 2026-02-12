@@ -49,7 +49,7 @@ export function VietnameseCinemaSection({ title, subtitle, description, link, mo
 
         <div className="relative p-4 sm:p-6 md:p-8">
           {/* Header with Vietnamese flag */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b-2 border-red-900/30">
+          <div className="flex  sm:items-center sm:justify-between gap-4 sm:gap-6 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b-2 border-red-900/30">
             <div className="flex-1">
               {/* Vietnamese Flag */}
               <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -104,7 +104,7 @@ export function VietnameseCinemaSection({ title, subtitle, description, link, mo
             {/* View all button with Vietnamese flag colors */}
             <Link
               href={link}
-              className="group relative px-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-yellow-400 hover:to-yellow-500 border-2 border-red-500 hover:border-yellow-400 rounded-xl overflow-hidden transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6 shadow-lg hover:shadow-red-500/50"
+              className="group mt-2 relative px-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-yellow-400 hover:to-yellow-500 border-2 border-red-500 hover:border-yellow-400 rounded-xl overflow-hidden transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6 shadow-lg hover:shadow-red-500/50"
             >
               <span className="relative z-10 flex items-center gap-1.5 sm:gap-2 text-white group-hover:text-red-900 font-black text-xs sm:text-sm whitespace-nowrap">
                 <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>

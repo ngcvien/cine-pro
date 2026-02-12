@@ -60,47 +60,14 @@ export default function ContinueWatching() {
 
         {watchHistory.length > 0 && (
           <Link
-            href="/tu-phim"
-            className="
-            relative group inline-flex items-center gap-2
-            rounded-xl px-3 py-2
-            border border-white/15
-            bg-white/5 backdrop-blur-md
-            overflow-hidden
-            transition-all duration-300
-            hover:border-primary/60 hover:bg-white/10
-          "
-          >
-            {/* Glow layer */}
-            <span
-              className="
-              absolute inset-0 rounded-xl opacity-0
-              bg-gradient-to-r from-primary/30 via-transparent to-primary/30
-              group-hover:opacity-100 transition-opacity duration-300
-            "
-            />
-
-            <span
-              className="
-              relative overflow-hidden max-w-0
-              group-hover:max-w-[8rem]
-              transition-[max-width] duration-300 ease-out
-              whitespace-nowrap text-xs font-bold
-              text-gray-400 group-hover:text-primary
-            "
-            >
-              XEM LỊCH SỬ
-            </span>
-
-            <ChevronRight
-              className="
-              relative w-4 h-4
-              text-gray-400 group-hover:text-primary
-              transition-transform duration-300
-              group-hover:translate-x-1
-            "
-            />
-          </Link>
+                    href="/tu-phim"
+                    className="group px-2 mt-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
+                  >
+                    <span className="flex items-center gap-1.5 sm:gap-2 text-white group-hover:text-primary font-black text-xs sm:text-sm whitespace-nowrap">
+                      <span className="hidden group-hover:inline transition-all duration-300">XEM TỦ PHIM</span>
+                      <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </Link> 
 
         )}
       </div>

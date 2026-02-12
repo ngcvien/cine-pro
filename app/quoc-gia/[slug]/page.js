@@ -85,9 +85,9 @@ export default async function CountryPage({ params, searchParams }) {
             <h1 className={`text-3xl md:text-5xl font-black uppercase tracking-tighter flex items-center gap-3 ${theme.textTitle}`}>
               {isVietnam && <Star size={40} fill={theme.iconColor} stroke="none" className="animate-pulse" />}
 
-              <h1 >
+              <span >
                 PHIM
-              </h1>
+              </span>
               {title}
             </h1>
             <p className={`mt-2 font-mono text-sm uppercase tracking-widest ${theme.textSub}`}>

@@ -65,7 +65,7 @@ export default function HeroSection({ movies = [] }) {
   const movieTitle = limitWords(currentMovie?.name, 10);
 
   return (
-    <div className="relative w-full h-[550px] md:h-[700px] mb-12 overflow-hidden group rounded-b-lg ">
+    <div className="relative w-full h-[550px] md:h-[700px] mb-12 overflow-hidden  group rounded-b-lg ">
       
       {/* --- 1. BACKGROUND --- */}
       <AnimatePresence mode="popLayout" initial={false}>
@@ -143,10 +143,10 @@ export default function HeroSection({ movies = [] }) {
                 </Link>
                 <Link
                   href={`/chi-tiet/${currentMovie?.slug}`}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base backdrop-blur-md transition-all"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 px-3 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base backdrop-blur-md transition-all"
                 >
-                  <Info size={20} />
-                  CHI TIẾT
+                  <Info size={22} />
+                  <span className="hidden sm:inline" aria-hidden >CHI TIẾT</span>
                 </Link>
                 <span className="w-px h-8 bg-white/20 hidden sm:block" aria-hidden />
                 <WatchLaterButton
@@ -161,7 +161,7 @@ export default function HeroSection({ movies = [] }) {
       </div>
 
       {/* --- 3. DANH SÁCH POSTER NHỎ (GÓC DƯỚI PHẢI) --- */}
-      <div className="absolute bottom-8 right-4 md:right-8 z-20 hidden md:flex items-end gap-3">
+      <div className="absolute bottom-8 right-4 md:right-8 z-20 hidden lg:flex items-end gap-3">
         {heroMovies.map((movie, index) => {
           const isActive = index === currentIndex;
           return (
@@ -204,7 +204,7 @@ export default function HeroSection({ movies = [] }) {
       </div>
 
       {/* Dots cho Mobile (Thay thế list poster trên điện thoại) */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 md:hidden z-20">
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 lg:hidden z-20">
           {heroMovies.map((_, idx) => (
               <button 
                 key={idx}

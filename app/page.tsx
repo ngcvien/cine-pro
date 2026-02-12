@@ -8,12 +8,13 @@ import HeroSection from "../components/HeroSection";
 import WatchingNow from "../components/WatchingNow";
 import ContinueWatching from "../components/ContinueWatching";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import RankedMovieCard from "../components/RankedMovieCard";
 import CircularMovieCard from '../components/CircularMovieCard';
 import MagazineMovieCard from '../components/MagazineMovieCard';
 import StackedMovieCard from '../components/StackedMovieCard';
 import VietnameseCinemaSection from "../components/VietnameseCinemaSection";
+import { ChevronRight, Flame, TrendingUp, Clock, Star, Sparkles } from "lucide-react";
+
 import {
   NeonGlowSection,
   BrutalistSection,
@@ -51,15 +52,15 @@ function getHeroSlugs(): string[] {
 
 // Bổ sung quality + episode_current cho các phim hero (API danh sách không trả về 2 trường này)
 export async function enrichMoviesWithDetail(movies: any[], limit: number = 5): Promise<any[]> {
-  console.log("Enriching movies with detail for first", limit, "movies.");
-  console.log("Movies to enrich:", movies.slice(0, limit).map(m => m.slug));
+  // console.log("Enriching movies with detail for first", limit, "movies.");
+  // console.log("Movies to enrich:", movies.slice(0, limit).map(m => m.slug));
   const toEnrich = movies.slice(0, limit);
   const enriched = await Promise.all(
     toEnrich.map(async (movie) => {
       if (!movie?.slug) return movie;
       try {
-        
-        const data = await getMovieData(`phim/${movie.slug}`,  {
+
+        const data = await getMovieData(`phim/${movie.slug}`, {
           next: { revalidate: 3600 },
         })
         const detail = data?.movie;
@@ -90,7 +91,7 @@ async function getCatalog(category: string) {
 // 1. Lấy Phim Mới (Dùng cho Hero Section + List Phim Mới)
 async function getNewMovies() {
   return await getMovieData("/danh-sach/phim-moi-cap-nhat?page=1", {
-      next: { revalidate: 60 } 
+    next: { revalidate: 60 }
   });
 }
 
@@ -140,7 +141,7 @@ export default async function Home() {
   // 5 phim đầu (cho Hero) gọi thêm API chi tiết để có quality + episode_current (API danh sách không trả về)
   const newMoviesWithHeroDetail: any[] =
     newMovies.length > 0 ? await enrichMoviesWithDetail(newMovies, 5) : [];
-  
+
   // console.log("Hero Movies:", heroMovies);
 
   return (
@@ -249,7 +250,7 @@ function MovieSection({ title, subtitle, description, link, movies }: any) {
 
   return (
     <div>
-      <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
+      <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-4 items-end">
         <div>
           <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
             {title} <span className="text-primary">{subtitle}</span>
@@ -261,46 +262,13 @@ function MovieSection({ title, subtitle, description, link, movies }: any) {
 
         <Link
           href={link}
-          className="
-    relative group inline-flex items-center gap-2
-    rounded-xl px-3 py-2
-    border border-white/15
-    bg-white/5 backdrop-blur-md
-    overflow-hidden
-    transition-all duration-300
-    hover:border-primary/60 hover:bg-white/10
-  "
+          className="group px-2 mt-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
         >
-          {/* Glow layer */}
-          <span
-            className="
-      absolute inset-0 rounded-xl opacity-0
-      bg-gradient-to-r from-primary/30 via-transparent to-primary/30
-      group-hover:opacity-100 transition-opacity duration-300
-    "
-          />
-
-          <span
-            className="
-      relative overflow-hidden max-w-0
-      group-hover:max-w-[8rem]
-      transition-[max-width] duration-300 ease-out
-      whitespace-nowrap text-xs font-bold
-      text-gray-400 group-hover:text-primary
-    "
-          >
-            XEM TẤT CẢ
+          <span className="flex items-center gap-1.5 sm:gap-2 text-white group-hover:text-primary font-black text-xs sm:text-sm whitespace-nowrap">
+            <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
           </span>
-
-          <ChevronRight
-            className="
-      relative w-4 h-4
-      text-gray-400 group-hover:text-primary
-      transition-transform duration-300
-      group-hover:translate-x-1
-    "
-          />
-        </Link>
+        </Link> 
 
       </div>
 

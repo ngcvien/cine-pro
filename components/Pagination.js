@@ -1,28 +1,46 @@
 import Link from "next/link";
 
 export default function Pagination({ currentPage, totalPages, basePath }) {
-  if (totalPages <= 1) return null;
+  // --- SỬA LỖI Ở ĐÂY: Ép kiểu dữ liệu sang Number ---
+  const current = Number(currentPage);
+  const total = Number(totalPages);
+
+  if (total <= 1) return null;
 
   const getPageNumbers = () => {
     const delta = 2;
-    const range = [];
     const items = [];
 
-    // Tính toán dải số trang ở giữa dựa trên delta
-    const start = Math.max(2, currentPage - delta);
-    const end = Math.min(totalPages - 1, currentPage + delta);
+    // Luôn hiển thị trang 1
+    items.push(1);
 
-    for (let i = start; i <= end; i++) range.push(i);
+    // Tính toán khoảng giữa
+    const left = current - delta;
+    const right = current + delta;
 
-    // Xử lý trang đầu và dấu "..."
-    if (currentPage - delta > 2) items.push(1, "...");
-    else items.push(1);
+    // Hiển thị dấu "..." bên trái nếu cần
+    if (left > 2) {
+      items.push("...");
+    }
 
-    items.push(...range);
+    // Vòng lặp các trang ở giữa
+    // Sửa logic: Chỉ lặp từ trang 2 đến trang (total - 1)
+    // để tránh trùng lặp với trang đầu và trang cuối đã add thủ công
+    for (let i = 2; i < total; i++) {
+      if (i >= left && i <= right) {
+        items.push(i);
+      }
+    }
 
-    // Xử lý trang cuối và dấu "..."
-    if (currentPage + delta < totalPages - 1) items.push("...", totalPages);
-    else if (totalPages > 1) items.push(totalPages);
+    // Hiển thị dấu "..." bên phải nếu cần
+    if (right < total - 1) {
+      items.push("...");
+    }
+
+    // Luôn hiển thị trang cuối (nếu tổng > 1)
+    if (total > 1) {
+      items.push(total);
+    }
 
     return items;
   };
@@ -31,16 +49,16 @@ export default function Pagination({ currentPage, totalPages, basePath }) {
   const navClass = "w-10 h-10 flex items-center justify-center rounded-lg border transition-all";
 
   return (
-    <div className="flex justify-center items-center gap-2 mt-12 select-none">
+    <div className="flex justify-center items-center gap-2 mt-12 select-none flex-wrap">
       {/* Nút Previous */}
       <Link
-        href={currentPage > 1 ? `${basePath}?page=${currentPage - 1}` : "#"}
+        href={current > 1 ? `${basePath}?page=${current - 1}` : "#"}
         className={`${navClass} ${
-          currentPage > 1 
+          current > 1 
             ? "border-white/10 bg-white/5 text-white hover:bg-primary hover:text-black hover:border-primary" 
-            : "border-transparent text-gray-600 cursor-not-allowed"
+            : "border-transparent text-gray-600 cursor-not-allowed pointer-events-none"
         }`}
-        aria-disabled={currentPage <= 1}
+        aria-disabled={current <= 1}
       >
         <ChevronIcon direction="left" />
       </Link>
@@ -54,8 +72,8 @@ export default function Pagination({ currentPage, totalPages, basePath }) {
             key={page}
             href={`${basePath}?page=${page}`}
             className={`${navClass} text-sm font-bold ${
-              page === currentPage
-                ? "bg-primary text-black border-primary shadow-[0_0_10px_rgba(0,255,65,0.4)] scale-110"
+              page === current
+                ? "bg-primary text-black border-primary shadow-[0_0_10px_rgba(0,255,65,0.4)] scale-110 pointer-events-none"
                 : "border-transparent text-gray-400 hover:text-white hover:bg-white/10"
             }`}
           >
@@ -66,13 +84,13 @@ export default function Pagination({ currentPage, totalPages, basePath }) {
 
       {/* Nút Next */}
       <Link
-        href={currentPage < totalPages ? `${basePath}?page=${currentPage + 1}` : "#"}
+        href={current < total ? `${basePath}?page=${current + 1}` : "#"}
         className={`${navClass} ${
-          currentPage < totalPages 
+          current < total
             ? "border-white/10 bg-white/5 text-white hover:bg-primary hover:text-black hover:border-primary" 
-            : "border-transparent text-gray-600 cursor-not-allowed"
+            : "border-transparent text-gray-600 cursor-not-allowed pointer-events-none"
         }`}
-        aria-disabled={currentPage >= totalPages}
+        aria-disabled={current >= total}
       >
         <ChevronIcon direction="right" />
       </Link>
@@ -80,7 +98,7 @@ export default function Pagination({ currentPage, totalPages, basePath }) {
   );
 }
 
-// Sub-component cho icon để tránh lặp mã SVG
+// Icon component
 function ChevronIcon({ direction }) {
   const isLeft = direction === "left";
   return (

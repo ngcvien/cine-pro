@@ -18,7 +18,7 @@ export function NeonGlowSection({ title, subtitle, description, link, movies, Ca
         <div className="absolute bottom-0 right-0 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 border-b-2 border-r-2 sm:border-b-4 sm:border-r-4 border-primary/50 rounded-br-xl sm:rounded-br-2xl"></div>
 
         {/* Header - responsive */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-primary/20 sm:border-b-2">
+        <div className="flex  sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-primary/20 sm:border-b-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 sm:gap-3 mb-2">
               <Flame className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-primary animate-pulse" />
@@ -33,7 +33,7 @@ export function NeonGlowSection({ title, subtitle, description, link, movies, Ca
 
           <Link
             href={link}
-            className="group relative px-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-primary/10 hover:bg-primary border border-primary hover:border-white rounded-lg sm:rounded-xl overflow-hidden transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
+            className="group mt-2 relative px-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-primary/10 hover:bg-primary border border-primary hover:border-white rounded-lg sm:rounded-xl overflow-hidden transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
           >
             <span className="relative z-10 flex items-center gap-1.5 sm:gap-2 text-primary group-hover:text-black font-black text-xs sm:text-sm whitespace-nowrap">
               <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>
@@ -77,7 +77,7 @@ export function BrutalistSection({ title, subtitle, description, link, movies, C
           
           <Link
             href={link}
-            className="group bg-white text-black px-2 sm:px-2.5 md:px-3 py-2.5 sm:py-3 md:py-4 font-black text-[10px] sm:text-xs hover:bg-primary transition-all duration-300 border-2 sm:border-4 border-black hover:border-white self-start sm:self-auto whitespace-nowrap hover:px-4 sm:hover:px-5 md:hover:px-6 flex items-center gap-1.5"
+            className="group bg-white mt-2 text-black px-2 sm:px-2.5 md:px-3 py-2.5 sm:py-3 md:py-4 font-black text-[10px] sm:text-xs hover:bg-primary transition-all duration-300 border-2 sm:border-4 border-black hover:border-white self-start sm:self-auto whitespace-nowrap hover:px-4 sm:hover:px-5 md:hover:px-6 flex items-center gap-1.5"
           >
             <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>
             <span className="group-hover:hidden">→</span>
@@ -121,7 +121,7 @@ export function GradientMeshSection({ title, subtitle, description, link, movies
       {/* Content - responsive */}
       <div className="relative backdrop-blur-xl bg-black/40 border border-white/10 p-4 sm:p-6 md:p-8">
         {/* Header - responsive */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6">
+        <div className="flex  sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6">
           <div className="flex-1">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-gradient-to-br from-primary to-purple-500 rounded-full flex items-center justify-center">
@@ -138,7 +138,7 @@ export function GradientMeshSection({ title, subtitle, description, link, movies
 
           <Link
             href={link}
-            className="group relative px-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-primary to-purple-500 hover:from-white hover:to-white text-black rounded-full font-black text-xs sm:text-sm transition-all duration-300 hover:scale-105 overflow-hidden self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
+            className="group mt-2 relative px-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-primary to-purple-500 hover:from-white hover:to-white text-black rounded-full font-black text-xs sm:text-sm transition-all duration-300 hover:scale-105 overflow-hidden self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
           >
             <span className="relative z-10 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
               <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>
@@ -177,7 +177,7 @@ export function GlassMorphismSection({ title, subtitle, description, link, movie
       {/* Glass container - responsive */}
       <div className="relative backdrop-blur-2xl bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
         {/* Header - responsive */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/10">
+        <div className="flex flex-row items-end justify-between sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/10">
           <div className="flex-1">
             <div className="flex items-center gap-2 sm:gap-3 mb-2">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-primary" />
@@ -192,7 +192,7 @@ export function GlassMorphismSection({ title, subtitle, description, link, movie
 
           <Link
             href={link}
-            className="group px-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
+            className="group px-2 mt sm:px-2.5 py-2 sm:py-2.5 md:py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
           >
             <span className="flex items-center gap-1.5 sm:gap-2 text-white group-hover:text-primary font-black text-xs sm:text-sm whitespace-nowrap">
               <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>
