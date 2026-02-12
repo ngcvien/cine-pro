@@ -125,7 +125,7 @@ export default function NotificationBell() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-[-40] mt-3 w-80 md:w-96 bg-[#121212] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden ring-1 ring-white/5 animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute right-[-40] mt-3 w-80 backdrop-blur-md md:w-96 bg-[#121212]/70 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden ring-1 ring-white/5 animate-in fade-in zoom-in-95 duration-200">
           
           {/* Header Dropdown */}
           <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">

@@ -94,7 +94,7 @@ export default function SearchBox() {
 
       {/* DROPDOWN KẾT QUẢ GỢI Ý */}
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#121212] border border-white/10 rounded-lg shadow-2xl overflow-hidden z-50">
+        <div className="absolute backdrop-blur-md top-full left-0 right-0 mt-2 bg-[#121212]/70 border border-white/10 rounded-lg shadow-2xl overflow-hidden z-50">
             {results.length > 0 ? (
                 <ul className="max-h-[60vh] overflow-y-auto no-scrollbar py-2">
                     {results.map((movie) => {

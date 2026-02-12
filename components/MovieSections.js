@@ -119,7 +119,7 @@ export function GradientMeshSection({ title, subtitle, description, link, movies
       </div>
 
       {/* Content - responsive */}
-      <div className="relative backdrop-blur-xl bg-black/40 border border-white/10 p-4 sm:p-6 md:p-8">
+      <div className="relative bg-black/40 border border-white/10 p-4 sm:p-6 md:p-8">
         {/* Header - responsive */}
         <div className="flex  sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6">
           <div className="flex-1">
@@ -175,7 +175,7 @@ export function GlassMorphismSection({ title, subtitle, description, link, movie
       </div>
 
       {/* Glass container - responsive */}
-      <div className="relative backdrop-blur-2xl bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
+      <div className="relative bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
         {/* Header - responsive */}
         <div className="flex flex-row items-end justify-between sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/10">
           <div className="flex-1">

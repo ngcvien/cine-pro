@@ -151,9 +151,12 @@ export default function Navbar() {
 
     return (
         <nav
-            className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? "bg-[#050505]/90 backdrop-blur-md shadow-lg" : "bg-gradient-to-b from-black/80 to-transparent"
-                }`}
+            className={"fixed top-0 w-full z-50"}
         >
+            <div className={`absolute inset-0 transition-all duration-500 z-[-1] ${isScrolled
+                    ? "bg-[#050505]/80 backdrop-blur-md shadow-lg"
+                    : "bg-gradient-to-b from-black/80 to-transparent"
+                }`} />
             <div className="container mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
 
                 {/* LEFT: HAMBURGER (Mobile) + LOGO + MENU (Desktop) */}
