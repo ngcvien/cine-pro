@@ -1,21 +1,27 @@
 import Link from "next/link";
 import VideoPlayer from "../../../components/VideoPlayer";
-import EpisodeList from "../../../components/EpisodeList";
+import EpisodeList from "../../../components/EpisodeList"; // Giữ lại nếu bạn muốn dùng, hoặc dùng logic mới bên dưới
 import ActorList from "../../../components/ActorList"; 
 import { getMovieData } from "@/lib/movieService";
+import MovieWatchArea from "../../../components/MovieWatchArea"; // Component mới tách ra (Khuyên dùng)
 
 // Hàm lấy dữ liệu chi tiết phim
 async function getMovieDetail(slug) {
     return await getMovieData(`/phim/${slug}`, { cache: "no-store" });
 }
 
-export const metadata = {
-    title: "Xem Phim - Cine Pro",
-    description: "Xem phim trực tuyến miễn phí với chất lượng cao"
-};
+export async function generateMetadata({ params }) {
+    const { slug } = await params;
+    const data = await getMovieDetail(slug);
+    return {
+        title: data?.movie?.name ? `Xem phim ${data.movie.name} - Cine Pro` : "Xem Phim - Cine Pro",
+        description: data?.movie?.content || "Xem phim trực tuyến miễn phí với chất lượng cao",
+    };
+}
 
 export default async function MovieDetailPage({ params, searchParams }) {
     const { slug } = await params;
+    // Lấy tap từ searchParams (ví dụ ?tap=tap-01)
     const { tap } = await searchParams;
 
     const data = await getMovieDetail(slug);
@@ -25,15 +31,14 @@ export default async function MovieDetailPage({ params, searchParams }) {
     }
 
     const movie = data.movie;
-    const episodes = data.episodes[0]?.server_data || [];
+    
+    // 🔥 QUAN TRỌNG: Lấy toàn bộ danh sách servers (không chỉ [0])
+    const episodes = data.episodes || []; 
 
     // Logic tính thời gian
     const timeString = movie.time || "";
     const timeMatch = timeString.match(/\d+/);
     const totalDuration = timeMatch ? parseInt(timeMatch[0]) : 0;
-
-    // Xác định tập đang xem
-    const currentEpisode = episodes.find(e => e.slug === tap) || episodes[0];
 
     return (
         <div className="bg-[#050505] pb-20 font-sans text-white min-h-screen">
@@ -50,39 +55,23 @@ export default async function MovieDetailPage({ params, searchParams }) {
                 <div className="mb-8 flex items-center gap-2 text-sm font-medium text-gray-500 m-15">
                     <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
                     <span>/</span>
-                    <span className="text-gray-300 truncate max-w-[200px]">{movie.name}</span>
+                    <Link href={`/chi-tiet/${slug}`} className="hover:text-primary transition-colors truncate max-w-[150px]">{movie.name}</Link>
+                    <span>/</span>
+                    <span className="text-gray-300">Xem phim</span>
                 </div>
 
                 {/* MAIN CONTENT */}
                 <div className="space-y-10 max-w-7xl mx-auto">
 
-                    {/* 1. VIDEO PLAYER SECTION */}
-                    <div className="space-y-2">
-                        {currentEpisode?.link_m3u8 ? (
-                            <VideoPlayer
-                                url={currentEpisode.link_m3u8}
-                                slug={slug}
-                                episodeName={currentEpisode.name}
-                                episodes={episodes}
-                                episodeSlug={currentEpisode.slug}
-                            />
-                        ) : (
-                            <div className="aspect-video bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-gray-500 rounded-xl border border-white/10">
-                                <span>Chưa có tập phim này</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* EPISODE LIST */}
-                    <EpisodeList
-                        episodes={episodes}
-                        currentEpisode={currentEpisode}
-                        slug={slug}
-                        poster={movie.poster_url}
-                        totalDuration={totalDuration}
+                    {/* --- KHU VỰC XEM PHIM (PLAYER + SERVER + LIST TẬP) --- */}
+                    {/* Tách ra Client Component để xử lý State chọn Server */}
+                    <MovieWatchArea 
+                        movie={movie}
+                        episodes={episodes} // Truyền toàn bộ mảng episodes (chứa nhiều server)
+                        currentEpSlug={tap} // Truyền tập đang chọn từ URL
                     />
 
-                    {/* 3. MOVIE DETAILS - GIAO DIỆN BÙNG NỔ */}
+                    {/* --- MOVIE DETAILS - GIAO DIỆN BÙNG NỔ --- */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                         {/* CỘT TRÁI (70%) - INFO CHÍNH */}
@@ -91,7 +80,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
                             {/* Title Block */}
                             <div>
                                 <Link href={`/chi-tiet/${slug}`} className="group block">
-                                    <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-[0.9] group-hover:text-primary transition-colors duration-300">
+                                    <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-[1.1] group-hover:text-primary transition-colors duration-300">
                                         {movie.name}
                                     </h1>
                                 </Link>
@@ -127,7 +116,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
                                 </p>
                             </div>
 
-                            {/* --- 4. DIỄN VIÊN (ĐÃ THÊM VÀO ĐÂY) --- */}
+                            {/* --- DIỄN VIÊN --- */}
                             <div className="pt-4">
                                 <h3 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
                                     <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
@@ -159,9 +148,9 @@ export default async function MovieDetailPage({ params, searchParams }) {
 
                                 {/* Detailed Stats */}
                                 <div className="p-6 space-y-5">
-                                    <InfoRow label="Đạo diễn" value={movie.actor[0] === "" ? "Đang cập nhật" : movie.actor[0]} />
-                                    <InfoRow label="Quốc gia" value={movie.country[0]?.name} />
-                                    <InfoRow label="Ngày cập nhật" value={new Date(movie.modified.time).toLocaleDateString('vi-VN')} />
+                                    <InfoRow label="Đạo diễn" value={movie.director && movie.director[0]} />
+                                    <InfoRow label="Quốc gia" value={movie.country && movie.country[0]?.name} />
+                                    <InfoRow label="Ngày cập nhật" value={movie.modified?.time ? new Date(movie.modified.time).toLocaleDateString('vi-VN') : "N/A"} />
 
                                     <Link
                                         href={`/chi-tiet/${slug}`}
@@ -181,7 +170,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
     );
 }
 
-// --- SUB COMPONENTS ---
+// --- SUB COMPONENTS (Giữ nguyên) ---
 
 const Badge = ({ children }) => (
     <span className="bg-white/10 border border-white/5 text-gray-200 text-xs font-bold px-3 py-1 rounded">
@@ -190,7 +179,7 @@ const Badge = ({ children }) => (
 );
 
 const InfoRow = ({ label, value }) => {
-    if (!value) return null;
+    if (!value || value === "") return null;
     return (
         <div className="flex justify-between items-start">
             <span className="text-gray-500 text-sm font-medium">{label}</span>
