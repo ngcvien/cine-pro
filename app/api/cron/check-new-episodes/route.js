@@ -69,7 +69,7 @@ export async function GET(request) {
                         movieSlug: slug,
                         movieName: name,
                         title: "Phim hóng có tập mới!",
-                        message: `${name} - ${episodeString}`,
+                        message: `Vừa cập nhật ${episodeString}`,
                         poster: poster_url || "",
                         type: "new_episode",
                         isRead: false,
