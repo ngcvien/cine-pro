@@ -36,7 +36,7 @@ function normalizePosterUrl(movie: any) {
   };
 }
 
-// Đọc danh sách slug phim "hot" từ file JSON (bạn chỉnh file data/hero-slugs.json để đổi phim hiển thị)
+// Đọc danh sách slug phim "hot" từ file JSON 
 function getHeroSlugs(): string[] {
   try {
     const filePath = path.join(process.cwd(), "data", "hero-slugs.json");

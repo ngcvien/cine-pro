@@ -103,8 +103,8 @@ export default function HistoryItem({ item, onDelete }) {
         />
         
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center text-center p-4 backdrop-blur-sm">
-          <span className="text-primary font-black text-xs uppercase mb-2 tracking-widest">ĐANG XEM</span>
+        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center text-center p-4 ">
+          {/* <span className="text-primary font-black text-xs uppercase mb-2 tracking-widest">ĐANG XEM</span> */}
           <span className="text-white font-bold text-sm line-clamp-2 mb-1">{movie.name}</span>
           <span className="text-gray-400 text-xs font-mono bg-white/10 px-2 py-1 rounded">{item.episode}</span>
           <span className="text-gray-500 text-[10px] mt-2">{stats.watched} / {stats.total || "??"} phút</span>
