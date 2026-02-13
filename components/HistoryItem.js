@@ -114,7 +114,7 @@ export default function HistoryItem({ item, onDelete }) {
         </div>
 
         {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-800/80 backdrop-blur">
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-800/80 ">
           <div 
             className="h-full bg-primary transition-all duration-1000 ease-out shadow-[0_0_10px_#00FF41]" 
             style={{ width: `${stats.percent}%` }}
