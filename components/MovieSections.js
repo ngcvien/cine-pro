@@ -150,9 +150,9 @@ export function GradientMeshSection({ title, subtitle, description, link, movies
         {/* Movies - responsive */}
         <div className="-mx-4 px-4 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-6 sm:pb-8 scroll-smooth scrollbar-hide">
-            {movies.map((movie) => (
+            {movies.map((movie, idx) => (
               <div key={movie._id} className="flex-shrink-0 w-[140px] xs:w-[160px] sm:w-[180px] md:w-[200px]">
-                <CardComponent movie={movie} />
+                <CardComponent movie={movie} rank={idx + 1} />
               </div>
             ))}
           </div>
@@ -192,7 +192,7 @@ export function GlassMorphismSection({ title, subtitle, description, link, movie
 
           <Link
             href={link}
-            className="group px-2 mt sm:px-2.5 py-2 sm:py-2.5 md:py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
+            className="group px-2 mt sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
           >
             <span className="flex items-center gap-1.5 sm:gap-2 text-white group-hover:text-primary font-black text-xs sm:text-sm whitespace-nowrap">
               <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>

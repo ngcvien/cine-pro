@@ -133,14 +133,14 @@ export default function RankedMovieCard({ movie, rank }) {
                   onClick={handleWatchClick}
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`${styles.badgeBg} text-black p-3 sm:p-4 md:p-5 rounded-full shadow-2xl backdrop-blur-sm`}
+                  className={`${styles.badgeBg} text-black p-3 sm:p-4 md:p-5 rounded-full shadow-2xl `}
                 >
                   <Play size={20} className="sm:w-6 sm:h-6 md:w-7 md:h-7" fill="currentColor" />
                 </motion.button>
               </div>
 
               {/* Quality Badge - Floating */}
-              <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-black/90 backdrop-blur-md border-2 ${styles.border} text-white px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-[10px] md:text-xs font-black rounded-lg shadow-xl">
+              <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-black/90  border-2 ${styles.border} text-white px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-[10px] md:text-xs font-black rounded-lg shadow-xl">
                 {movie.quality || "HD"}
               </div>
 

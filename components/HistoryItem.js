@@ -59,7 +59,7 @@ export default function HistoryItem({ item, onDelete }) {
                 e.stopPropagation();
                 setMenuOpen((v) => !v);
               }}
-              className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center transition-colors border border-white/10"
+              className="w-8 h-8 rounded-full bg-black/40 sm:bg-white/10 sm:backdrop-blur-sm hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center transition-colors border border-white/10"
               title="Tùy chọn"
               aria-label="Tùy chọn"
               aria-expanded={menuOpen}

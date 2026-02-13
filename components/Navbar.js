@@ -87,7 +87,7 @@ export default function Navbar() {
                 setIsMobileMenuOpen(true);
             }
             // Vuốt từ phải qua trái để đóng (chỉ khi menu đang mở)
-            else if (isMobileMenuOpen && diff < -40) {
+            else if (isMobileMenuOpen && diff < -60) {
                 setIsMobileMenuOpen(false);
             }
 

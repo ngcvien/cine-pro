@@ -83,7 +83,7 @@ export default function WatchLaterButton({ movie, slug, hero = true }) {
       disabled={processing}
       className={`flex items-center justify-center transition-all shrink-0 ${
         hero
-          ? `rounded-full p-3 md:p-4 backdrop-blur-md ${
+          ? `rounded-full p-3 md:p-4 sm:backdrop-blur-md ${
               isSaved
                 ? "bg-primary/20 text-primary border border-primary/50 hover:bg-red-500/20 hover:text-red-500 hover:border-red-500"
                 : "bg-white/10 text-white border border-white/10 hover:bg-white/20 hover:border-white"

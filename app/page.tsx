@@ -153,7 +153,7 @@ export default async function Home() {
       )}
 
       {/* 2. WATCHING NOW (Phim đang xem - Client Component) */}
-      <WatchingNow />
+      {/* <WatchingNow /> */}
 
       {/* 3. CONTINUE WATCHING (Tiếp tục xem - Client Component) */}
       <ContinueWatching />
@@ -172,19 +172,19 @@ export default async function Home() {
         description="DANH SÁCH CÁC BỘ PHIM VỪA ĐƯỢC THÊM VÀO HỆ THỐNG."
         link="/danh-sach/phim-moi-cap-nhat"
         movies={(newMoviesWithHeroDetail.length > 0 ? newMoviesWithHeroDetail : newMovies) as any}
-        CardComponent={StackedMovieCard}
+        // CardComponent={StackedMovieCard}
       />
 
 
       {/* 5. PHIM LẺ */}
-      <MovieSection
+      {/* <MovieSection
         title="ĐÁNH NHANH"
         subtitle="THẮNG GỌN"
         description="90 phút thăng hoa cảm xúc cùng phim lẻ."
         link="/danh-sach/phim-le"
         movies={singleMovies}
       // CardComponent={StackedMovieCard}
-      />
+      /> */}
 
 
       <VietnameseCinemaSection
@@ -214,6 +214,16 @@ export default async function Home() {
         movies={cartoonMovies}
         CardComponent={MagazineMovieCard}
       />
+
+        {/* test */}
+      {/* <GradientMeshSection
+        title="WIBU LAND"
+        subtitle="THẾ GIỚI 2D"
+        description="Khi thế giới thực quá áp lực, hãy trốn vào đây. Waifu và Husbandu đang chờ bạn."
+        link="/danh-sach/hoat-hinh"
+        movies={cartoonMovies}
+        CardComponent={RankedMovieCard}
+      /> */}
 
       <MovieSection
         title="XEM"
@@ -262,7 +272,7 @@ function MovieSection({ title, subtitle, description, link, movies }: any) {
 
         <Link
           href={link}
-          className="group px-2 mt-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
+          className="group px-2 mt-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3  bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
         >
           <span className="flex items-center gap-1.5 sm:gap-2 text-white group-hover:text-primary font-black text-xs sm:text-sm whitespace-nowrap">
             <span className="hidden group-hover:inline transition-all duration-300">XEM TẤT CẢ</span>

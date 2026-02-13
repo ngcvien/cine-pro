@@ -61,7 +61,7 @@ export default function ContinueWatching() {
         {watchHistory.length > 0 && (
           <Link
                     href="/tu-phim"
-                    className="group px-2 mt-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
+                    className="group px-2 mt-2 sm:px-2.5 py-2 sm:py-2.5 md:py-3 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-primary rounded-xl sm:rounded-2xl transition-all duration-300 self-start sm:self-auto hover:px-4 sm:hover:px-5 md:hover:px-6"
                   >
                     <span className="flex items-center gap-1.5 sm:gap-2 text-white group-hover:text-primary font-black text-xs sm:text-sm whitespace-nowrap">
                       <span className="hidden group-hover:inline transition-all duration-300">XEM TỦ PHIM</span>

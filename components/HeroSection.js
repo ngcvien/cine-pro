@@ -104,13 +104,13 @@ export default function HeroSection({ movies = [] }) {
                 <span className="bg-primary text-black font-black text-[10px] md:text-xs px-3 py-1 rounded shadow-lg shadow-primary/20">
                   #{currentIndex + 1} TRENDING
                 </span>
-                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 backdrop-blur-sm">
+                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 sm:backdrop-blur-sm">
                    {currentMovie?.year}
                 </span>
-                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 backdrop-blur-sm">
+                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 sm:backdrop-blur-sm">
                    {currentMovie?.quality || "FHD"}
                 </span>
-                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 backdrop-blur-sm">
+                <span className="text-gray-300 text-xs font-bold border border-white/20 px-2 py-1 rounded bg-black/20 sm:backdrop-blur-sm">
                    {currentMovie?.episode_current || "FULL"}
                 </span>
               </div>
@@ -143,7 +143,7 @@ export default function HeroSection({ movies = [] }) {
                 </Link>
                 <Link
                   href={`/chi-tiet/${currentMovie?.slug}`}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 px-3 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base backdrop-blur-md transition-all"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 px-3 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base sm:backdrop-blur-md transition-all"
                 >
                   <Info size={22} />
                   <span className="hidden sm:inline" aria-hidden >CHI TIẾT</span>
