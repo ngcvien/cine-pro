@@ -12,7 +12,7 @@ export async function GET(request) {
     }
 
     try {
-        // Quét 3 trang đầu để lấy danh sách phim mới cập nhật
+        // Quét 3 trang đầu 
         const PAGES_TO_SCAN = [1, 2, 3];
         const responses = await Promise.all(
             PAGES_TO_SCAN.map(page => getMovieData(`/danh-sach/phim-moi-cap-nhat?page=${page}`))
