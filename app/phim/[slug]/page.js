@@ -1,9 +1,7 @@
 import Link from "next/link";
-import VideoPlayer from "../../../components/VideoPlayer";
-import EpisodeList from "../../../components/EpisodeList"; // Giữ lại nếu bạn muốn dùng, hoặc dùng logic mới bên dưới
 import ActorList from "../../../components/ActorList"; 
 import { getMovieData } from "@/lib/movieService";
-import MovieWatchArea from "../../../components/MovieWatchArea"; // Component mới tách ra (Khuyên dùng)
+import MovieWatchArea from "../../../components/MovieWatchArea"; 
 
 // Hàm lấy dữ liệu chi tiết phim
 async function getMovieDetail(slug) {

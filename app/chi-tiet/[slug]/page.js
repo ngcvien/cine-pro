@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ActorList from "../../../components/ActorList";
 import WatchLaterButton from "../../../components/WatchLaterButton";
-import { i } from "framer-motion/client";
 import { getMovieData } from "@/lib/movieService";
 
 // --- 1. HÀM LẤY DỮ LIỆU ---
