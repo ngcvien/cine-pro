@@ -160,7 +160,7 @@ export default function NotificationBell() {
               ) : (
                 notifications.map((noti) => (
                   <Link 
-                    href={`/phim/${noti.movieSlug}`} 
+                    href={noti.link || `/phim/${noti.movieSlug}`} 
                     key={noti.id}
                     onClick={() => handleRead(noti)}
                     className={`

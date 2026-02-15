@@ -5,7 +5,7 @@ import {getMovieData, getAllAPISources} from "@/lib/movieService";
 const API_CONFIG = await getAllAPISources();
 
 async function getMoviesByGenre(slug, page = 1) {
-  return await getMovieData(`v1/api/the-loai/${slug}?page=${page}&limit=24`);
+  return await getMovieData(`/v1/api/the-loai/${slug}?page=${page}&limit=24`);
 }
 
 export async function generateMetadata({ params }) {
