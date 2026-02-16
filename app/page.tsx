@@ -1,5 +1,5 @@
 import fs from "fs";
-import { getMovieData } from "@/lib/movieService";
+import { getMovieData, getImageUrl } from "@/lib/movieService";
 import { getHeroMovies } from "@/lib/movieServiceServer";
 import path from "path";
 
@@ -27,12 +27,8 @@ import {
 function normalizePosterUrl(movie: any) {
   return {
     ...movie,
-    poster_url: movie.poster_url?.startsWith('http')
-      ? movie.poster_url
-      : `https://phimimg.com/${movie.poster_url}`,
-    thumb_url: movie.thumb_url?.startsWith('http')
-      ? movie.thumb_url
-      : `https://phimimg.com/${movie.thumb_url}`
+    poster_url: getImageUrl(movie.poster_url),
+    thumb_url:  getImageUrl(movie.thumb_url)
   };
 }
 

@@ -2,13 +2,12 @@
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Play, Star, Award } from "lucide-react";
+import { getImageUrl } from "@/lib/movieService";
 
 export default function MagazineMovieCard({ movie, featured = false }) {
   const router = useRouter();
   
-  const imageUrl = movie.poster_url.includes("http") 
-    ? movie.poster_url 
-    : `https://phimimg.com/${movie.poster_url}`;
+  const imageUrl = getImageUrl(movie.poster_url);
 
   const handleClick = () => {
     router.push(`/chi-tiet/${movie.slug}`);

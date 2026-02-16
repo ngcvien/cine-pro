@@ -1,11 +1,12 @@
 import MovieCard from "../../components/MovieCard";
 
 export const dynamic = 'force-dynamic';
-import { getMovieData } from "@/lib/movieService";
+import { getMovieData, searchMoviesHybrid } from "@/lib/movieService";
 
 async function searchMovies(keyword) {
   if (!keyword) return null;
-  return await getMovieData(`/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=30`, { cache: "no-store" });
+  // return await getMovieData(`/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=30`, { cache: "no-store" });
+  return await searchMoviesHybrid(keyword);
 }
 
 export default async function SearchPage({ searchParams }) {

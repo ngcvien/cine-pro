@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, Info } from "lucide-react";
 import Link from "next/link";
 import WatchLaterButton from "./WatchLaterButton";
+import { getImageUrl } from "@/lib/movieService";
 
 export default function HeroSection({ movies = [] }) {
   // Lấy tối đa 5 phim
@@ -32,16 +33,12 @@ export default function HeroSection({ movies = [] }) {
   // Hàm lấy ảnh
   const getPoster = (movie) => { // Ảnh nền to (ưu tiên thumb ngang)
     if (!movie) return "";
-    return movie.poster_url?.includes("http")
-      ? movie.thumb_url
-      : `https://phimimg.com/${movie.thumb_url}`; 
+    return getImageUrl(movie.thumb_url); 
   };
 
   const getSmallPoster = (movie) => { // Ảnh nhỏ (ưu tiên poster dọc)
       if (!movie) return "";
-      return movie.poster_url?.includes("http")
-        ? movie.poster_url
-        : `https://phimimg.com/${movie.poster_url}`; 
+      return getImageUrl(movie.poster_url); 
   };
 
   // Giới hạn cốt truyện theo số từ 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ActorList from "../../../components/ActorList";
 import WatchLaterButton from "../../../components/WatchLaterButton";
-import { getMovieData } from "@/lib/movieService";
+import { getMovieData, getImageUrl } from "@/lib/movieService";
 
 // --- 1. HÀM LẤY DỮ LIỆU ---
 
@@ -209,7 +209,7 @@ export default async function MovieDetailPage({ params }) {
                                 <Link key={relMovie._id} href={`/phim/${relMovie.slug}`} className="group block">
                                     <div className="aspect-[2/3] rounded-xl overflow-hidden border border-white/10 relative mb-3">
                                         <img
-                                            src={`https://phimimg.com/${relMovie.poster_url}`}
+                                            src={getImageUrl(relMovie.poster_url)}
                                             alt={relMovie.name}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                         />

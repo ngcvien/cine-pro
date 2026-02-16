@@ -120,6 +120,7 @@ export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
         const hasEp = newServerData.server_data.find(e => e.slug === currentEpisode.slug);
         if (!hasEp) router.push(`/phim/${movie.slug}?tap=${newServerData.server_data[0].slug}`);
     };
+    console.log("curent ep: "+ currentEpisode.link_embed);
 
     return (
         <div className="space-y-6">

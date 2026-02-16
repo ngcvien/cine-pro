@@ -3,14 +3,13 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import WatchLaterButton from "./WatchLaterButton";
 import HeroSection from "./HeroSection";
+import { getImageUrl } from "@/lib/movieService";
 
 export default function MovieCard({ movie }) {
   const router = useRouter();
   
   // PhimAPI trả về đường dẫn ảnh, ta cần ghép với domain nếu nó thiếu (thường là có sẵn domain)
-  const imageUrl = movie.poster_url.includes("http") 
-    ? movie.poster_url 
-    : `https://phimimg.com/${movie.poster_url}`; 
+  const imageUrl = getImageUrl(movie.poster_url); 
 
   const handleDetailClick = () => {
     router.push(`/chi-tiet/${movie.slug}`);

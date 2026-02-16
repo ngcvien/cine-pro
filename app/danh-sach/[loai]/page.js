@@ -1,6 +1,6 @@
 import MovieCard from "../../../components/MovieCard";
 import Pagination from "../../../components/Pagination";
-import { getMovieData } from "@/lib/movieService";
+import { getMovieData,getImageUrl } from "@/lib/movieService";
 
 const TITLES = {
     "phim-moi-cap-nhat": "PHIM MỚI CẬP NHẬT",
@@ -67,9 +67,7 @@ export default async function CategoryPage({ params, searchParams }) {
             {/* Movie Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {movies.map((movie) => {
-                    const posterUrl = movie.poster_url?.startsWith('http')
-                        ? movie.poster_url
-                        : `https://phimimg.com/${movie.poster_url}`;
+                    const posterUrl = getImageUrl(movie.poster_url);
 
                     return (
                         <MovieCard

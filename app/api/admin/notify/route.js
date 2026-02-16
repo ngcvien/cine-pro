@@ -18,7 +18,7 @@ export async function POST(request) {
 
         // 2. Lấy dữ liệu
         const body = await request.json();
-        const { slug, movieName, episodeName, posterUrl, link } = body;
+        const { slug, movieName, episodeName, posterUrl, link, customTitle, customMessage } = body;
 
         // 3. Quét người theo dõi
         const followersSnapshot = await dbAdmin.collectionGroup("watch_later")
@@ -58,9 +58,9 @@ export async function POST(request) {
                 userId: userId, // QUAN TRỌNG: để lọc sau này
                 movieSlug: slug,
                 movieName: movieName,
-                title: "Phim bạn hóng có tập mới!",
-                message: `${episodeName} vừa cập nhật. Xem ngay!`,
-                link: link, // Link xem phim
+                title: customTitle || "Phim bạn hóng có tập mới!", 
+                message: customMessage || `${episodeName} vừa cập nhật. Xem ngay!`,
+                link: link, 
                 poster: posterUrl || "",
                 type: "new_episode",
                 isRead: false,

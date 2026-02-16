@@ -1,11 +1,10 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { getImageUrl } from "@/lib/movieService";
 
 export default function MovieCardSmall({ movie }) {
-  const imageUrl = movie.poster_url?.includes("http") 
-    ? movie.poster_url 
-    : `https://phimimg.com/${movie.poster_url}`; 
+  const imageUrl = getImageUrl(movie.poster_url); 
 
   return (
     <Link href={`/phim/${movie.slug}`}>

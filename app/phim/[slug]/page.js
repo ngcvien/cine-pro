@@ -97,7 +97,7 @@ export default async function MovieDetailPage({ params, searchParams }) {
                                 <Badge>{movie.time}</Badge>
                                 <div className="h-4 w-[1px] bg-white/20 mx-2"></div>
                                 {movie.category?.slice(0, 3).map((c) => (
-                                    <span key={c.id} className="text-xs font-bold text-gray-400 border border-white/10 px-2 py-1 rounded hover:text-white hover:border-primary transition-colors cursor-default">
+                                    <span key={c.slug} className="text-xs font-bold text-gray-400 border border-white/10 px-2 py-1 rounded hover:text-white hover:border-primary transition-colors cursor-default">
                                         {c.name}
                                     </span>
                                 ))}
