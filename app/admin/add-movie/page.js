@@ -349,7 +349,7 @@ export default function AddMoviePage({ editSlug }) {
     // --- LOGIC LƯU TẬP PHIM (TAB 2 - BULK ADD) ---
     const handleSaveEpisodes = async () => {
         // 1. Validate dữ liệu đầu vào
-        if (!movieForm.slug) return alert("Vui lòng chọn phim ở Tab 1 trước hoặc nhập Slug!");
+        if (!movieForm.movie.slug) return alert("Vui lòng chọn phim ở Tab 1 trước hoặc nhập Slug!");
         if (episodeList.length === 0) return alert("Danh sách tập đang trống!");
 
         // Lọc bỏ các dòng không có link (M3U8 hoặc Embed đều được)
@@ -365,7 +365,7 @@ export default function AddMoviePage({ editSlug }) {
 
         setLoading(true);
         try {
-            const docRef = doc(db, "custom_movies", movieForm.slug);
+            const docRef = doc(db, "custom_movies", movieForm.movie.slug);
             const docSnap = await getDoc(docRef);
 
             // 2. Lấy danh sách episodes hiện tại (nếu có)
@@ -433,11 +433,11 @@ export default function AddMoviePage({ editSlug }) {
                         "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                        slug: movieForm.slug,
+                        slug: movieForm.movie.slug,
                         movieName: movieForm.name,
                         episodeName: lastEp.name,
                         posterUrl: movieForm.thumb_url || movieForm.poster_url,
-                        link: `/xem-phim/${movieForm.slug}?tap=${lastEp.slug}`,
+                        link: `/xem-phim/${movieForm.movie.slug}?tap=${lastEp.slug}`,
                         customTitle: notifyForm.customTitle,
                         customMessage: notifyForm.customMessage
                     })
@@ -682,7 +682,7 @@ export default function AddMoviePage({ editSlug }) {
                                         <label className="text-[10px] uppercase font-bold text-gray-500">Tên Server</label>
                                         <input
                                             className="w-full bg-black border border-white/10 p-2 text-white text-sm outline-none focus:border-[#00FF41]"
-                                            value={serverConfig.serverName}
+                                            value={serverConfig.serverName || "Vietsub"}
                                             onChange={e => setServerConfig({ ...serverConfig, serverName: e.target.value })}
                                             placeholder="Vietsub"
                                         />
@@ -750,7 +750,7 @@ export default function AddMoviePage({ editSlug }) {
                                                             <td className="p-2">
                                                                 <input
                                                                     className="w-full bg-black border border-white/10 p-1 text-gray-300 focus:border-[#00FF41] outline-none text-xs font-mono"
-                                                                    value={ep.link_m3u8}
+                                                                    value={ep.link_m3u8||""}
                                                                     placeholder="https://..."
                                                                     onChange={e => handleEpChange(idx, 'link_m3u8', e.target.value)}
                                                                 />
@@ -758,7 +758,7 @@ export default function AddMoviePage({ editSlug }) {
                                                             <td className="p-2">
                                                                 <input
                                                                     className="w-full bg-black border border-white/10 p-1 text-gray-300 focus:border-[#00FF41] outline-none text-xs font-mono"
-                                                                    value={ep.link_embed}
+                                                                    value={ep.link_embed||""}
                                                                     placeholder="https://..."
                                                                     onChange={e => handleEpChange(idx, 'link_embed', e.target.value)}
                                                                 />

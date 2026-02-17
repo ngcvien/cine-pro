@@ -3,7 +3,7 @@ import { Facebook, Twitter, Instagram, Github, Mail, ShieldAlert } from "lucide-
 
 export default function Footer() {
   return (
-    <footer className="bg-[#050505] border-t border-white/10 pt-16 pb-8 font-sans relative z-10">
+    <footer className="bg-[#050505] border-t border-white/10 pt-16 pb-8 font-sans relative z-[-1]">
       <div className="container mx-auto px-4 md:px-8">
         
         {/* --- GRID CONTENT --- */}

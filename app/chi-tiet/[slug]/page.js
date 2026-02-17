@@ -53,7 +53,7 @@ export default async function MovieDetailPage({ params }) {
         <div className="min-h-screen bg-[#0a0a0a] text-white pb-20 font-sans selection:bg-primary selection:text-black">
 
             {/* --- BACKGROUND HERO (Làm nền mờ) --- */}
-            <div className="fixed inset-0 z-0 h-[80vh] w-full">
+            <div className="fixed inset-0 z-[-0] h-[80vh] w-full">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent z-10"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent z-10"></div>
                 <img src={movie.poster_url} alt="Backdrop" className="w-full h-full object-cover opacity-30" />

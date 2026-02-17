@@ -12,7 +12,6 @@ export const metadata = {
   description: "Web xem phim miễn phí với giao diện hiện đại",
 };
 
-// 👇 ĐOẠN QUAN TRỌNG: Thêm khai báo kiểu cho props
 export default function RootLayout({
   children,
 }: {
@@ -20,10 +19,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning={true}>
-      <body className="bg-[#050505] text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen relative">
+      <body className="bg-[#050505] text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen relative flex flex-col ">
         
         {/* --- GLOBAL BACKGROUND --- */}
-        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none flex flex-col min-h-screen">
             {/* Đốm sáng xanh lá */}
             <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-primary/2 rounded-full blur-[120px] opacity-70" />
             
@@ -37,7 +36,7 @@ export default function RootLayout({
 
         <Navbar />
 
-        <main className="relative z-0 ">
+        <main className="flex-1 relative z-0 ">
             {children}
         </main>
         {/* <Footer /> */}
