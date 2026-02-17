@@ -11,7 +11,7 @@ export async function POST(request) {
         }
         const idToken = authHeader.split('Bearer ')[1];
         const decodedToken = await authAdmin.verifyIdToken(idToken);
-        const ADMIN_UIDS = [process.env.ADMIN_UIDS]; 
+        const ADMIN_UIDS = [process.env.NEXT_PUBLIC_ADMIN_UIDS]; 
         if (!ADMIN_UIDS.includes(decodedToken.uid)) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }

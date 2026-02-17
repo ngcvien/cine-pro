@@ -6,7 +6,7 @@ import { searchMoviesHybrid, getMovieData, getImageUrl } from "@/lib/movieServic
 import AdminGuard from "@/components/AdminGuard";
 
 
-export default function AddMoviePage() {
+export default function AddMoviePage({ editSlug }) {
     // --- STATE QUẢN LÝ ---
     const [activeTab, setActiveTab] = useState("info"); // 'info' | 'episodes'
     const [isSearching, setIsSearching] = useState(false);
@@ -19,22 +19,106 @@ export default function AddMoviePage() {
     const [countryOptions, setCountryOptions] = useState([]);
 
     useEffect(() => {
-    const fetchMetadata = async () => {
-        try {
-            const dataGenre = await getMovieData('the-loai/');
-            const dataCountry = await getMovieData('quoc-gia/');
-            
+        const loadMovieData = async () => {
+            // Nếu không có editSlug (tức là đang thêm mới) -> Reset form về mặc định
+            if (!editSlug) {
+                resetForm();
+                return;
+            }
 
-            // API trả về mảng trực tiếp: [{name, slug...}, {...}]
-            setGenreOptions(dataGenre || []);
-            setCountryOptions(dataCountry || []);
-        } catch (error) {
-            console.error("Lỗi lấy danh sách Thể loại/Quốc gia:", error);
-        }
+            setLoading(true);
+            try {
+                // Lấy dữ liệu từ Firestore (Custom Movies)
+                const docRef = doc(db, "custom_movies", editSlug);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+
+                    // A. Điền Tab 1: Thông tin phim
+                    // Lưu ý: Cần map đúng cấu trúc nested object mà bạn đã tạo ở bài trước
+                    setMovieForm({
+                        status: data.api_status || true,
+                        msg: data.api_msg || "",
+                        movie: {
+                            ...data, // Spread toàn bộ data gốc
+                            // Xử lý các object con để tránh lỗi undefined
+                            tmdb: data.tmdb || { type: "", id: "", season: "", vote_average: 0, vote_count: 0 },
+                            imdb: data.imdb || { id: "" },
+                            created: data.created || { time: "" },
+                            modified: data.modified || { time: "" },
+                            actor: data.actor || [],
+                            director: data.director || [],
+                            category: data.category || [],
+                            country: data.country || []
+                        }
+                    });
+
+                    // B. Điền Tab 2: Danh sách tập
+                    if (data.episodes && data.episodes.length > 0) {
+                        // Mặc định lấy server đầu tiên để hiển thị lên bảng
+                        const firstServer = data.episodes[0];
+                        setServerConfig({
+                            serverName: firstServer.server_name,
+                            priority: false // Hoặc lấy từ data nếu bạn có lưu
+                        });
+                        setEpisodeList(firstServer.server_data || []);
+                    } else {
+                        setEpisodeList([]);
+                    }
+
+                    // Chuyển về Tab Info để người dùng thấy ngay
+                    setActiveTab("info");
+                }
+            } catch (error) {
+                console.error("Lỗi tải phim để sửa:", error);
+                alert("Không tải được dữ liệu phim!");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadMovieData();
+    }, [editSlug]);
+
+    const resetForm = () => {
+        setMovieForm({
+            status: true, msg: "",
+            movie: {
+                _id: "", name: "", slug: "", origin_name: "", content: "",
+                type: "series", status: "ongoing", poster_url: "", thumb_url: "",
+                trailer_url: "", time: "", episode_current: "", episode_total: "",
+                quality: "HD", lang: "Vietsub", notify: "", showtimes: "",
+                year: 2024, view: 0,
+                is_copyright: false, sub_docquyen: false, chieurap: false,
+                tmdb: { type: "", id: "", season: "", vote_average: 0, vote_count: 0 },
+                imdb: { id: "" },
+                created: { time: "" }, modified: { time: "" },
+                actor: [], director: [], category: [], country: []
+            }
+        });
+        setEpisodeList([{ name: "Tập 1", slug: "tap-1", m3u8: "", embed: "" }]);
+        setServerConfig({ serverName: "Vietsub", priority: false });
+        setActiveTab("info");
     };
 
-    fetchMetadata();
-  }, []);
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            try {
+                const dataGenre = await getMovieData('the-loai/');
+                const dataCountry = await getMovieData('quoc-gia/');
+
+
+                // API trả về mảng trực tiếp: [{name, slug...}, {...}]
+                setGenreOptions(dataGenre || []);
+                setCountryOptions(dataCountry || []);
+            } catch (error) {
+                console.error("Lỗi lấy danh sách Thể loại/Quốc gia:", error);
+            }
+        };
+
+        fetchMetadata();
+    }, []);
 
     // 1. FORM THÔNG TIN PHIM (MOVIE INFO)
     const [movieForm, setMovieForm] = useState({
@@ -376,7 +460,7 @@ export default function AddMoviePage() {
             <div className="min-h-screen bg-[#0a0a0a] text-gray-300 font-sans p-6">
 
                 {/* HEADER & TÌM KIẾM */}
-                <div className="max-w-5xl mx-auto mb-8 mt-16">
+                <div className="max-w-5xl mx-auto mb-8">
                     <h1 className="text-xl font-bold text-white mb-4 tracking-wider uppercase">Quản Trị Phim</h1>
 
                     <div className="bg-[#121212] p-4 border border-white/5 rounded-sm">
@@ -867,25 +951,25 @@ function MultiSelect({ label, options, value = [], onChange }) {
 }
 
 // Helper render input cho array (Actor, Category...)
-  // Hiển thị tên dạng chuỗi, nhưng lưu vẫn giữ cấu trúc gốc nếu không sửa
-  const renderArrayInput = (label, arrayData, key = 'name') => {
-      // Chuyển array object thành string để hiển thị: "Hành động, Phiêu lưu"
-      const displayValue = Array.isArray(arrayData) 
-        ? arrayData.map(item => (typeof item === 'object' ? item[key] : item)).join(", ") 
+// Hiển thị tên dạng chuỗi, nhưng lưu vẫn giữ cấu trúc gốc nếu không sửa
+const renderArrayInput = (label, arrayData, key = 'name') => {
+    // Chuyển array object thành string để hiển thị: "Hành động, Phiêu lưu"
+    const displayValue = Array.isArray(arrayData)
+        ? arrayData.map(item => (typeof item === 'object' ? item[key] : item)).join(", ")
         : arrayData;
 
-      return (
+    return (
         <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">{label}</label>
-            <input 
+            <input
                 className="bg-black border border-white/10 p-3 text-white text-sm focus:border-[#00FF41] outline-none"
                 defaultValue={displayValue}
                 // Lưu ý: Logic này chỉ để hiển thị. 
                 // Nếu muốn sửa array phức tạp (Category có id, slug) bằng tay thì cần UI phức tạp hơn.
                 // Ở đây ta ưu tiên dữ liệu từ API.
-                readOnly 
+                readOnly
                 title="Dữ liệu này được lấy từ API. Sửa thủ công phức tạp nên đang để Read-only."
             />
         </div>
-      );
-  };
+    );
+};

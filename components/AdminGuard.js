@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",");
+const ADMIN_UIDS = (process.env.NEXT_PUBLIC_ADMIN_UIDS || "").split(",");
 
 export default function AdminGuard({ children }) {
   const [authorized, setAuthorized] = useState(false);
@@ -15,7 +15,7 @@ export default function AdminGuard({ children }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // Kiểm tra xem email user có nằm trong danh sách Admin không
-        if (ADMIN_EMAILS.includes(user.email)) {
+        if (ADMIN_UIDS.includes(user.uid)) {
           setAuthorized(true);
         } else {
           // Đã đăng nhập nhưng không phải Admin -> Về trang chủ

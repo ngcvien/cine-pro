@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Search, Bell, Menu, X, LogOut, User, FolderHeart, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Bell, Menu, X, LogOut, User, FolderHeart, ChevronDown, ChevronRight, LayoutDashboard } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "../lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -19,6 +19,9 @@ export default function Navbar() {
     const router = useRouter();
     const [loadingAuth, setLoadingAuth] = useState(true);
 
+    const ADMIN_UID = [process.env.NEXT_PUBLIC_ADMIN_UIDS];
+    console.log('ADMIN_UID: ' + ADMIN_UID);
+
     // --- LOGIC AUTH ---
     const [user, setUser] = useState(null);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -26,6 +29,8 @@ export default function Navbar() {
     const mobileMenuRef = useRef(null);
     const touchStartX = useRef(0);
     const touchEndX = useRef(0);
+
+
 
     const loginUrl = pathname === "/login"
         ? "/login"
@@ -148,14 +153,17 @@ export default function Navbar() {
         { name: "Chiếu Rạp", href: "/danh-sach/phim-chieu-rap" },
         { name: "Bộ lọc", href: "/filter" },
     ];
+    if (pathname && pathname.startsWith("/admin")) {
+        return null;
+    }
 
     return (
         <nav
             className={"fixed top-0 w-full z-50"}
         >
             <div className={`absolute inset-0 transition-all duration-500 z-[-1] ${isScrolled
-                    ? "bg-[#050505]/80 backdrop-blur-md shadow-lg"
-                    : "bg-gradient-to-b from-black/80 to-transparent"
+                ? "bg-[#050505]/80 backdrop-blur-md shadow-lg"
+                : "bg-gradient-to-b from-black/80 to-transparent"
                 }`} />
             <div className="container mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
 
@@ -313,6 +321,11 @@ export default function Navbar() {
                                     <Link href="/tu-phim" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/10 hover:text-white transition-colors text-sm">
                                         <FolderHeart size={16} /> Tủ phim
                                     </Link>
+                                    {user && user.uid == ADMIN_UID && (
+                                        <Link href="/admin" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/10 hover:text-white transition-colors text-sm">
+                                            <LayoutDashboard size={16} /> Admin
+                                        </Link>
+                                    )}
 
                                     <div className="h-px bg-white/10 my-2 mx-4"></div>
 
@@ -534,6 +547,11 @@ export default function Navbar() {
                                 >
                                     <FolderHeart size={18} /> Tủ phim
                                 </Link>
+                                {user && user.uid == ADMIN_UID && (
+                                    <Link href="/admin" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/10 hover:text-white transition-colors text-sm">
+                                        <LayoutDashboard size={18} /> Admin
+                                    </Link>
+                                )}
                                 <button
                                     onClick={() => {
                                         handleLogout();
