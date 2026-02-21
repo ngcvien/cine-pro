@@ -20,7 +20,6 @@ export default function Navbar() {
     const [loadingAuth, setLoadingAuth] = useState(true);
 
     const ADMIN_UID = [process.env.NEXT_PUBLIC_ADMIN_UIDS];
-    console.log('ADMIN_UID: ' + ADMIN_UID);
 
     // --- LOGIC AUTH ---
     const [user, setUser] = useState(null);
