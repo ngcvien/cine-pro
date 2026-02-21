@@ -171,3 +171,21 @@ h1, h2, h3, h4, h5, h6 {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(74, 222, 128, 0.5); /* Màu primary khi hover */
 }
+
+
+/* Hiệu ứng chữ bay Danmaku */
+@keyframes danmakuFly {
+  from { 
+    left: 100%; 
+    transform: translateX(0); 
+  }
+  to { 
+    left: 0; 
+    transform: translateX(-100%); 
+  }
+}
+
+.animate-danmaku {
+  /* 8s là thời gian bay, linear giúp tốc độ đều không bị giật, forwards giữ trạng thái cuối */
+  animation: danmakuFly 8s linear forwards;
+}

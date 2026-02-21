@@ -150,7 +150,7 @@ export default function Navbar() {
         { name: "Phim Bộ", href: "/danh-sach/phim-bo" },
         { name: "TV Shows", href: "/danh-sach/tv-shows" },
         { name: "Hoạt Hình", href: "/danh-sach/hoat-hinh" },
-        { name: "Chiếu Rạp", href: "/danh-sach/phim-chieu-rap" },
+        // { name: "Chiếu Rạp", href: "/danh-sach/phim-chieu-rap" },
         { name: "Bộ lọc", href: "/filter" },
     ];
     if (pathname && pathname.startsWith("/admin")) {
@@ -195,6 +195,23 @@ export default function Navbar() {
                                 </Link>
                             </li>
                         ))}
+                        <Link
+                            href='/watch-party'
+                            className={`group relative pr-8 text-sm text-center font-bold uppercase flex items-center tracking-wide transition-colors text-gray-300 hover:text-white  ${pathname === '/watch-party' ? "text-primary" : "text-gray-300"}`}
+                        >
+                            <span>XEM CHUNG</span>
+
+                            {/* Tag DEMO treo lơ lửng trên góc */}
+                            <span className="absolute -top-2.5 right-0 px-1.5 py-[1px] bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 rounded-full text-[8px] font-black tracking-widest  transition-all shadow-sm">
+                                DEMO
+
+                                {/* Chấm sáng nhấp nháy tạo điểm nhấn (Bạn có thể xóa cụm này nếu chỉ muốn chữ) */}
+                                {/* <span className="absolute -top-1 -right-1 flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FF41] opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00FF41]"></span>
+                                </span> */}
+                            </span>
+                        </Link>
 
                         {/* DROPDOWN THỂ LOẠI */}
                         <li className="relative group py-4">
