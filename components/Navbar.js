@@ -469,6 +469,24 @@ export default function Navbar() {
                                 {link.name}
                             </Link>
                         ))}
+                        <Link
+                            href='/watch-party'
+                            className={`block px-4 py-3 rounded-lg font-bold text-sm transition-all ${pathname === '/watch-party' ?  "bg-primary/20 text-primary border border-primary/30"
+                                    : "text-gray-300 hover:bg-white/10 hover:text-white"}`}
+                        >
+                            <span>XEM CHUNG</span>
+
+                            {/* Tag DEMO treo lơ lửng trên góc */}
+                            <span className="absolute -top-2.5 right-0 px-1.5 py-[1px] bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 rounded-full text-[8px] font-black tracking-widest  transition-all shadow-sm">
+                                DEMO
+
+                                {/* Chấm sáng nhấp nháy tạo điểm nhấn (Bạn có thể xóa cụm này nếu chỉ muốn chữ) */}
+                                {/* <span className="absolute -top-1 -right-1 flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FF41] opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00FF41]"></span>
+                                </span> */}
+                            </span>
+                        </Link>
 
                         {/* Thể Loại Dropdown */}
                         <div>
