@@ -130,6 +130,7 @@ export default function MovieWatchArea({ movie, episodes, currentEpSlug }) {
                         <VideoPlayer
                             url={currentEpisode.link_m3u8}
                             slug={movie.slug}
+                            movieName={movie.name}
                             episodeName={currentEpisode.name}
                             episodeSlug={currentEpisode.slug}
                             episodes={currentServerData.server_data}

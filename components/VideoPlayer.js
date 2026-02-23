@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { RotateCcw, RotateCw, SkipBack, SkipForward } from "lucide-react";
 import { renderToString } from "react-dom/server";
 
-export default function VideoPlayer({ url, slug, episodeName, episodes = [], episodeSlug }) {
+export default function VideoPlayer({ url, slug, movieName, episodeName, episodes = [], episodeSlug }) {
   const artRef = useRef(null);
   const playerInstance = useRef(null);
   const [user, setUser] = useState(null);
@@ -60,7 +60,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
         case 'ArrowRight':
           e.preventDefault();
           if (e.ctrlKey) {
-            e.preventDefault();    
+            e.preventDefault();
             art.forward = 30;
             art.notice.show = "Tới 30 giây";
             break;
@@ -71,7 +71,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
         case 'ArrowLeft':
           e.preventDefault();
           if (e.ctrlKey) {
-            e.preventDefault();    
+            e.preventDefault();
             art.backward = 30;
             art.notice.show = "Lùi 30 giây";
             break;
@@ -112,7 +112,7 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
             router.push(`/phim/${slug}?tap=${prevEp.slug}`);
           }
           break;
-        
+
         default: break;
       }
     };
@@ -147,9 +147,9 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
       miniProgressBar: true,
       theme: "#00FF41",
       hotkey: false,
-      setting: true,          
-      playbackRate: true,    
-      aspectRatio: true,      
+      setting: true,
+      playbackRate: true,
+      aspectRatio: true,
       flip: true,
       controls: [
         // {
@@ -208,6 +208,101 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
             art.forward = 5;
             art.notice.show = "Tới 5 giây";
           },
+        },
+
+      ],
+      layers: [
+        {
+          name: 'movieTitle',
+          html: `
+                        <style>
+                            /* GIAO DIỆN GỐC (PC) */
+                            .art-custom-title {
+                                position: absolute;
+                                top: 0; left: 0; right: 0;
+                                padding: 25px 20px;
+                                background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+                                display: flex; 
+                                align-items: center; gap: 12px;
+                                transition: opacity 0.4s ease, transform 0.4s ease;
+                                pointer-events: none;
+                                z-index: 50;
+                            }
+                            .art-custom-title-mark {
+                                width: 4px; height: 18px; background-color: #00FF41; border-radius: 2px; flex-shrink: 0;
+                            }
+                            .art-custom-title-text {
+                                font-size: 18px; font-weight: bold; color: #ffffff; 
+                                text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+                                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                            }
+                            .art-custom-title-ep {
+                                color: #a3a3a3; font-size: 15px; font-weight: 500; margin-left: 5px;
+                            }
+
+                            /* 1. TRÊN ĐIỆN THOẠI: ẨN HOÀN TOÀN CHO ĐỠ CHẬT */
+                            @media (max-width: 768px) {
+                                .art-custom-title { display: none; }
+                            }
+
+                            /* 2. KHI PHÓNG TO TOÀN MÀN HÌNH: ÉP HIỂN THỊ LẠI */
+                            .art-fullscreen .art-custom-title {
+                                display: flex !important; /* Phá vỡ lệnh ẩn ở trên */
+                                padding: 15px 20px; /* Thu gọn lề một chút khi xoay ngang điện thoại */
+                            }
+                            .art-fullscreen .art-custom-title-text {
+                                font-size: 16px; /* Chữ vừa vặn hơn trên đt xoay ngang */
+                            }
+                            /* 1. Ép vị trí ra giữa và vô hiệu hóa kiểu tắt đột ngột của Artplayer */
+                            .art-video-player .art-notice {
+                                display: block !important; /* QUAN TRỌNG: Chống Artplayer giấu hẳn element */
+                                position: absolute !important;
+                                top: auto !important;
+                                bottom: 15% !important; /* Nằm cách đáy 15% (bên dưới một tí) */
+                                left: 50% !important;
+                                right: auto !important;
+                                width: auto !important;
+                                margin: 0 !important;
+                                z-index: 999 !important;
+                                pointer-events: none !important; /* Không cản trở click chuột vào video */
+                                
+                                /* TRẠNG THÁI ẨN: Trong suốt 100% và tụt nhẹ xuống */
+                                opacity: 0 !important;
+                                transform: translate(-50%, 15px) !important;
+                                transition: opacity 0.5s ease, transform 0.5s ease !important;
+                            }
+                            
+                            /* KHI HIỂN THỊ: Artplayer sẽ gắn class art-notice-show vào video player */
+                            .art-video-player.art-notice-show .art-notice {
+                                opacity: 1 !important; /* Hiện rõ lên */
+                                // transform: translate(-50%, 0) !important; /* Trượt nhẹ lên vị trí gốc */
+                            }
+                            
+                            /* 2. Làm đẹp nội dung (Dạng viên nang bo tròn mượt mà) */
+                            .art-video-player .art-notice-inner {
+                                background: rgba(0, 0, 0, 0.7) !important;
+                                // backdrop-filter: blur(10px) !important;
+                                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                                color: #ffffff !important;
+                                padding: 10px 24px !important;
+                                font-size: 13px !important;
+                                font-weight: bold !important;
+                                border-radius: 50px !important; /* Bo tròn hoàn toàn hai đầu */
+                                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important;
+                                text-transform: uppercase !important;
+                                white-space: nowrap !important;
+                                letter-spacing: 1px !important;
+                            }
+                        </style>
+
+                        <div class="art-custom-title">
+                            <span class="art-custom-title-mark"></span>
+                            <span class="art-custom-title-text">
+                                ${movieName || 'Đang tải...'} 
+                                ${episodeName ? `<span class="art-custom-title-ep">| ${episodeName}</span>` : ''}
+                            </span>
+                        </div>
+                    `,
         }
       ],
 
@@ -231,8 +326,29 @@ export default function VideoPlayer({ url, slug, episodeName, episodes = [], epi
       autoSize: false,
 
     });
+    // 2. LẮNG NGHE SỰ KIỆN ẨN/HIỆN CỦA THANH ĐIỀU KHIỂN
+    art.on('control', (state) => {
+      // Kiểm tra an toàn xem cái thẻ gốc của React có còn trên màn hình không
+      if (!artRef.current) return;
+
+      // Dùng thẳng biến artRef.current của React để tìm, bất chấp mọi phiên bản Artplayer
+      const titleEl = artRef.current.querySelector('.art-custom-title');
+
+      if (titleEl) {
+        if (state) {
+          // Khi thanh điều khiển hiện
+          titleEl.style.opacity = '1';
+          titleEl.style.transform = 'translateY(0)';
+        } else {
+          // Khi thanh điều khiển ẩn
+          titleEl.style.opacity = '0';
+          titleEl.style.transform = 'translateY(-15px)';
+        }
+      }
+    });
 
     playerInstance.current = art;
+
 
     // --- LOGIC: TẢI LỊCH SỬ THÔNG MINH ---
     art.on("ready", async () => {
