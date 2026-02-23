@@ -45,7 +45,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
         case ' ': case 'k': case 'K':
           e.preventDefault();
           art.toggle();
-          art.notice.show = art.playing ? "Tạm dừng" : "Tiếp tục";
+          // art.notice.show = art.playing ? "Tạm dừng" : "Tiếp tục";
           break;
         case 'j': case 'J':
           e.preventDefault();
