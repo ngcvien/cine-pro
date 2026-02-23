@@ -257,8 +257,8 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
                             .art-video-player .art-notice {
                                 display: block !important; /* QUAN TRỌNG: Chống Artplayer giấu hẳn element */
                                 position: absolute !important;
-                                top: auto !important;
-                                bottom: 15% !important; /* Nằm cách đáy 15% (bên dưới một tí) */
+                                bottom: auto !important;
+                                top: 15% !important; /* Nằm cách đáy 15% (bên dưới một tí) */
                                 left: 50% !important;
                                 right: auto !important;
                                 width: auto !important;
@@ -268,7 +268,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
                                 
                                 /* TRẠNG THÁI ẨN: Trong suốt 100% và tụt nhẹ xuống */
                                 opacity: 0 !important;
-                                transform: translate(-50%, 15px) !important;
+                                transform: translate(-50%, -20px) !important;
                                 transition: opacity 0.5s ease, transform 0.5s ease !important;
                             }
                             
