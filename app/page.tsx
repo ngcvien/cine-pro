@@ -141,11 +141,13 @@ export default async function Home() {
   // console.log("Hero Movies:", heroMovies);
 
   return (
-    <div className="container mx-auto px-4 md:px-1 space-y-16 pb-20">
+    <div className=" mx-auto px-6 md:px-[-1] space-y-16 pb-20">
 
       {/* 1. HERO SECTION (Truyền danh sách đã bổ sung quality, episode_current) */}
       {heroMovies.length > 0 && (
-        <HeroSection movies={heroMovies as any} />
+        <div className="-mx-6 md:mx-0">
+          <HeroSection movies={heroMovies as any}/>
+        </div>
       )}
 
       {/* 2. WATCHING NOW (Phim đang xem - Client Component) */}

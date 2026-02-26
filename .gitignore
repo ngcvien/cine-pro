@@ -41,3 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env
+
+/android
+/android/app/src/main/res/drawable/tv_banner.png
+/www
+capacitor.config.ts
