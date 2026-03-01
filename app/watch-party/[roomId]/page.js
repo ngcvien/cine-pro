@@ -812,7 +812,7 @@ export default function WatchPartyRoom() {
 
                     {/* FULLSCREEN CHAT INPUT */}
                     {isFullscreen && (
-                        <div className="absolute bottom-20 left-0 right-0 z-20 flex justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 px-6">
+                        <div className="absolute bottom-60 left-0 right-0 z-20 flex justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 px-6">
                             <form onSubmit={handleSendMessage} className="glass-strong p-2 rounded-2xl flex gap-2 w-full max-w-2xl shadow-2xl">
                                 <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder={cooldown > 0 ? `Chờ ${cooldown}s...` : 'Gõ tin nhắn...'}
