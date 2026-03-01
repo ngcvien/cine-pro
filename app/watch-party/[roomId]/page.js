@@ -139,7 +139,7 @@ export default function WatchPartyRoom() {
 
     useEffect(() => {
         if (!episodes || episodes.length === 0 || !videoLink) return;
-        const sIndex = episodes.findIndex(server => 
+        const sIndex = episodes.findIndex(server =>
             server.server_data.some(ep => ep.link_m3u8 === videoLink)
         );
         if (sIndex !== -1) {
@@ -241,6 +241,94 @@ export default function WatchPartyRoom() {
             playbackRate: isHost,
             fastForward: false, // Tắt tua nhanh mặc định 
             controls: playerControls,
+            layers: [
+                {
+                    name: 'movieTitle',
+                    html: `
+                        <style>
+                            /* GIAO DIỆN GỐC (PC) */
+                            .art-custom-title {
+                                position: absolute;
+                                top: 0; left: 0; right: 0;
+                                padding: 25px 20px;
+                                background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+                                display: flex; 
+                                align-items: center; gap: 12px;
+                                transition: opacity 0.4s ease, transform 0.4s ease;
+                                pointer-events: none;
+                                z-index: 50;
+                            }
+                            .art-custom-title-mark {
+                                width: 4px; height: 18px; background-color: #00FF41; border-radius: 2px; flex-shrink: 0;
+                            }
+                            .art-custom-title-text {
+                                font-size: 18px; font-weight: bold; color: #ffffff; 
+                                text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+                                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                            }
+                            .art-custom-title-ep {
+                                color: #a3a3a3; font-size: 15px; font-weight: 500; margin-left: 5px;
+                            }
+
+                            /* 1. TRÊN ĐIỆN THOẠI: ẨN HOÀN TOÀN CHO ĐỠ CHẬT */
+                            @media (max-width: 768px) {
+                                .art-custom-title { display: none; }
+                            }
+
+                            /* 2. KHI PHÓNG TO TOÀN MÀN HÌNH: ÉP HIỂN THỊ LẠI */
+                            .art-fullscreen .art-custom-title {
+                                display: flex !important; /* Phá vỡ lệnh ẩn ở trên */
+                                padding: 15px 20px; /* Thu gọn lề một chút khi xoay ngang điện thoại */
+                            }
+                            .art-fullscreen .art-custom-title-text {
+                                font-size: 16px; /* Chữ vừa vặn hơn trên đt xoay ngang */
+                            }
+                            /* 1. Ép vị trí ra giữa và vô hiệu hóa kiểu tắt đột ngột của Artplayer */
+                            .art-video-player .art-notice {
+                                display: block !important; /* QUAN TRỌNG: Chống Artplayer giấu hẳn element */
+                                position: absolute !important;
+                                bottom: auto !important;
+                                top: 15% !important; /* Nằm cách đáy 15% (bên dưới một tí) */
+                                left: 50% !important;
+                                right: auto !important;
+                                width: auto !important;
+                                margin: 0 !important;
+                                z-index: 999 !important;
+                                pointer-events: none !important; /* Không cản trở click chuột vào video */
+                                
+                                /* TRẠNG THÁI ẨN: Trong suốt 100% và tụt nhẹ xuống */
+                                opacity: 0 !important;
+                                transform: translate(-50%, -20px) !important;
+                                transition: opacity 0.5s ease, transform 0.5s ease !important;
+                            }
+                            
+                            /* KHI HIỂN THỊ: Artplayer sẽ gắn class art-notice-show vào video player */
+                            .art-video-player.art-notice-show .art-notice {
+                                opacity: 1 !important; /* Hiện rõ lên */
+                                // transform: translate(-50%, 0) !important; /* Trượt nhẹ lên vị trí gốc */
+                            }
+                            
+                            /* 2. Làm đẹp nội dung (Dạng viên nang bo tròn mượt mà) */
+                            .art-video-player .art-notice-inner {
+                                background: rgba(0, 0, 0, 0.7) !important;
+                                // backdrop-filter: blur(10px) !important;
+                                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                                color: #ffffff !important;
+                                padding: 10px 24px !important;
+                                font-size: 13px !important;
+                                font-weight: bold !important;
+                                border-radius: 50px !important; /* Bo tròn hoàn toàn hai đầu */
+                                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important;
+                                text-transform: uppercase !important;
+                                white-space: nowrap !important;
+                                letter-spacing: 1px !important;
+                            }
+                        </style>
+
+                        
+                    `,
+                }
+            ],
             customType: {
                 m3u8: function (video, url) {
                     if (Hls.isSupported()) {
@@ -261,11 +349,27 @@ export default function WatchPartyRoom() {
             if (document.activeElement.tagName === 'INPUT') return; // Không kích hoạt khi đang gõ chat
 
             switch (e.key) {
-                case 'ArrowLeft':
-                    art.currentTime = Math.max(0, art.currentTime - 5);
-                    break;
                 case 'ArrowRight':
-                    art.currentTime += 5;
+                    e.preventDefault();
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        art.forward = 30;
+                        art.notice.show = "+30";
+                        break;
+                    }
+                    art.forward = 5;
+                    art.notice.show = "+5";
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        art.backward = 30;
+                        art.notice.show = "-30";
+                        break;
+                    }
+                    art.backward = 5;
+                    art.notice.show = "-5";
                     break;
                 case ' ': // Phím Space
                     e.preventDefault();
@@ -522,7 +626,7 @@ export default function WatchPartyRoom() {
                 timestamp: serverTimestamp(),
             });
             setNewMessage("");
-            setCooldown(5);
+            setCooldown(0);
         } catch (error) {
             console.error("Lỗi gửi:", error);
         }
@@ -564,7 +668,7 @@ export default function WatchPartyRoom() {
             `}</style>
             <div className="flex flex-col items-center gap-5 animate-[fade-in_0.5s_ease]">
                 <div className="loader"></div>
-                <p style={{fontFamily:'IBM Plex Mono'}} className="text-[11px] text-[#22FF00]/50 uppercase tracking-[0.3em]">Đang kết nối...</p>
+                <p style={{ fontFamily: 'IBM Plex Mono' }} className="text-[11px] text-[#22FF00]/50 uppercase tracking-[0.3em]">Đang kết nối...</p>
             </div>
         </div>
     );
@@ -576,13 +680,13 @@ export default function WatchPartyRoom() {
                 @keyframes aurora { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(40px,-30px) scale(1.1);} }
             `}</style>
             <div className="absolute inset-0 pointer-events-none">
-                <div style={{animation:'aurora 8s ease-in-out infinite'}} className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#22FF00]/6 blur-[100px]"></div>
-                <div style={{animation:'aurora 10s ease-in-out infinite reverse'}} className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#22FF00]/5 blur-[100px]"></div>
+                <div style={{ animation: 'aurora 8s ease-in-out infinite' }} className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#22FF00]/6 blur-[100px]"></div>
+                <div style={{ animation: 'aurora 10s ease-in-out infinite reverse' }} className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#22FF00]/5 blur-[100px]"></div>
             </div>
             <div className="relative z-10 text-center space-y-6 p-8">
-                <p style={{fontFamily:'Be Vietnam Pro'}} className="text-3xl font-bold text-white">Yêu Cầu Đăng Nhập</p>
-                <p style={{fontFamily:'IBM Plex Mono'}} className="text-sm text-gray-500">Bạn cần tài khoản để tham gia phòng xem chung</p>
-                <button onClick={() => router.push('/login')} style={{fontFamily:'Be Vietnam Pro'}} className="group relative px-10 py-3.5 bg-gradient-to-r from-[#22FF00] to-[#1acc00] text-black font-bold uppercase tracking-widest text-sm rounded-xl overflow-hidden hover:shadow-[0_0_30px_rgba(34,255,0,0.5)] transition-all duration-300">
+                <p style={{ fontFamily: 'Be Vietnam Pro' }} className="text-3xl font-bold text-white">Yêu Cầu Đăng Nhập</p>
+                <p style={{ fontFamily: 'IBM Plex Mono' }} className="text-sm text-gray-500">Bạn cần tài khoản để tham gia phòng xem chung</p>
+                <button onClick={() => router.push('/login')} style={{ fontFamily: 'Be Vietnam Pro' }} className="group relative px-10 py-3.5 bg-gradient-to-r from-[#22FF00] to-[#1acc00] text-black font-bold uppercase tracking-widest text-sm rounded-xl overflow-hidden hover:shadow-[0_0_30px_rgba(34,255,0,0.5)] transition-all duration-300">
                     <span className="relative z-10">Đăng nhập ngay</span>
                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </button>
@@ -591,7 +695,7 @@ export default function WatchPartyRoom() {
     );
 
     return (
-        <div className="min-h-screen bg-[#050905] text-gray-300 flex flex-col md:flex-row overflow-hidden mt-17" style={{fontFamily:'IBM Plex Mono, monospace'}}>
+        <div className="min-h-screen bg-[#050905] text-gray-300 flex flex-col md:flex-row overflow-hidden mt-17" style={{ fontFamily: 'IBM Plex Mono, monospace' }}>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;700&display=swap');
 
@@ -701,11 +805,10 @@ export default function WatchPartyRoom() {
                 <div className="sticky top-0 z-20 glass border-b border-white/[0.06] px-5 py-3 flex flex-wrap gap-3 justify-between items-center">
                     {/* LEFT: Badge + Title */}
                     <div className="flex items-center gap-3 min-w-0">
-                        <span className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] mono font-bold uppercase tracking-wider ${
-                            isWaiting
+                        <span className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] mono font-bold uppercase tracking-wider ${isWaiting
                             ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                             : 'bg-[#22FF00]/8 text-[#22FF00] border border-[#22FF00]/15'
-                        }`}>
+                            }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${isWaiting ? 'bg-amber-400' : 'bg-[#22FF00] live-dot'}`}></span>
                             {isWaiting ? 'Sắp chiếu' : 'Live'}
                         </span>
@@ -738,7 +841,7 @@ export default function WatchPartyRoom() {
                             onClick={() => setShowChat(!showChat)}
                             className="hidden md:flex items-center gap-1.5 mono text-[10px] uppercase tracking-wider text-gray-500 hover:text-white border-l border-white/[0.06] pl-4 transition-colors"
                         >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                             {showChat ? 'Thu chat' : 'Mở chat'}
                         </button>
                     </div>
@@ -749,7 +852,7 @@ export default function WatchPartyRoom() {
 
                     {/* Gradient vignette overlay */}
                     <div className="absolute inset-0 z-[1] pointer-events-none"
-                        style={{background:'radial-gradient(ellipse at center, transparent 60%, rgba(5,5,8,0.6) 100%)'}}></div>
+                        style={{ background: 'radial-gradient(ellipse at center, transparent 60%, rgba(5,5,8,0.6) 100%)' }}></div>
 
                     {videoLink ? (
                         <div ref={artContainerRef} className="absolute inset-0 z-0 outline-none focus:outline-none"></div>
@@ -763,14 +866,14 @@ export default function WatchPartyRoom() {
                     {/* WAITING SCREEN */}
                     {isWaiting && (
                         <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center"
-                            style={{background:'linear-gradient(135deg, rgba(5,5,8,0.97) 0%, rgba(2,12,2,0.97) 100%)'}}>
+                            style={{ background: 'linear-gradient(135deg, rgba(5,5,8,0.97) 0%, rgba(2,12,2,0.97) 100%)' }}>
                             {/* Decorative rings */}
                             <div className="absolute w-96 h-96 rounded-full border border-[#22FF00]/8 animate-pulse"></div>
-                            <div className="absolute w-64 h-64 rounded-full border border-[#22FF00]/20/15" style={{animation:'spin-glow 15s linear infinite'}}></div>
+                            <div className="absolute w-64 h-64 rounded-full border border-[#22FF00]/20/15" style={{ animation: 'spin-glow 15s linear infinite' }}></div>
 
                             <div className="relative z-10 flex flex-col items-center gap-6">
                                 <p className="ibm text-[11px] text-[#22FF00]/40 uppercase tracking-[0.4em]">Giờ G Sắp Điểm</p>
-                                <p className="bvp font-black count-glow" style={{fontSize:'clamp(4rem,12vw,8rem)', color:'#22FF00', lineHeight:1}}>
+                                <p className="bvp font-black count-glow" style={{ fontSize: 'clamp(4rem,12vw,8rem)', color: '#22FF00', lineHeight: 1 }}>
                                     {formatTime(timeRemaining)}
                                 </p>
                                 <div className="glass-strong px-8 py-4 rounded-2xl mt-2">
@@ -801,8 +904,8 @@ export default function WatchPartyRoom() {
                                     {!danmaku.isMe && (
                                         <img src={danmaku.photoURL} alt="" className="w-4 h-4 rounded-full object-cover border border-white/20" />
                                     )}
-                                    <span className="ibm text-[11px] font-bold" style={{color: danmaku.isMe ? '#0a4a00' : '#F3F4F6'}}>
-                                        {!danmaku.isMe && <span style={{color:'rgba(156,163,175,0.7)'}} className="mr-1">{danmaku.displayName}:</span>}
+                                    <span className="ibm text-[11px] font-bold" style={{ color: danmaku.isMe ? '#ffffff' : '#F3F4F6' }}>
+                                        {!danmaku.isMe && <span style={{ color: 'rgba(156,163,175,0.7)' }} className="mr-1">{danmaku.displayName}:</span>}
                                         {danmaku.text}
                                     </span>
                                 </div>
@@ -812,7 +915,7 @@ export default function WatchPartyRoom() {
 
                     {/* FULLSCREEN CHAT INPUT */}
                     {isFullscreen && (
-                        <div className="absolute bottom-60 left-0 right-0 z-20 flex justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 px-6">
+                        <div className="absolute bottom-35 left-0 right-0 z-20 flex justify-center opacity-0 hover:opacity-80 transition-opacity  duration-300 px-6">
                             <form onSubmit={handleSendMessage} className="glass-strong p-2 rounded-2xl flex gap-2 w-full max-w-2xl shadow-2xl">
                                 <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder={cooldown > 0 ? `Chờ ${cooldown}s...` : 'Gõ tin nhắn...'}
@@ -846,11 +949,10 @@ export default function WatchPartyRoom() {
                                         <button
                                             key={sIdx}
                                             onClick={() => setActiveServerIndex(sIdx)}
-                                            className={`px-4 py-2 mono text-[10px] uppercase tracking-widest rounded-lg transition-all duration-200 border ${
-                                                activeServerIndex === sIdx
+                                            className={`px-4 py-2 mono text-[10px] uppercase tracking-widest rounded-lg transition-all duration-200 border ${activeServerIndex === sIdx
                                                 ? 'bg-gradient-to-r from-[#22FF00]/10 to-[#1acc00]/20 text-[#22FF00] border-[#22FF00]/30 shadow-[0_0_16px_rgba(34,255,0,0.15)]'
                                                 : 'bg-white/[0.03] text-gray-600 border-white/[0.06] hover:text-gray-300 hover:bg-white/[0.06]'
-                                            }`}
+                                                }`}
                                         >
                                             {formatServerName(server.server_name)}
                                         </button>
@@ -870,11 +972,10 @@ export default function WatchPartyRoom() {
                                                     onClick={() => handleSelectEpisode(epFullName, ep.link_m3u8)}
                                                     disabled={!isHost}
                                                     title={!isHost ? 'Chỉ Host mới đổi được tập' : 'Đổi tập'}
-                                                    className={`ep-btn min-w-[56px] px-3.5 py-2 mono text-xs font-bold rounded-lg border transition-all duration-200 ${
-                                                        isPlaying
+                                                    className={`ep-btn min-w-[56px] px-3.5 py-2 mono text-xs font-bold rounded-lg border transition-all duration-200 ${isPlaying
                                                         ? 'bg-[#22FF00] text-black border-transparent shadow-[0_0_20px_rgba(34,255,0,0.35)]'
                                                         : 'bg-white/[0.03] text-gray-400 border-white/[0.07] hover:bg-white/[0.07] hover:text-white hover:border-[#22FF00]/20'
-                                                    } ${!isHost && !isPlaying ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                                        } ${!isHost && !isPlaying ? 'opacity-40 cursor-not-allowed' : ''}`}
                                                 >
                                                     {ep.name}
                                                 </button>
@@ -907,7 +1008,7 @@ export default function WatchPartyRoom() {
                     {/* CHAT HEADER */}
                     <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#22FF00]"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#22FF00]"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                             <span className="bvp font-bold text-white text-sm">Trò chuyện</span>
                         </div>
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#22FF00]/8 border border-[#22FF00]/15">
@@ -920,7 +1021,7 @@ export default function WatchPartyRoom() {
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-sleek">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full gap-3 opacity-50">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#22FF00]/40"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#22FF00]/40"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                                 <p className="ibm text-[10px] text-gray-700 uppercase tracking-widest">Chưa có tin nhắn</p>
                             </div>
                         )}
@@ -933,7 +1034,7 @@ export default function WatchPartyRoom() {
                                         src={msg.photoURL}
                                         alt=""
                                         className="w-7 h-7 rounded-full object-cover border flex-shrink-0 mt-7"
-                                        style={{borderColor: isMe ? 'rgba(34,255,0,0.4)' : 'rgba(255,255,255,0.08)'}}
+                                        style={{ borderColor: isMe ? 'rgba(34,255,0,0.4)' : 'rgba(255,255,255,0.08)' }}
                                     />
                                     <div className={`flex flex-col max-w-[78%] gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
                                         <span className="ibm text-[9px] text-gray-600 uppercase tracking-wider">{msg.displayName}</span>
@@ -963,7 +1064,7 @@ export default function WatchPartyRoom() {
                     {/* CHAT INPUT */}
                     <div className="p-4 border-t border-white/[0.05]">
                         <form onSubmit={handleSendMessage}>
-                            <div className="relative flex items-center rounded-xl overflow-hidden" style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)'}}>
+                            <div className="relative flex items-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                                 <input
                                     type="text"
                                     value={newMessage}
@@ -972,20 +1073,20 @@ export default function WatchPartyRoom() {
                                     disabled={cooldown > 0}
                                     maxLength={150}
                                     className="flex-1 bg-transparent px-4 py-3 text-sm text-white outline-none placeholder-gray-700 mono disabled:opacity-40"
-                                    style={{caretColor:'#22FF00'}}
+                                    style={{ caretColor: '#22FF00' }}
                                 />
                                 <button
                                     type="submit"
                                     disabled={!newMessage.trim() || cooldown > 0}
                                     className="m-1.5 px-4 py-2 mono text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all disabled:opacity-20"
-                                    style={{background:'#22FF00', color:'#000'}}
+                                    style={{ background: '#22FF00', color: '#000' }}
                                 >
                                     {cooldown > 0 ? `${cooldown}s` : 'Gửi'}
                                 </button>
                             </div>
 
                             {cooldown > 0 && (
-                                <div className="mt-2.5 h-0.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.04)'}}>
+                                <div className="mt-2.5 h-0.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
                                     <div
                                         className="h-full rounded-full transition-all duration-1000 ease-linear"
                                         style={{
