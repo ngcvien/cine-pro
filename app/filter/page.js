@@ -37,8 +37,8 @@ export default function FilterPage() {
         const fetchOptions = async () => {
             try {
                 const [catData, countryData] = await Promise.all([
-                    getMovieData("the-loai"),
-                    getMovieData("quoc-gia")
+                    getMovieData("the-loai/"),
+                    getMovieData("quoc-gia/")
                 ]);
                 setCategories(catData || []);
                 setCountries(countryData || []);
@@ -164,7 +164,7 @@ export default function FilterPage() {
                             </button>
                         </div>
 
-                        <div className="bg-[#121212] lg:p-6 lg:rounded-xl lg:border lg:border-white/10 lg:sticky lg:top-24 space-y-4">
+                        <div className="bg-[#121212] lg:p-6 lg:rounded-xl lg:border lg:border-white/10 lg:sticky lg:top-24 space-y-4 ">
 
                             {/* 1. Loại Phim */}
                             <div>
@@ -189,7 +189,7 @@ export default function FilterPage() {
                                     name="category"
                                     value={filters.category}
                                     onChange={handleFilterChange}
-                                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white focus:border-primary outline-none"
+                                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white focus:border-primary outline-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                                 >
                                     <option value="">-- Tất cả --</option>
                                     {categories.map((cat) => (
@@ -205,7 +205,7 @@ export default function FilterPage() {
                                     name="country"
                                     value={filters.country}
                                     onChange={handleFilterChange}
-                                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white focus:border-primary outline-none"
+                                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white focus:border-primary outline-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                                 >
                                     <option value="">-- Tất cả --</option>
                                     {countries.map((c) => (
@@ -221,7 +221,7 @@ export default function FilterPage() {
                                     name="year"
                                     value={filters.year}
                                     onChange={handleFilterChange}
-                                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white focus:border-primary outline-none"
+                                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white focus:border-primary outline-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                                 >
                                     <option value="">-- Tất cả --</option>
                                     {years.map((y) => (

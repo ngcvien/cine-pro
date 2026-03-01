@@ -40,6 +40,13 @@ export default function WatchPartyRoom() {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showChat, setShowChat] = useState(true);
     const [showDanmaku, setShowDanmaku] = useState(true);
+    const [showFullscreenInput, setShowFullscreenInput] = useState(false);
+    const [fullscreenInputCollapsed, setFullscreenInputCollapsed] = useState(false);
+    const [fullscreenInputFocused, setFullscreenInputFocused] = useState(false);
+    const fullscreenInputTimerRef = useRef(null);
+    const fullscreenTypingTimerRef = useRef(null);
+    const fullscreenBlurTimerRef = useRef(null);
+    const fullscreenInputRef = useRef(null);
 
     // --- CHAT STATES ---
     const [messages, setMessages] = useState([]);
@@ -237,7 +244,7 @@ export default function WatchPartyRoom() {
             hotkey: false, // Tắt hotkey mặc định để tự quản lý
             pip: true,
             setting: true,
-            miniProgressBar: true,
+            miniProgressBar: false,
             playbackRate: isHost,
             fastForward: false, // Tắt tua nhanh mặc định 
             controls: playerControls,
@@ -305,13 +312,13 @@ export default function WatchPartyRoom() {
                             /* KHI HIỂN THỊ: Artplayer sẽ gắn class art-notice-show vào video player */
                             .art-video-player.art-notice-show .art-notice {
                                 opacity: 1 !important; /* Hiện rõ lên */
-                                // transform: translate(-50%, 0) !important; /* Trượt nhẹ lên vị trí gốc */
+                                /* transform: translate(-50%, 0) !important; */
                             }
                             
                             /* 2. Làm đẹp nội dung (Dạng viên nang bo tròn mượt mà) */
                             .art-video-player .art-notice-inner {
                                 background: rgba(0, 0, 0, 0.7) !important;
-                                // backdrop-filter: blur(10px) !important;
+                                /* backdrop-filter: blur(10px) !important; */
                                 border: 1px solid rgba(255, 255, 255, 0.08) !important;
                                 color: #ffffff !important;
                                 padding: 10px 24px !important;
@@ -347,6 +354,18 @@ export default function WatchPartyRoom() {
         // BẮT SỰ KIỆN PHÍM TẮT CHUNG (HOTKEYS)
         const handleKeyDown = (e) => {
             if (document.activeElement.tagName === 'INPUT') return; // Không kích hoạt khi đang gõ chat
+
+            // Phím / khi fullscreen: focus vào chat input
+            if ((e.key === '/' || e.key === 'c' || e.key === 'C') && document.fullscreenElement) {
+                e.preventDefault();
+                if (fullscreenInputRef.current) {
+                    setFullscreenInputCollapsed(false);
+                    setShowFullscreenInput(true);
+                    setFullscreenInputFocused(true);
+                    setTimeout(() => fullscreenInputRef.current?.focus(), 50);
+                }
+                return;
+            }
 
             switch (e.key) {
                 case 'ArrowRight':
@@ -627,6 +646,12 @@ export default function WatchPartyRoom() {
             });
             setNewMessage("");
             setCooldown(0);
+            // Sau khi gửi: blur input sau 1s để trả quyền điều khiển phím tắt về video
+            if (fullscreenBlurTimerRef.current) clearTimeout(fullscreenBlurTimerRef.current);
+            fullscreenBlurTimerRef.current = setTimeout(() => {
+                fullscreenInputRef.current?.blur();
+                setFullscreenInputFocused(false);
+            }, 1000);
         } catch (error) {
             console.error("Lỗi gửi:", error);
         }
@@ -848,7 +873,28 @@ export default function WatchPartyRoom() {
                 </div>
 
                 {/* ===== VIDEO PLAYER WRAPPER ===== */}
-                <div ref={wrapperRef} className="relative w-full aspect-video md:min-h-[58vh]  bg-black overflow-hidden flex-shrink-0">
+                <div
+                    ref={wrapperRef}
+                    className="relative w-full aspect-video md:min-h-[58vh] bg-black overflow-hidden flex-shrink-0"
+                    onMouseMove={() => {
+                        if (!isFullscreen) return;
+                        setShowFullscreenInput(true);
+                        if (fullscreenInputTimerRef.current) clearTimeout(fullscreenInputTimerRef.current);
+                        // Không ẩn nếu đang focus vào input
+                        fullscreenInputTimerRef.current = setTimeout(() => {
+                            if (!fullscreenInputRef.current || document.activeElement !== fullscreenInputRef.current) {
+                                setShowFullscreenInput(false);
+                            }
+                        }, 3000);
+                    }}
+                    onMouseLeave={() => {
+                        if (fullscreenInputTimerRef.current) clearTimeout(fullscreenInputTimerRef.current);
+                        // Không ẩn nếu đang focus vào input
+                        if (!fullscreenInputRef.current || document.activeElement !== fullscreenInputRef.current) {
+                            setShowFullscreenInput(false);
+                        }
+                    }}
+                >
 
                     {/* Gradient vignette overlay */}
                     <div className="absolute inset-0 z-[1] pointer-events-none"
@@ -915,19 +961,121 @@ export default function WatchPartyRoom() {
 
                     {/* FULLSCREEN CHAT INPUT */}
                     {isFullscreen && (
-                        <div className="absolute bottom-35 left-0 right-0 z-20 flex justify-center opacity-0 hover:opacity-80 transition-opacity  duration-300 px-6">
-                            <form onSubmit={handleSendMessage} className="glass-strong p-2 rounded-2xl flex gap-2 w-full max-w-2xl shadow-2xl">
-                                <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder={cooldown > 0 ? `Chờ ${cooldown}s...` : 'Gõ tin nhắn...'}
-                                    disabled={cooldown > 0}
-                                    className="flex-1 bg-transparent px-4 py-2 text-sm text-white outline-none placeholder-gray-600 mono disabled:opacity-40"
-                                    maxLength={150}
-                                />
-                                <button type="submit" disabled={!newMessage.trim() || cooldown > 0}
-                                    className="bg-gradient-to-r from-[#22FF00] to-[#1acc00] text-black px-6 py-2 mono text-xs font-bold uppercase rounded-xl hover:opacity-90 disabled:opacity-30 transition-all">
-                                    {cooldown > 0 ? `${cooldown}s` : 'Gửi'}
-                                </button>
-                            </form>
+                        <div className={`absolute bottom-[140px] right-6 z-20 flex flex-col items-end gap-2 transition-opacity duration-300 ${(showFullscreenInput || fullscreenInputFocused) ? 'opacity-90' : 'opacity-0 pointer-events-none'}`}>
+
+                            {/* EXPANDED FORM — trượt ra/vào */}
+                            <div style={{
+                                maxWidth: fullscreenInputCollapsed ? '0px' : '520px',
+                                width: fullscreenInputCollapsed ? '0px' : '520px',
+                                opacity: fullscreenInputCollapsed ? 0 : 1,
+                                overflow: 'hidden',
+                                transition: 'max-width 0.35s cubic-bezier(0.4,0,0.2,1), width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
+                                pointerEvents: fullscreenInputCollapsed ? 'none' : 'auto',
+                            }}>
+                                <form onSubmit={handleSendMessage} className="glass-strong p-2 rounded-2xl flex gap-2 shadow-2xl" style={{ width: '520px' }}>
+                                    <input
+                                        ref={fullscreenInputRef}
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={(e) => {
+                                            setNewMessage(e.target.value);
+                                            const val = e.target.value;
+                                            // Có nội dung: hiện lên, reset timer ẩn sau 3s ngừng gõ
+                                            if (val.trim()) {
+                                                setShowFullscreenInput(true);
+                                                if (fullscreenTypingTimerRef.current) clearTimeout(fullscreenTypingTimerRef.current);
+                                                fullscreenTypingTimerRef.current = setTimeout(() => {
+                                                    fullscreenInputRef.current?.blur();
+                                                    setFullscreenInputFocused(false);
+                                                    setShowFullscreenInput(false);
+                                                }, 3000);
+                                            } else {
+                                                // Input vừa trống: blur sau 1s
+                                                // if (fullscreenBlurTimerRef.current) clearTimeout(fullscreenBlurTimerRef.current);
+                                                // fullscreenBlurTimerRef.current = setTimeout(() => {
+                                                //     fullscreenInputRef.current?.blur();
+                                                //     {setFullscreenInputFocused(false);
+                                                //     setShowFullscreenInput(false);}
+                                                // }, 2000);
+                                            }
+                                        }}
+                                        onFocus={() => {
+                                            setFullscreenInputFocused(true);
+                                            setShowFullscreenInput(true);
+                                            if (fullscreenInputTimerRef.current) clearTimeout(fullscreenInputTimerRef.current);
+                                        }}
+                                        onBlur={() => {
+                                            setFullscreenInputFocused(false);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            // Escape: thoát khỏi input, trả quyền phím tắt về video
+                                            if (e.key === 'Escape') {
+                                                e.preventDefault();
+                                                fullscreenInputRef.current?.blur();
+                                                setFullscreenInputFocused(false);
+                                                setNewMessage('');
+                                            }
+                                        }}
+                                        placeholder={cooldown > 0 ? `Chờ ${cooldown}s...` : 'Nhấn / để chat...'}
+                                        disabled={cooldown > 0}
+                                        className="flex-1 bg-transparent px-4 py-2 text-sm text-white outline-none placeholder-gray-600 mono disabled:opacity-40"
+                                        maxLength={150}
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!newMessage.trim() || cooldown > 0}
+                                        className="bg-gradient-to-r from-[#22FF00] to-[#1acc00] text-black px-5 py-2 mono text-xs font-bold uppercase rounded-xl hover:opacity-90 disabled:opacity-30 transition-all flex-shrink-0"
+                                    >
+                                        {cooldown > 0 ? `${cooldown}s` : 'Gửi'}
+                                    </button>
+                                </form>
+                            </div>
+
+                            {/* TOGGLE BUTTON — luôn hiển thị khi fullscreen (cùng visibility với container) */}
+                            <button
+                                onClick={() => {
+                                    if (fullscreenInputCollapsed) {
+                                        setFullscreenInputCollapsed(false);
+                                        // Focus vào input khi mở ra
+                                        setTimeout(() => fullscreenInputRef.current?.focus(), 380);
+                                    } else {
+                                        setFullscreenInputCollapsed(true);
+                                        fullscreenInputRef.current?.blur();
+                                        setFullscreenInputFocused(false);
+                                    }
+                                }}
+                                title={fullscreenInputCollapsed ? 'Mở chat (/)' : 'Thu gọn chat (Esc)'}
+                                style={{
+                                    width: '38px',
+                                    height: '38px',
+                                    borderRadius: '12px',
+                                    background: fullscreenInputCollapsed
+                                        ? 'linear-gradient(135deg, rgba(34,255,0,0.25), rgba(34,255,0,0.15))'
+                                        : 'rgba(5,10,5,0.85)',
+                                    border: '1px solid rgba(34,255,0,0.35)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    backdropFilter: 'blur(12px)',
+                                    boxShadow: fullscreenInputCollapsed
+                                        ? '0 0 16px rgba(34,255,0,0.25)'
+                                        : '0 4px 16px rgba(0,0,0,0.4)',
+                                    transition: 'all 0.25s ease',
+                                    flexShrink: 0,
+                                    opacity: 80
+                                }}
+                            >
+                                {fullscreenInputCollapsed ? (
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22FF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                ) : (
+                                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
+                                        <line x1="2" y1="7" x2="12" y2="7"/>
+                                    </svg>
+                                )}
+                            </button>
                         </div>
                     )}
                 </div>
@@ -1000,8 +1148,26 @@ export default function WatchPartyRoom() {
             </div>
 
             {/* ===== CỘT PHẢI: CHAT ===== */}
-            {showChat && (
-                <div className="relative z-10 w-full md:w-[360px] h-[48vh] md:h-[85vh] flex flex-col glass-strong border-l border-[#22FF00]/8 flex-shrink-0">
+            <div
+                className="relative z-10 flex-shrink-0"
+                style={{
+                    width: showChat ? '360px' : '0px',
+                    minWidth: showChat ? '360px' : '0px',
+                    transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1), min-width 0.35s cubic-bezier(0.4,0,0.2,1)',
+                    overflow: 'visible',
+                }}
+            >
+               
+
+                <div
+                    className="h-[48vh] md:h-[85vh] flex flex-col glass-strong border-l border-[#22FF00]/8"
+                    style={{
+                        width: '360px',
+                        transform: showChat ? 'translateX(0)' : 'translateX(100%)',
+                        transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)',
+                        overflow: 'hidden',
+                    }}
+                >
                     {/* Subtle top gradient accent */}
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#22FF00]/40 to-transparent"></div>
 
@@ -1105,7 +1271,8 @@ export default function WatchPartyRoom() {
                         </form>
                     </div>
                 </div>
-            )}
-        </div>
+                </div>
+            </div>
+
     );
 }

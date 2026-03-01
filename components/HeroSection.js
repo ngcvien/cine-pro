@@ -226,7 +226,7 @@ export default function HeroSection({ movies = [] }) {
                     {currentMovie?.year}
                   </span>
 
-                  <span className="hero-tag text-[10px] text-gray-300 border border-primary/30 px-2.5 py-1 rounded-sm bg-primary/10 backdrop-blur-sm">
+                  <span className="hero-tag text-[10px] text-gray-300 border border-white/15 px-2.5 py-1 rounded-sm bg-white/5 backdrop-blur-sm">
                     {currentMovie.quality || "FHD"}
                   </span>
 

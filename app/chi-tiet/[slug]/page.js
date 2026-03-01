@@ -38,6 +38,8 @@ export default async function MovieDetailPage({ params }) {
     if (!data || !data.movie) return notFound();
 
     const movie = data.movie;
+    const episodes = data.episodes || [];
+    const firstServerEps = episodes[0]?.server_data || [];
 
     // Lấy danh sách phim liên quan
     const categorySlug = movie.category?.[0]?.slug;
@@ -95,6 +97,33 @@ export default async function MovieDetailPage({ params }) {
                                 }}
                             />
                         </div>
+
+                        {/* --- KHU VỰC CHỌN TẬP NHANH --- */}
+                        {firstServerEps.length > 1 && (
+                            <div className="mt-5 bg-[#111111] p-4 rounded-xl border border-white/5 shadow-inner">
+                                <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Chọn Nhanh Tập</h3>
+                                    <span className="text-[10px] text-primary font-bold tracking-widest uppercase bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-sm">
+                                        {firstServerEps.length} Tập
+                                    </span>
+                                </div>
+                                
+                                {/* Ép tàng hình thanh cuộn trên mọi trình duyệt (Chrome, Safari, Firefox, Edge) */}
+                                <div className="flex flex-wrap gap-2 max-h-[130px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                    
+                                    {/* Tạo bản sao của mảng và đảo ngược để tập mới nhất nổi lên đầu */}
+                                    {[...firstServerEps].reverse().map((ep, idx) => (
+                                        <Link
+                                            key={ep.slug || idx}
+                                            href={`/phim/${slug}?ep=${ep.slug}`}
+                                            className="px-3 py-1.5 bg-[#1a1a1a] hover:bg-primary/10 hover:text-primary border border-white/5 hover:border-primary/40 text-xs font-bold text-gray-400 rounded transition-colors text-center min-w-[45px]"
+                                        >
+                                            {ep.name}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Cột Phải: Thông tin chi tiết */}

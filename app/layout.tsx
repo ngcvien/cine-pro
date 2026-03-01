@@ -18,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="vi" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning={true}>
-      <body className="bg-[#050505] text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen relative flex flex-col ">
+    <html lang="vi" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning={true} >
+      <body className="bg-[#050505] text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen relative flex flex-col no-scrollbar">
         
         {/* --- GLOBAL BACKGROUND --- */}
         <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none flex flex-col min-h-screen">
@@ -36,7 +36,7 @@ export default function RootLayout({
 
         <Navbar />
 
-        <main className="flex-1 relative z-0 ">
+        <main className="flex-1 relative z-0  " >
             {children}
         </main>
         {/* <Footer /> */}

@@ -282,7 +282,7 @@ function MovieSection({ title, subtitle, description, link, movies }: any) {
 
       <div className="-mx-4 px-4 md:-mx-8 md:px-8">
         {/* Thanh cuộn ngang ẩn scrollbar */}
-        <div className="flex gap-4 overflow-x-auto pb-8 scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-4 overflow-x-auto pb-8 scroll-smooth " style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {movies.map((movie: any) => (
             <div key={movie._id} className="flex-shrink-0 w-[160px] md:w-[200px]">
               <MovieCard movie={movie} />

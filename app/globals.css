@@ -25,6 +25,44 @@ body {
   line-height: 1.6;
 }
 
+/* ==========================================
+   TÙY CHỈNH THANH CUỘN TOÀN TRANG (ĐẸP & TINH TẾ)
+   ========================================== */
+
+/* 1. Dành cho Firefox */
+html {
+    scrollbar-width: thin; /* Làm thanh cuộn mỏng lại */
+    scrollbar-color: rgba(255, 255, 255, 0.15) var(--background); /* Màu tay cầm và màu nền */
+}
+
+/* 2. Dành cho Chrome, Edge, Safari */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 8px; /* Độ rộng cực kỳ thon gọn */
+    height: 8px; /* Độ cao cho thanh cuộn ngang nếu có */
+}
+
+/* Phần rãnh trượt (Track) */
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: var(--background); /* Tệp hoàn toàn với màu nền đen của web */
+}
+
+/* Phần tay cầm (Thumb) */
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15); /* Màu xám kính mờ cực sang */
+    border-radius: 10px; /* Bo tròn hai đầu */
+    border: 2px solid var(--background); /* Tạo khoảng hở (padding) giả giúp thanh trượt trông thon gọn hơn nữa */
+}
+
+/* Hiệu ứng khi rê chuột vào tay cầm */
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background: var(--primary); /* Chuyển sang xanh Neon #00ff41 */
+    border: 1px solid var(--background); /* Vết viền mỏng lại để vệt sáng to ra một chút */
+}
+
 /* Cập nhật tên biến font mới */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-manrope); 
