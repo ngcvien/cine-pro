@@ -233,7 +233,7 @@ export default function Navbar() {
                                 </div>
                                 <div className="border-t border-white/10 bg-white/5">
                                     <Link
-                                        href="/filter"
+                                        href="/the-loai"
                                         className="block px-4 py-2 text-center text-sm font-bold text-primary hover:text-white hover:bg-primary/20 transition-colors"
                                     >
                                         XEM TẤT CẢ

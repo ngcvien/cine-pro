@@ -22,16 +22,65 @@ export default function RootLayout({
       <body className="bg-[#050505] text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen relative flex flex-col no-scrollbar">
         
         {/* --- GLOBAL BACKGROUND --- */}
-        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none flex flex-col min-h-screen">
-            {/* Đốm sáng xanh lá */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-primary/2 rounded-full blur-[120px] opacity-70" />
-            
-            {/* Đốm sáng xanh dương */}
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-blue-600/2 rounded-full blur-[120px] opacity-80" />
-            
-            {/* Lớp Noise & Overlay */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-100 contrast-150 mix-blend-overlay"></div>
-            <div className="absolute inset-0 bg-black/0" />
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+
+            {/* Base */}
+            <div className="absolute inset-0 bg-[#050505]" />
+
+            {/* Grid lines */}
+            <div className="absolute inset-0" style={{
+                backgroundImage: `linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+                                   linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)`,
+                backgroundSize: "80px 80px",
+                maskImage: "radial-gradient(ellipse 90% 80% at 50% 40%, black 30%, transparent 100%)",
+                WebkitMaskImage: "radial-gradient(ellipse 90% 80% at 50% 40%, black 30%, transparent 100%)",
+            }} />
+
+            {/* Orb xanh lá — góc trên trái */}
+            <div className="absolute" style={{
+                top: "-15%", left: "-12%",
+                width: "55vw", height: "55vw",
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(74,222,128,0.07) 0%, transparent 65%)",
+                filter: "blur(60px)",
+            }} />
+
+            {/* Orb tím — góc dưới phải */}
+            <div className="absolute" style={{
+                bottom: "-20%", right: "-15%",
+                width: "60vw", height: "60vw",
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 65%)",
+                filter: "blur(70px)",
+            }} />
+
+            {/* Orb xanh dương nhạt — giữa phải */}
+            <div className="absolute" style={{
+                top: "35%", right: "5%",
+                width: "30vw", height: "30vw",
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(56,189,248,0.04) 0%, transparent 70%)",
+                filter: "blur(50px)",
+            }} />
+
+            {/* Scanlines ngang mờ */}
+            <div className="absolute inset-0" style={{
+                backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px)",
+                backgroundSize: "100% 4px",
+            }} />
+
+            {/* Noise grain */}
+            <div className="absolute inset-0 opacity-[0.028]" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                backgroundRepeat: "repeat",
+                backgroundSize: "160px",
+                mixBlendMode: "overlay",
+            }} />
+
+            {/* Vignette cạnh */}
+            <div className="absolute inset-0" style={{
+                background: "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,0.55) 100%)",
+            }} />
         </div>
 
         <Navbar />
@@ -39,7 +88,7 @@ export default function RootLayout({
         <main className="flex-1 relative z-0  " >
             {children}
         </main>
-        {/* <Footer /> */}
+        <Footer />
         
       </body>
       

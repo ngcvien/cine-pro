@@ -4,22 +4,16 @@ import ActorList from "../../../components/ActorList";
 import WatchLaterButton from "../../../components/WatchLaterButton";
 import { getMovieData, getImageUrl } from "@/lib/movieService";
 
-// --- 1. HÀM LẤY DỮ LIỆU ---
-
-// Lấy chi tiết phim
 async function getMovieDetail(slug) {
     return await getMovieData(`/phim/${slug}`);
 }
 
-// Lấy phim liên quan (Dựa theo slug thể loại đầu tiên)
 async function getRelatedMovies(categorySlug) {
     if (!categorySlug) return [];
     const data = await getMovieData(`v1/api/the-loai/${categorySlug}?limit=5`);
     return data?.data?.items || [];
-
 }
 
-// Metadata SEO
 export async function generateMetadata({ params }) {
     const { slug } = await params;
     const data = await getMovieDetail(slug);
@@ -40,255 +34,373 @@ export default async function MovieDetailPage({ params }) {
     const movie = data.movie;
     const episodes = data.episodes || [];
     const firstServerEps = episodes[0]?.server_data || [];
-
-    // Lấy danh sách phim liên quan
     const categorySlug = movie.category?.[0]?.slug;
     const relatedMovies = await getRelatedMovies(categorySlug);
-    // Lọc bỏ phim hiện tại ra khỏi danh sách liên quan
     const filteredRelated = relatedMovies.filter(m => m.slug !== movie.slug).slice(0, 4);
-
-    // Link Xem Phim
     const firstEpisodeSlug = data.episodes?.[0]?.server_data?.[0]?.slug;
     const watchLink = firstEpisodeSlug ? `/phim/${slug}` : "#";
+    const plotText = movie.content?.replace(/<[^>]+>/g, '') || "";
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white pb-20 font-sans selection:bg-primary selection:text-black">
+        <>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&display=swap');
 
-            {/* --- BACKGROUND HERO (Làm nền mờ) --- */}
-            <div className="fixed inset-0 z-[-0] h-[80vh] w-full">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent z-10"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent z-10"></div>
-                <img src={movie.poster_url} alt="Backdrop" className="w-full h-full object-cover opacity-30" />
-            </div>
+                .detail-page * {
+                    font-family: 'Be Vietnam Pro', sans-serif;
+                }
+                .detail-title {
+                    font-weight: 900;
+                    letter-spacing: -0.02em;
+                    line-height: 1.1;
+                    text-transform: uppercase;
+                }
+                .section-heading {
+                    font-weight: 800;
+                    font-size: 1.1rem;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                }
+                .glass-card {
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.07);
+                    backdrop-filter: blur(12px);
+                }
+                .tag-pill {
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                }
+                .ep-btn {
+                    font-size: 11px;
+                    font-weight: 700;
+                    min-width: 44px;
+                    text-align: center;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba(255,255,255,0.06);
+                    color: #9ca3af;
+                    transition: all 0.2s;
+                }
+                .ep-btn:hover {
+                    background: rgba(74,222,128,0.1);
+                    border-color: rgba(74,222,128,0.35);
+                    color: #4ade80;
+                }
+                .info-row-label {
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
+                    color: #6b7280;
+                    margin-bottom: 3px;
+                }
+                .info-row-value {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #e5e7eb;
+                }
+                .related-card img {
+                    transition: transform 0.5s cubic-bezier(0.25,0.1,0.25,1);
+                }
+                .related-card:hover img {
+                    transform: scale(1.07);
+                }
+                .play-btn-glow {
+                    box-shadow: 0 0 28px rgba(74,222,128,0.35), 0 4px 16px rgba(0,0,0,0.4);
+                    transition: all 0.25s;
+                }
+                .play-btn-glow:hover {
+                    box-shadow: 0 0 40px rgba(74,222,128,0.5), 0 4px 20px rgba(0,0,0,0.5);
+                    transform: translateY(-2px);
+                }
+                .divider-accent {
+                    width: 3px;
+                    border-radius: 2px;
+                    background: linear-gradient(to bottom, #4ade80, transparent);
+                }
+            `}</style>
 
-            <div className="relative z-20 container mx-auto px-4 md:px-8 pt-24 md:pt-32">
+            <div className="detail-page min-h-screen bg-[#080808] text-white pb-24 selection:bg-primary selection:text-black">
 
-                {/* --- SECTION 1: MAIN INFO (Poster & Title) --- */}
-                <div className="flex flex-col md:flex-row gap-10 items-start mb-16">
+                {/* ── BACKGROUND SCROLLABLE ── */}
+                <div className="absolute top-0 left-0 right-0 h-[110vh] z-0 pointer-events-none overflow-hidden">
+                    <img
+                        src={movie.thumb_url || movie.poster_url}
+                        alt=""
+                        className="w-full h-full object-cover object-top opacity-20"
+                        style={{ filter: "blur(2px)" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#080808]/60 via-[#080808]/80 to-[#080808]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#080808]/80 via-transparent to-[#080808]/60" />
+                </div>
 
-                    {/* Cột Trái: Poster + Action */}
-                    <div className="w-full md:w-[300px] flex-shrink-0 flex flex-col gap-4 group">
-                        <div className="relative rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-white/10 aspect-[2/3]">
-                            <img src={movie.poster_url} alt={movie.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                {/* ── DECORATIVE BG LAYERS (phần dưới) ── */}
+                {/* Orb xanh lá góc trái giữa trang */}
+                <div className="pointer-events-none fixed z-0" style={{
+                    top: "55vh", left: "-12vw",
+                    width: "55vw", height: "55vw", maxWidth: 700, maxHeight: 700,
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle, rgba(74,222,128,0.055) 0%, transparent 70%)",
+                    filter: "blur(40px)",
+                }} />
+                {/* Orb tím mờ góc phải */}
+                <div className="pointer-events-none fixed z-0" style={{
+                    top: "70vh", right: "-10vw",
+                    width: "45vw", height: "45vw", maxWidth: 600, maxHeight: 600,
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)",
+                    filter: "blur(50px)",
+                }} />
+                {/* Grid pattern toàn trang */}
+                <div className="pointer-events-none fixed inset-0 z-0" style={{
+                    backgroundImage: `linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+                                      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)`,
+                    backgroundSize: "72px 72px",
+                    maskImage: "linear-gradient(to bottom, transparent 0%, black 20%, black 75%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 20%, black 75%, transparent 100%)",
+                }} />
+                {/* Đường kẻ dọc accent trái */}
+                <div className="pointer-events-none fixed left-0 top-0 bottom-0 z-0 w-px hidden lg:block" style={{
+                    background: "linear-gradient(to bottom, transparent, rgba(74,222,128,0.18) 30%, rgba(74,222,128,0.06) 70%, transparent)",
+                }} />
+                {/* Noise grain toàn trang */}
+                <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022]" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "repeat",
+                    backgroundSize: "180px",
+                    mixBlendMode: "overlay",
+                }} />
 
-                            {/* Badge Chất lượng */}
-                            <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-black px-2 py-1 rounded shadow-lg">
-                                {movie.quality}
+                <div className="relative z-10 container mx-auto px-4 md:px-8 pt-20 md:pt-28">
+
+                    {/* Breadcrumb */}
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mb-8 tracking-wide">
+                        <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
+                        <span>/</span>
+                        <Link href="/the-loai" className="hover:text-primary transition-colors">Phim</Link>
+                        <span>/</span>
+                        <span className="text-gray-300 truncate max-w-[200px]">{movie.name}</span>
+                    </div>
+
+                    {/* ── SECTION 1: MAIN INFO ── */}
+                    <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start mb-20">
+
+                        {/* ── CỘT TRÁI: Poster ── */}
+                        <div className="w-full lg:w-[260px] xl:w-[290px] flex-shrink-0">
+
+                            {/* Poster */}
+                            <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.7)] border border-white/8 aspect-[2/3] mb-4 group">
+                                <img
+                                    src={movie.poster_url}
+                                    alt={movie.name}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                                {/* Quality badge */}
+                                {movie.quality && (
+                                    <div className="absolute top-3 left-3 tag-pill bg-primary text-black shadow-lg">
+                                        {movie.quality}
+                                    </div>
+                                )}
+                                {/* Episode badge */}
+                                {movie.episode_current && (
+                                    <div className="absolute top-3 right-3 tag-pill bg-black/70 text-white border border-white/15 backdrop-blur">
+                                        {movie.episode_current}
+                                    </div>
+                                )}
                             </div>
-                        </div>
 
-                        {/* Nút Xem Phim + Xem sau */}
-                        <div className="flex items-center gap-3">
-                            <Link
-                                href={watchLink}
-                                className="flex-1 bg-primary hover:bg-green-400 text-black font-black py-4 rounded-xl text-center text-lg shadow-[0_0_20px_rgba(74,222,128,0.3)] transition-all hover:translate-y-[-2px] flex items-center justify-center gap-2"
-                            >
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                XEM PHIM NGAY
-                            </Link>
-                            <WatchLaterButton
-                                slug={movie.slug}
-                                movie={{
-                                    name: movie.name,
-                                    origin_name: movie.origin_name,
-                                    poster_url: movie.poster_url,
-                                    thumb_url: movie.thumb_url,
-                                    year: movie.year,
-                                }}
-                            />
-                        </div>
+                            {/* Action buttons */}
+                            <div className="flex gap-2 mb-4">
+                                <Link
+                                    href={watchLink}
+                                    className="play-btn-glow flex-1 bg-primary hover:bg-green-300 text-black font-black py-3.5 rounded-xl text-sm flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                    XEM NGAY
+                                </Link>
+                                <WatchLaterButton
+                                    slug={movie.slug}
+                                    movie={{
+                                        name: movie.name,
+                                        origin_name: movie.origin_name,
+                                        poster_url: movie.poster_url,
+                                        thumb_url: movie.thumb_url,
+                                        year: movie.year,
+                                    }}
+                                />
+                            </div>
 
-                        {/* --- KHU VỰC CHỌN TẬP NHANH --- */}
-                        {firstServerEps.length > 1 && (
-                            <div className="mt-5 bg-[#111111] p-4 rounded-xl border border-white/5 shadow-inner">
-                                <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Chọn Nhanh Tập</h3>
-                                    <span className="text-[10px] text-primary font-bold tracking-widest uppercase bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-sm">
-                                        {firstServerEps.length} Tập
-                                    </span>
+                            {/* Episode picker */}
+                            {firstServerEps.length > 1 && (
+                                <div className="glass-card rounded-xl p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="section-heading text-gray-400 text-[10px]">Chọn tập</span>
+                                        <span className="tag-pill bg-primary/10 text-primary border border-primary/20">
+                                            {firstServerEps.length} Tập
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 max-h-[120px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                        {[...firstServerEps].reverse().map((ep, idx) => (
+                                            <Link
+                                                key={ep.slug || idx}
+                                                href={`/phim/${slug}?ep=${ep.slug}`}
+                                                className="ep-btn"
+                                            >
+                                                {ep.name}
+                                            </Link>
+                                        ))}
+                                    </div>
                                 </div>
-                                
-                                {/* Ép tàng hình thanh cuộn trên mọi trình duyệt (Chrome, Safari, Firefox, Edge) */}
-                                <div className="flex flex-wrap gap-2 max-h-[130px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                    
-                                    {/* Tạo bản sao của mảng và đảo ngược để tập mới nhất nổi lên đầu */}
-                                    {[...firstServerEps].reverse().map((ep, idx) => (
+                            )}
+                        </div>
+
+                        {/* ── CỘT PHẢI: Thông tin ── */}
+                        <div className="flex-1 min-w-0">
+
+                            {/* Tên phim */}
+                            <h1 className="detail-title text-3xl md:text-5xl xl:text-6xl text-white mb-2">
+                                {movie.name}
+                            </h1>
+                            {movie.origin_name && (
+                                <p className="text-lg text-gray-400 italic font-light mb-6 tracking-wide">
+                                    {movie.origin_name}
+                                    {movie.year && <span className="not-italic text-gray-600 mx-2 font-normal">·</span>}
+                                    {movie.year && <span className="not-italic text-gray-500 font-normal not-italic">{movie.year}</span>}
+                                </p>
+                            )}
+
+                            {/* Rating + Meta tags */}
+                            <div className="flex flex-wrap items-center gap-2 mb-7">
+                                {movie.tmdb?.vote_average != null && (
+                                    <div
+                                        className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/25 px-3 py-1.5 rounded-lg"
+                                        title={movie.tmdb?.vote_count ? `${movie.tmdb.vote_count} đánh giá` : ""}
+                                    >
+                                        <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <span className="font-black text-yellow-400 text-sm">{Number(movie.tmdb.vote_average).toFixed(1)}</span>
+                                        {movie.tmdb?.vote_count != null && (
+                                            <span className="text-yellow-600/70 text-xs font-normal">({movie.tmdb.vote_count.toLocaleString()})</span>
+                                        )}
+                                    </div>
+                                )}
+                                {movie.status && (
+                                    <span className={`tag-pill border ${movie.status === 'completed' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-blue-500/10 border-blue-500/30 text-blue-400'}`}>
+                                        {movie.status === "ongoing" ? "Đang chiếu" : movie.status === "completed" ? "Hoàn thành" : movie.status}
+                                    </span>
+                                )}
+                                {movie.type && <span className="tag-pill bg-white/5 border border-white/10 text-gray-300">{movie.type}</span>}
+                                {movie.time && <span className="tag-pill bg-white/5 border border-white/10 text-gray-300">{movie.time}</span>}
+                                {movie.lang && <span className="tag-pill bg-white/5 border border-white/10 text-gray-300">{movie.lang}</span>}
+                            </div>
+
+                            {/* Genre tags */}
+                            {movie.category?.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-8">
+                                    {movie.category.map((c, i) => (
                                         <Link
-                                            key={ep.slug || idx}
-                                            href={`/phim/${slug}?ep=${ep.slug}`}
-                                            className="px-3 py-1.5 bg-[#1a1a1a] hover:bg-primary/10 hover:text-primary border border-white/5 hover:border-primary/40 text-xs font-bold text-gray-400 rounded transition-colors text-center min-w-[45px]"
+                                            key={c.slug ? `${c.slug}-${i}` : i}
+                                            href={`/the-loai/${c.slug}`}
+                                            className="tag-pill bg-primary/8 hover:bg-primary/15 border border-primary/20 text-primary/80 hover:text-primary transition-colors"
                                         >
-                                            {ep.name}
+                                            {c.name}
                                         </Link>
                                     ))}
                                 </div>
+                            )}
+
+                            {/* Plot */}
+                            {plotText && (
+                                <div className="mb-8">
+                                    <div className="flex items-center gap-2.5 mb-3">
+                                        <div className="divider-accent h-5" />
+                                        <span className="section-heading text-gray-300 text-xs">Cốt truyện</span>
+                                    </div>
+                                    <p className="text-gray-300/90 leading-relaxed text-base font-light text-justify">
+                                        {plotText}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Info grid */}
+                            <div className="glass-card rounded-2xl p-5 grid grid-cols-2 sm:grid-cols-3 gap-5">
+                                <InfoRow label="Đạo diễn" value={Array.isArray(movie.director) ? movie.director.filter(Boolean).join(", ") : movie.director} />
+                                <InfoRow label="Quốc gia" value={movie.country?.map(c => c?.name).filter(Boolean).join(", ")} />
+                                <InfoRow
+                                    label="Số tập"
+                                    value={[movie.episode_current, movie.episode_total].every(v => v != null)
+                                        ? `${movie.episode_current} / ${movie.episode_total}` : null}
+                                />
+                                <InfoRow label="Lượt xem" value={movie.view != null ? Number(movie.view).toLocaleString("vi") : null} />
+                                {movie.notify && <InfoRow label="Thông báo" value={movie.notify} />}
+                                <InfoRow label="Cập nhật" value={movie.modified?.time ? new Date(movie.modified.time).toLocaleDateString("vi-VN") : null} />
                             </div>
-                        )}
+                        </div>
                     </div>
 
-                    {/* Cột Phải: Thông tin chi tiết */}
-                    <div className="flex-1 space-y-6">
+                    {/* ── SECTION 2: DIỄN VIÊN ── */}
+                    <div className="mb-16">
+                        <SectionTitle>Diễn Viên</SectionTitle>
+                        <ActorList actors={movie.actor} />
+                    </div>
 
-                        {/* Breadcrumb */}
-                        <div className="flex items-center gap-2 text-sm text-gray-400 font-medium">
-                            <Link href="/" className="hover:text-primary">Home</Link> /
-                            <Link href="/the-loai" className="hover:text-primary">Phim</Link> /
-                            <span className="text-white">{movie.origin_name}</span>
+                    {/* ── SECTION 3: TRAILER ── */}
+                    <TrailerSection trailerUrl={movie.trailer_url} posterUrl={movie.poster_url} movieName={movie.name} />
+
+                    {/* ── SECTION 4: PHIM LIÊN QUAN ── */}
+                    <div className="mb-16">
+                        <div className="flex items-center justify-between mb-7">
+                            <SectionTitle>Có Thể Bạn Muốn Xem</SectionTitle>
+                            {categorySlug && (
+                                <Link href={`/the-loai/${categorySlug}`} className="text-xs font-bold text-primary hover:text-green-300 flex items-center gap-1 transition-colors">
+                                    Xem thêm
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                </Link>
+                            )}
                         </div>
 
-                        {/* Tiêu đề */}
-                        <div>
-                            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight tracking-tight mb-2">
-                                {movie.name}
-                            </h1>
-                            <h2 className="text-xl md:text-2xl text-gray-400 italic font-light">
-                                {movie.origin_name} <span className="text-gray-600 not-italic mx-2">|</span> {movie.year}
-                            </h2>
-                        </div>
-
-                        {/* Meta Tags: TMDB rating, trạng thái, loại phim, time, lang, thể loại */}
-                        <div className="flex flex-wrap items-center gap-4 py-4 border-y border-white/10">
-                            {(movie.tmdb?.vote_average != null) && (
-                                <>
-                                    <div className="flex items-center gap-1 text-yellow-500 font-black text-lg" title={movie.tmdb?.vote_count ? `${movie.tmdb.vote_count} đánh giá` : ""}>
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                        <span>{Number(movie.tmdb.vote_average).toFixed(1)}</span>
-                                        {movie.tmdb?.vote_count != null && <span className="text-gray-500 font-normal text-sm">({movie.tmdb.vote_count})</span>}
-                                    </div>
-                                    <span className="text-gray-500">|</span>
-                                </>
-                            )}
-                            {movie.status && (
-                                <>
-                                    <span className="bg-white/10 text-gray-300 text-xs font-bold px-2 py-1 rounded">{movie.status === "ongoing" ? "Đang chiếu" : movie.status === "completed" ? "Hoàn thành" : movie.status}</span>
-                                    <span className="text-gray-500">|</span>
-                                </>
-                            )}
-                            {movie.type && (
-                                <>
-                                    <span className="text-gray-300 font-medium">{movie.type}</span>
-                                    <span className="text-gray-500">|</span>
-                                </>
-                            )}
-                            <span className="text-gray-300 font-medium">{movie.time}</span>
-                            <span className="text-gray-500">|</span>
-                            <span className="text-gray-300 font-medium">{movie.lang}</span>
-                            <span className="text-gray-500">|</span>
-                            <div className="flex flex-wrap gap-2">
-                                {movie.category?.map((c, i) => (
-                                    <Link key={c.slug ? `${c.slug}-${i}` : i} href={`/the-loai/${c.slug}`} className="bg-white/10 hover:bg-white/20 text-xs font-bold px-2 py-1 rounded text-gray-300 transition-colors">
-                                        {c.name}
+                        {filteredRelated.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                                {filteredRelated.map((relMovie) => (
+                                    <Link key={relMovie._id} href={`/chi-tiet/${relMovie.slug}`} className="related-card group block">
+                                        <div className="aspect-[2/3] rounded-xl overflow-hidden border border-white/8 relative mb-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+                                            <img
+                                                src={getImageUrl(relMovie.poster_url)}
+                                                alt={relMovie.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            {relMovie.year && (
+                                                <div className="absolute top-2 right-2 tag-pill bg-black/70 text-white/80 border border-white/10 backdrop-blur">
+                                                    {relMovie.year}
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                                                <div className="w-10 h-10 bg-primary/90 rounded-full flex items-center justify-center text-black shadow-lg">
+                                                    <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h4 className="font-bold text-sm text-white/90 truncate group-hover:text-primary transition-colors leading-snug">{relMovie.name}</h4>
+                                        {relMovie.origin_name && <p className="text-xs text-gray-500 truncate mt-0.5 font-light italic">{relMovie.origin_name}</p>}
                                     </Link>
                                 ))}
                             </div>
-                        </div>
-
-                        {/* Nội dung phim */}
-                        <div className="space-y-3">
-                            <h3 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                <span className="w-1 h-5 bg-primary rounded-full"></span>
-                                Cốt truyện
-                            </h3>
-                            <p className="text-gray-300 leading-relaxed text-lg font-light text-justify">
-                                {movie.content.replace(/<[^>]+>/g, '')}
-                            </p>
-                        </div>
-
-                        {/* Bảng thông tin chi tiết */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 bg-white/5 p-6 rounded-xl border border-white/5">
-                            <InfoRow label="Đạo diễn" value={Array.isArray(movie.director) ? movie.director.filter(Boolean).join(", ") : movie.director} />
-                            <InfoRow label="Quốc gia" value={movie.country?.map((c) => c?.name).filter(Boolean).join(", ")} />
-                            <InfoRow label="Số tập" value={[movie.episode_current, movie.episode_total].every((v) => v != null) ? `${movie.episode_current} / ${movie.episode_total}` : null} />
-                            <InfoRow label="Lượt xem" value={movie.view != null ? `${Number(movie.view).toLocaleString("vi")}` : null} />
-                            {movie.notify && <InfoRow label="Thông báo" value={movie.notify} />}
-                            <InfoRow label="Cập nhật" value={movie.modified?.time ? new Date(movie.modified.time).toLocaleDateString("vi-VN") : null} />
-                        </div>
+                        ) : (
+                            <p className="text-gray-500 text-sm">Chưa có phim liên quan.</p>
+                        )}
                     </div>
-                </div>
-
-                {/* --- SECTION 2: DIỄN VIÊN (CAST) --- */}
-                <div className="mb-16">
-                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-primary rounded-full"></span>
-                        Diễn Viên
-                    </h3>
-
-                    {/* Thay thế code cũ bằng component mới này */}
-                    <ActorList actors={movie.actor} />
 
                 </div>
-                {/* --- SECTION 3: TRAILER (nhúng từ movie.trailer_url) --- */}
-                <TrailerSection trailerUrl={movie.trailer_url} posterUrl={movie.poster_url} movieName={movie.name} />
-
-                {/* --- SECTION 4: PHIM LIÊN QUAN (RELATED) --- */}
-                <div className="mb-16">
-                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-8 bg-primary rounded-full"></span>
-                            Có Thể Bạn Muốn Xem
-                        </div>
-                        <Link href={`/the-loai/${categorySlug}`} className="text-sm font-bold text-primary hover:underline">
-                            Xem thêm
-                        </Link>
-                    </h3>
-
-                    {filteredRelated.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {filteredRelated.map((relMovie) => (
-                                <Link key={relMovie._id} href={`/phim/${relMovie.slug}`} className="group block">
-                                    <div className="aspect-[2/3] rounded-xl overflow-hidden border border-white/10 relative mb-3">
-                                        <img
-                                            src={getImageUrl(relMovie.poster_url)}
-                                            alt={relMovie.name}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                        <div className="absolute top-2 right-2 bg-primary text-black font-bold text-[10px] px-2 py-0.5 rounded">
-                                            {relMovie.year}
-                                        </div>
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white">
-                                                <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <h4 className="font-bold text-white truncate group-hover:text-primary transition-colors">{relMovie.name}</h4>
-                                    <p className="text-xs text-gray-500">{relMovie.origin_name}</p>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500">Chưa có phim liên quan.</p>
-                    )}
-                </div>
-
-                {/* --- SECTION 5: BÌNH LUẬN (Giả lập để trang trông "động" hơn) --- */}
-                <div>
-                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-primary rounded-full"></span>
-                        Bình Luận (3)
-                    </h3>
-                    <div className="bg-[#121212] border border-white/5 rounded-xl p-6 space-y-6">
-                        {/* Form bình luận */}
-                        <div className="flex gap-4 mb-8">
-                            <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0"></div>
-                            <div className="flex-1">
-                                <input type="text" placeholder="Viết bình luận của bạn..." className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" />
-                            </div>
-                        </div>
-
-                        {/* List bình luận giả */}
-                        <CommentItem user="Minh Khôi" time="2 giờ trước" content="Phim quá đỉnh, xem đi xem lại không chán!" color="bg-blue-600" />
-                        <CommentItem user="Thảo Vy" time="1 ngày trước" content="Đoạn kết hơi buồn nhưng xứng đáng 10 điểm." color="bg-pink-600" />
-                        <CommentItem user="MovieFan99" time="3 ngày trước" content="Web load nhanh quá, giao diện đẹp. 1 like cho admin!" color="bg-green-600" />
-                    </div>
-                </div>
-
             </div>
-        </div>
+        </>
     );
 }
 
-// Lấy video ID từ URL YouTube (watch?v=, youtu.be/, embed/)
+// Lấy video ID từ URL YouTube
 function getYoutubeVideoId(url) {
     if (!url || typeof url !== "string") return null;
     const trimmed = url.trim();
@@ -301,17 +413,44 @@ function getYoutubeVideoId(url) {
     return null;
 }
 
-// Component: Trailer nhúng YouTube hoặc placeholder
+// ── Component: Section heading ──
+function SectionTitle({ children }) {
+    return (
+        <h3 className="flex items-center gap-2.5 mb-6">
+            <span
+                style={{
+                    width: 3,
+                    height: 22,
+                    borderRadius: 2,
+                    background: "linear-gradient(to bottom, #4ade80, #16a34a)",
+                    flexShrink: 0,
+                    display: "inline-block",
+                }}
+            />
+            <span
+                style={{
+                    fontFamily: "'Be Vietnam Pro', sans-serif",
+                    fontWeight: 800,
+                    fontSize: "1.15rem",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    color: "#f9fafb",
+                }}
+            >
+                {children}
+            </span>
+        </h3>
+    );
+}
+
+// ── Component: Trailer ──
 function TrailerSection({ trailerUrl, posterUrl, movieName }) {
     const videoId = getYoutubeVideoId(trailerUrl);
 
     return (
         <div className="mb-16">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                <span className="w-1.5 h-8 bg-primary rounded-full"></span>
-                Trailer Chính Thức
-            </h3>
-            <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-white/10 relative">
+            <SectionTitle>Trailer Chính Thức</SectionTitle>
+            <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/8 relative shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
                 {videoId ? (
                     <iframe
                         src={`https://www.youtube.com/embed/${videoId}?rel=0`}
@@ -322,14 +461,19 @@ function TrailerSection({ trailerUrl, posterUrl, movieName }) {
                     />
                 ) : (
                     <div className="relative w-full h-full group">
-                        <img src={posterUrl} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" alt="trailer" />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                        <img src={posterUrl} className="w-full h-full object-cover opacity-50 group-hover:opacity-40 transition-opacity" alt="trailer" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                             {trailerUrl ? (
-                                <a href={trailerUrl} target="_blank" rel="noopener noreferrer" className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(220,38,38,0.6)] hover:scale-110 transition-transform cursor-pointer">
-                                    <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                <a
+                                    href={trailerUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(220,38,38,0.5)] hover:scale-110 transition-transform"
+                                >
+                                    <svg className="w-7 h-7 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                                 </a>
                             ) : null}
-                            <p className="text-center text-gray-400 text-sm">
+                            <p className="text-gray-400 text-sm font-light">
                                 {trailerUrl ? "Mở trailer trên YouTube" : "Chưa có trailer"}
                             </p>
                         </div>
@@ -340,31 +484,13 @@ function TrailerSection({ trailerUrl, posterUrl, movieName }) {
     );
 }
 
-// Component phụ: Dòng thông tin
+// ── Component: Info row ──
 function InfoRow({ label, value }) {
     if (!value) return null;
     return (
-        <div className="flex flex-col border-b border-white/5 pb-2 last:border-0 last:pb-0">
-            <span className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{label}</span>
-            <span className="text-white font-medium">{value}</span>
+        <div>
+            <div className="info-row-label">{label}</div>
+            <div className="info-row-value">{value}</div>
         </div>
     );
-}
-
-// Component phụ: Bình luận item
-function CommentItem({ user, time, content, color }) {
-    return (
-        <div className="flex gap-4">
-            <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center font-bold text-white text-sm flex-shrink-0`}>
-                {user.charAt(0)}
-            </div>
-            <div>
-                <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-white text-sm">{user}</span>
-                    <span className="text-xs text-gray-500">• {time}</span>
-                </div>
-                <p className="text-gray-300 text-sm">{content}</p>
-            </div>
-        </div>
-    )
 }

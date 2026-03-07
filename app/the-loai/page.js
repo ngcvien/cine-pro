@@ -74,24 +74,28 @@ export default function CategoriesPage() {
                 <Link 
                   key={cat.slug} 
                   href={`/the-loai/${cat.slug}`}
-                  className={`group relative h-36 rounded-xl overflow-hidden bg-[#121212]/50 backdrop-blur-sm border border-white/5 hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.shadow}`}
+                  className={`group relative h-36 rounded-xl overflow-hidden border border-white/8 hover:border-white/25 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${meta.shadow}`}
                 >
-                    <div className={`absolute inset-0 bg-gradient-to-r ${meta.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out`} />
-                    
+                    {/* Gradient: luôn hiện mờ, hover sáng hơn */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${meta.color} opacity-40 group-hover:opacity-100 transition-opacity duration-500 ease-out`} />
+
+                    {/* Lớp tối phủ nhẹ trên mobile để chữ dễ đọc */}
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/0 transition-colors duration-500" />
+
                     {/* Watermark */}
-                    <div className="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-20 transition-opacity duration-300 select-none pointer-events-none">
+                    <div className="absolute -bottom-4 -right-4 opacity-10 group-hover:opacity-20 transition-opacity duration-300 select-none pointer-events-none">
                         <span className="text-7xl font-black uppercase tracking-tighter text-white whitespace-nowrap">
                             {cat.name}
                         </span>
                     </div>
 
-                    <div className="absolute inset-0 p-6 flex flex-col justify-end z-10">
-                        <h3 className="text-2xl font-black text-white uppercase tracking-wider group-hover:translate-x-2 transition-transform duration-300">
+                    <div className="absolute inset-0 p-5 flex flex-col justify-end z-10">
+                        <h3 className="text-xl font-black text-white uppercase tracking-wider group-hover:translate-x-2 transition-transform duration-300 drop-shadow-sm">
                             {cat.name}
                         </h3>
-                        <div className="flex items-center gap-3 mt-1 opacity-60 group-hover:opacity-100 group-hover:text-black/80 transition-all duration-300 group-hover:translate-x-2 delay-75">
-                            <div className="h-[2px] w-6 bg-primary group-hover:bg-black"></div>
-                            <p className="text-xs font-bold uppercase tracking-widest">
+                        <div className="flex items-center gap-2.5 mt-1.5 opacity-75 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-2 delay-75">
+                            <div className="h-[2px] w-5 bg-white/70 group-hover:bg-black/60 rounded-full"></div>
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-white/80 group-hover:text-black/70">
                                 {meta.desc}
                             </p>
                         </div>

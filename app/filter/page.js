@@ -120,7 +120,7 @@ export default function FilterPage() {
     const years = Array.from({ length: currentYear - 1970 + 1 }, (_, i) => currentYear - i);
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pt-24 pb-20 font-sans">
+        <div className="min-h-screen  text-white pt-24 pb-20 font-sans">
             <div className="container mx-auto px-4 md:px-8">
 
                 {/* HEADER */}
