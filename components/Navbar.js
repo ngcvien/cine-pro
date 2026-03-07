@@ -125,7 +125,6 @@ export default function Navbar() {
         { name: "Tình Cảm", slug: "tinh-cam" },
         { name: "Cổ Trang", slug: "co-trang" },
         { name: "Kinh Dị", slug: "kinh-di" },
-        { name: "Hoạt Hình", slug: "hoat-hinh" },
         { name: "Viễn Tưởng", slug: "vien-tuong" },
     ];
 
