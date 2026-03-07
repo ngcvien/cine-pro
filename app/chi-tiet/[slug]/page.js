@@ -21,7 +21,7 @@ export async function generateMetadata({ params }) {
     return {
         title: `${data.movie.name} (${data.movie.year}) - CinePro`,
         description: data.movie.content,
-        openGraph: { images: [data.movie.poster_url] },
+        openGraph: { images: [data.movie.thumb_url] },
     };
 }
 

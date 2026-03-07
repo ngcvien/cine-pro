@@ -7,6 +7,8 @@ import { ref, push, onValue, serverTimestamp, set, get } from "firebase/database
 import Artplayer from "artplayer";
 import Hls from "hls.js";
 import { getMovieData } from "@/lib/movieService";
+import Maintenance from "@/components/Maintenance";
+
 
 const formatServerName = (name) => {
     if (!name) return "Server Chính";
@@ -14,6 +16,8 @@ const formatServerName = (name) => {
 };
 
 export default function WatchPartyRoom() {
+    const IS_MAINTENANCE = false;
+
     const params = useParams();
     const router = useRouter();
     const roomId = params.roomId;
@@ -61,6 +65,7 @@ export default function WatchPartyRoom() {
     const processedMsgIds = useRef(new Set());
     const isInitialLoad = useRef(true);
 
+
     // 1. KIỂM TRA ĐĂNG NHẬP
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -69,6 +74,12 @@ export default function WatchPartyRoom() {
         });
         return () => unsubscribe();
     }, []);
+
+    if (IS_MAINTENANCE) {
+        return (
+            <Maintenance/>
+        );
+    }
 
     // 2. LẤY THÔNG TIN PHÒNG
     useEffect(() => {
@@ -1068,11 +1079,11 @@ export default function WatchPartyRoom() {
                             >
                                 {fullscreenInputCollapsed ? (
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22FF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                                     </svg>
                                 ) : (
                                     <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
-                                        <line x1="2" y1="7" x2="12" y2="7"/>
+                                        <line x1="2" y1="7" x2="12" y2="7" />
                                     </svg>
                                 )}
                             </button>
@@ -1157,7 +1168,7 @@ export default function WatchPartyRoom() {
                     overflow: 'visible',
                 }}
             >
-               
+
 
                 <div
                     className="h-[48vh] md:h-[85vh] flex flex-col glass-strong border-l border-[#22FF00]/8"
@@ -1271,8 +1282,8 @@ export default function WatchPartyRoom() {
                         </form>
                     </div>
                 </div>
-                </div>
             </div>
+        </div>
 
     );
 }
