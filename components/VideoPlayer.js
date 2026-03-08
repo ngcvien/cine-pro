@@ -135,6 +135,38 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
     const art = new Artplayer({
       container: artRef.current,
       url: url,
+
+      lang: "vi",
+
+      i18n: {
+        vi: {
+          "Play": "Phát",
+          "Pause": "Tạm dừng",
+          "Mute": "Tắt tiếng",
+          "Unmute": "Bật tiếng",
+          "Fullscreen": "Toàn màn hình",
+          "Exit fullscreen": "Thoát toàn màn hình",
+          "PIP": "Chế độ cửa sổ nổi",
+          "Exit PIP": "Thoát cửa sổ nổi",
+          "Aspect Ratio": "Tỉ lệ khung hình",
+          "Default": "Mặc định",
+          "Normal": "Bình thường",
+          "Mini Player": "Trình phát thu nhỏ",
+          "Screenshot": "Chụp màn hình",
+          "Settings": "Cài đặt",
+          "Playback Rate": "Tốc độ phát",
+          "Video Flip": "Lật video",
+          "Horizontal": "Lật ngang",
+          "Vertical": "Lật dọc",
+          "Reconnect": "Kết nối lại",
+          "Show Controls": "Hiện điều khiển",
+          "Hide Controls": "Ẩn điều khiển",
+          "Show Setting" : "Hiện cài đặt",
+          "Play Speed": "Tốc độ phát",
+          "Close": "Đóng",
+          "Video Info": "Thông tin video"
+        }
+      },
       title: episodeName,
       volume: 0.7,
       isLive: false,
@@ -143,13 +175,14 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
       autoOrientation: true,
       pip: true,
       fullscreen: true,
-      fullscreenWeb: true,
-      miniProgressBar: true,
+      // fullscreenWeb: true,
+      // miniProgressBar: true,
       theme: "#00FF41",
       hotkey: false,
       setting: true,
       playbackRate: true,
       aspectRatio: true,
+
       flip: true,
       controls: [
         // {
@@ -207,6 +240,18 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
           click: function () {
             art.forward = 5;
             art.notice.show = "Tới 5 giây";
+          },
+        },
+        {
+          name: 'skip-ad',
+          position: 'right',
+          index: 20,
+          html: `<svg width="22" height="22" viewBox="0 0 24 24" style="fill:#ffffff;"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`,
+          tooltip: 'Bỏ qua quảng cáo (30s)',
+          style: { cursor: 'pointer', marginLeft: '10px' },
+          click: function () {
+            art.forward = 30;
+            art.notice.show = "Bỏ qua quảng cáo (+30s)";
           },
         },
 

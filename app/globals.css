@@ -185,7 +185,8 @@ h1, h2, h3, h4, h5, h6 {
 
     /* Ẩn bớt các nút thừa */
     .art-video-player .art-control-fullscreenWeb,
-    .art-video-player .art-control-screenshot {
+    .art-video-player .art-control-screenshot,
+    .art-video-player .art-control-setting {
         display: none !important;
     }
 }
