@@ -23,8 +23,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
   const syncTimeToFirebase = useCallback(async (timeToSave) => {
     if (!user || !slug || timeToSave <= 0) return;
     try {
-      const dataToSave = {
-        seconds: timeToSave,
+      const dataToSave = {        slug: slug,        seconds: timeToSave,
         last_watched: serverTimestamp(),
         details: {
           [episodeSlug]: timeToSave
@@ -73,6 +72,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
           
           // Đồng bộ lên Firebase
           const pendingDataToSave = {
+            slug: pendingSlug,
             seconds: pendingTime,
             last_watched: serverTimestamp(),
             details: {

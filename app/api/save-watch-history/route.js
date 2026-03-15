@@ -34,6 +34,7 @@ export async function POST(request) {
 
     // Lưu dữ liệu lên Firebase
     const historyData = {
+      slug: slug,
       seconds: currentTime,
       last_watched: new Date(),
       details: {
