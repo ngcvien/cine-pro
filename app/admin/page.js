@@ -432,7 +432,7 @@ function HotMovieManager() {
             // Lưu đè mảng movie_slugs mới
             await setDoc(docRef, { movie_slugs: slugArray }, { merge: true });
 
-            alert(`✅ Đã lưu ${slugArray.length} phim vào Banner thành công!`);
+            alert(`  Đã lưu ${slugArray.length} phim vào Banner thành công!`);
         } catch (e) {
             console.error(e);
             alert("Lỗi lưu: " + e.message);

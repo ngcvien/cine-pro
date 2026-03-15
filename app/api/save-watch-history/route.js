@@ -39,7 +39,7 @@ export async function POST(request) {
       [`details.${episodeSlug}`]: currentTime,
     });
 
-    console.log(`✅ Saved watch history for user ${uid}, video ${slug}, time ${currentTime}s`);
+    console.log(`  Saved watch history for user ${uid}, video ${slug}, time ${currentTime}s`);
 
     return NextResponse.json(
       { success: true, message: "Watch history saved" },

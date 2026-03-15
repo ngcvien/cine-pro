@@ -28,7 +28,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
         last_watched: serverTimestamp(),
         [`details.${episodeSlug}`]: timeToSave
       });
-      console.log("✅ Đã lưu mốc thời gian lên Firebase:", timeToSave);
+      // console.log("  Đã lưu mốc thời gian lên Firebase:", timeToSave);
     } catch (error) {
       console.error("❌ Lỗi lưu lịch sử:", error);
     }
@@ -74,7 +74,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
           
           // Xóa khỏi localStorage sau khi sync thành công
           localStorage.removeItem(key);
-          console.log(`✅ Synced pending history: ${pendingSlug} - ${pendingTime}s`);
+          // console.log(`Synced pending history: ${pendingSlug} - ${pendingTime}s`);
         }
       } catch (error) {
         console.error("Lỗi sync pending history:", error);
@@ -498,10 +498,18 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
     });
 
     // --- 3. LƯU FIREBASE KHI NGƯỜI DÙNG BẤM TẠM DỪNG ---
-    art.on("pause", () => {
+    const handlePause = () => {
       lastFirebaseSyncRef.current = currentTimeRef.current;
       syncTimeToFirebase(currentTimeRef.current);
-    });
+      // console.log('Paused - Syncing watch time:', currentTimeRef.current);
+    };
+    
+    art.on("pause", handlePause);
+    
+    // Fallback: Lắng nghe pause event trên native video element (hỗ trợ PIP mode)
+    if (art.video) {
+      art.video.addEventListener("pause", handlePause);
+    }
     
     // --- 4. LƯU FIREBASE KHI VIDEO KẾT THÚC ---
     art.on("video:ended", () => {
@@ -532,11 +540,32 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
 
   // --- 5. LƯU FIREBASE KHI NGƯỜI DÙNG ĐÓNG TAB HOẶC CHUYỂN TRANG ---
   useEffect(() => {
-    // Khi người dùng đóng tab/trình duyệt
-    const handleBeforeUnload = (e) => {
+    // Hàm sync lên Firebase với keepalive (hỗ trợ tốt hơn trên mobile)
+    const syncToFirebaseWithKeepalive = async (timeToSave) => {
+      if (!user || !slug || timeToSave <= 0) return;
+      try {
+        await fetch('/api/save-watch-history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          body: JSON.stringify({
+            uid: user.uid,
+            slug: slug,
+            episodeSlug: episodeSlug,
+            currentTime: timeToSave
+          })
+        });
+        // console.log('Keepalive sync sent to Firebase');
+      } catch (error) {
+        console.error('Keepalive sync error:', error);
+      }
+    };
+
+    // Hàm xử lý lưu (backup localStorage + Firebase sync)
+    const handleSync = () => {
       if (!user || !slug || currentTimeRef.current <= 0) return;
       
-      // Lưu ngay vào localStorage làm backup (trường hợp Firebase không kịp lưu)
+      // Lưu backup vào localStorage
       localStorage.setItem(`pending_sync_${slug}_${episodeSlug}`, JSON.stringify({
         uid: user.uid,
         currentTime: currentTimeRef.current,
@@ -545,27 +574,36 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
         timestamp: new Date().toISOString()
       }));
 
-      // Cố gắng sync lên Firebase bằng sendBeacon (request không bị hủy khi tab đóng)
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/save-watch-history', JSON.stringify({
-          uid: user.uid,
-          slug: slug,
-          episodeSlug: episodeSlug,
-          currentTime: currentTimeRef.current
-        }));
-      }
-      
-      console.log(`⏱️ Đóng trang - Đã lưu thời gian ${currentTimeRef.current}s vào localStorage`);
+      // Sync lên Firebase
+      syncToFirebaseWithKeepalive(currentTimeRef.current);
+      // console.log(`Saved ${currentTimeRef.current}s to backup storage`);
     };
 
+    // Event 1: Before unload (Desktop khi đóng tab)
+    const handleBeforeUnload = () => handleSync();
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Event 2: Page hide (Mobile + Desktop khi tắt app/tab)
+    const handlePageHide = () => handleSync();
+    window.addEventListener("pagehide", handlePageHide);
+
+    // Event 3: Visibility change (Khi app chuyển background)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // console.log('App moved to background - syncing...');
+        handleSync();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       
       // Cleanup khi component unmount (chuyển trang)
       if (user && slug && currentTimeRef.current > 0) {
-        console.log(`✅ Component unmount - Lưu ${currentTimeRef.current}s lên Firebase`);
+        // console.log(`  Component unmount - Syncing ${currentTimeRef.current}s to Firebase`);
         syncTimeToFirebase(currentTimeRef.current);
       }
     };
