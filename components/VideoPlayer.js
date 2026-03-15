@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Artplayer from "artplayer";
 import Hls from "hls.js";
 import { auth, db } from "../lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RotateCcw, RotateCw, SkipBack, SkipForward } from "lucide-react";
@@ -12,10 +12,27 @@ import { renderToString } from "react-dom/server";
 export default function VideoPlayer({ url, slug, movieName, episodeName, episodes = [], episodeSlug }) {
   const artRef = useRef(null);
   const playerInstance = useRef(null);
+  const currentTimeRef = useRef(0);
+  const lastFirebaseSyncRef = useRef(0);
   const [user, setUser] = useState(null);
   const [isChangingEpisode, setIsChangingEpisode] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // --- HÀM ĐỒNG BỘ FIREBASE (ĐỊNH NGHĨA NGOÀI ĐỂ DÙNG Ở NHIỀU NƠII) ---
+  const syncTimeToFirebase = useCallback(async (timeToSave) => {
+    if (!user || !slug || timeToSave <= 0) return;
+    try {
+      await updateDoc(doc(db, "users", user.uid, "history", slug), {
+        seconds: timeToSave,
+        last_watched: serverTimestamp(),
+        [`details.${episodeSlug}`]: timeToSave
+      });
+      console.log("✅ Đã lưu mốc thời gian lên Firebase:", timeToSave);
+    } catch (error) {
+      console.error("❌ Lỗi lưu lịch sử:", error);
+    }
+  }, [user, slug, episodeSlug]);
 
   // Tính toán tập trước/sau
   const currentEpIndex = episodes.findIndex((ep) => ep.name === episodeName);
@@ -33,6 +50,37 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
+
+  // --- KIỂM TRA PENDING HISTORY TỪMETA LOCALSTORAGE LÚC MOUNT ---
+  useEffect(() => {
+    if (!user) return;
+
+    // Tìm tất cả pending sync từ localStorage
+    const keys = Object.keys(localStorage);
+    const pendingKeys = keys.filter(k => k.startsWith('pending_sync_'));
+
+    pendingKeys.forEach(async (key) => {
+      try {
+        const data = JSON.parse(localStorage.getItem(key));
+        if (data.uid === user.uid) {
+          const { slug: pendingSlug, episodeSlug: pendingEpisodeSlug, currentTime: pendingTime } = data;
+          
+          // Đồng bộ lên Firebase
+          await updateDoc(doc(db, "users", user.uid, "history", pendingSlug), {
+            seconds: pendingTime,
+            last_watched: serverTimestamp(),
+            [`details.${pendingEpisodeSlug}`]: pendingTime
+          });
+          
+          // Xóa khỏi localStorage sau khi sync thành công
+          localStorage.removeItem(key);
+          console.log(`✅ Synced pending history: ${pendingSlug} - ${pendingTime}s`);
+        }
+      } catch (error) {
+        console.error("Lỗi sync pending history:", error);
+      }
+    });
+  }, [user]);
 
   // --- GLOBAL HOTKEYS ---
   useEffect(() => {
@@ -434,31 +482,30 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
       if (shouldPlayImmediately) art.play();
     });
 
-    // --- LOGIC: LƯU LỊCH SỬ THÔNG MINH ---
-    art.on("video:timeupdate", async () => {
-      if (!user || !slug) return;
-      const currentTime = art.currentTime;
+    // --- 2. CẬP NHẬT LIÊN TỤC VÀO LOCALSTORAGE (MIỄN PHÍ) ---
+    art.on("video:timeupdate", () => {
+      const time = art.currentTime;
+      currentTimeRef.current = time;
+      
+      // Lưu ngay lập tức vào trình duyệt (0 tốn Quota)
+      localStorage.setItem(`history_${slug}_${episodeSlug}`, time);
 
-      // Lưu mỗi 5 giây
-      if (currentTime > 0 && Math.floor(currentTime) % 5 === 0) {
-        await setDoc(doc(db, "users", user.uid, "history", slug), {
-          // 1. Thông tin chung (Dùng cho Tủ Phim hiển thị tập mới nhất)
-          slug: slug,
-          episode: episodeName,
-          episode_slug: episodeSlug || '',
-          seconds: currentTime, // Thời gian của tập mới nhất
-          last_watched: serverTimestamp(),
-
-          // 2. THÊM MỚI: Lưu chi tiết thời gian cho TỪNG tập
-          // Cấu trúc này giúp lưu: { "tap-1": 120, "tap-2": 500 }
-          details: {
-            [episodeSlug]: currentTime
-          }
-        }, { merge: true }); // merge: true cực quan trọng để không mất dữ liệu các tập khác
+      // Backup lưu lên Firebase mỗi 120 giây (Chỉ 1 lần/2phút)
+      if (time - lastFirebaseSyncRef.current >= 120) {
+        lastFirebaseSyncRef.current = time;
+        syncTimeToFirebase(time);
       }
     });
 
+    // --- 3. LƯU FIREBASE KHI NGƯỜI DÙNG BẤM TẠM DỪNG ---
+    art.on("pause", () => {
+      lastFirebaseSyncRef.current = currentTimeRef.current;
+      syncTimeToFirebase(currentTimeRef.current);
+    });
+    
+    // --- 4. LƯU FIREBASE KHI VIDEO KẾT THÚC ---
     art.on("video:ended", () => {
+      syncTimeToFirebase(currentTimeRef.current);
       if (nextEp) {
         art.notice.show = "Đang chuyển sang tập tiếp theo...";
         setIsChangingEpisode(true);
@@ -482,6 +529,47 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
       }
     };
   }, [url, user, slug, episodeName, episodes, nextEp, prevEp, router, episodeSlug, searchParams]);
+
+  // --- 5. LƯU FIREBASE KHI NGƯỜI DÙNG ĐÓNG TAB HOẶC CHUYỂN TRANG ---
+  useEffect(() => {
+    // Khi người dùng đóng tab/trình duyệt
+    const handleBeforeUnload = (e) => {
+      if (!user || !slug || currentTimeRef.current <= 0) return;
+      
+      // Lưu ngay vào localStorage làm backup (trường hợp Firebase không kịp lưu)
+      localStorage.setItem(`pending_sync_${slug}_${episodeSlug}`, JSON.stringify({
+        uid: user.uid,
+        currentTime: currentTimeRef.current,
+        slug: slug,
+        episodeSlug: episodeSlug,
+        timestamp: new Date().toISOString()
+      }));
+
+      // Cố gắng sync lên Firebase bằng sendBeacon (request không bị hủy khi tab đóng)
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/save-watch-history', JSON.stringify({
+          uid: user.uid,
+          slug: slug,
+          episodeSlug: episodeSlug,
+          currentTime: currentTimeRef.current
+        }));
+      }
+      
+      console.log(`⏱️ Đóng trang - Đã lưu thời gian ${currentTimeRef.current}s vào localStorage`);
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      
+      // Cleanup khi component unmount (chuyển trang)
+      if (user && slug && currentTimeRef.current > 0) {
+        console.log(`✅ Component unmount - Lưu ${currentTimeRef.current}s lên Firebase`);
+        syncTimeToFirebase(currentTimeRef.current);
+      }
+    };
+  }, [user, slug, episodeSlug, syncTimeToFirebase]);
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);

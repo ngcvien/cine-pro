@@ -22,7 +22,7 @@ export default function ContinueWatching() {
           const q = query(
             collection(db, "users", u.uid, "history"),
             orderBy("last_watched", "desc"),
-            limit(6)
+            limit(15)
           );
 
           const querySnapshot = await getDocs(q);

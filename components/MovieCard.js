@@ -71,7 +71,7 @@ export default function MovieCard({ movie }) {
           </div>
         </div>
 
-        {/* Nút Xem sau (góc trái, tránh bấm mở chi tiết) */}
+        {/* Nút Yêu thích (góc trái, tránh bấm mở chi tiết) */}
         {/* <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
           <WatchLaterButton slug={movie.slug} movie={movie} />
         </div> */}

@@ -74,7 +74,7 @@ export default function MovieCabinetPage() {
 
   // Hàm xóa tất cả
   const handleClearAll = async () => {
-    const title = activeTab === 'history' ? 'Lịch sử xem' : 'Danh sách Xem sau';
+    const title = activeTab === 'history' ? 'Lịch sử xem' : 'Danh sách Yêu thích';
     if (!window.confirm(`CẢNH BÁO: Bạn có chắc muốn xóa toàn bộ ${title}?`)) return;
 
     const collectionName = activeTab === 'history' ? 'history' : 'watch_later';
@@ -200,7 +200,7 @@ export default function MovieCabinetPage() {
                   }`}
                 >
                   <Bookmark size={18} className={activeTab === 'watch-later' ? 'animate-pulse' : ''} />
-                  Xem sau
+                  Yêu thích
                   {activeTab === 'watch-later' && (
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping"></span>
                   )}
@@ -278,7 +278,7 @@ export default function MovieCabinetPage() {
                 <p className="text-gray-500 mb-10 max-w-md mx-auto leading-relaxed">
                   {activeTab === 'history' 
                     ? 'Bạn chưa xem bộ phim nào. Hãy bắt đầu khám phá thư viện phim phong phú của chúng tôi!' 
-                    : 'Bạn chưa lưu bộ phim nào để xem sau. Thêm phim vào danh sách khi bạn tìm thấy điều thú vị!'}
+                    : 'Bạn chưa lưu bộ phim nào để Yêu thích. Thêm phim vào danh sách khi bạn tìm thấy điều thú vị!'}
                 </p>
 
                 <Link 

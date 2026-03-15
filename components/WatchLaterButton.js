@@ -22,7 +22,7 @@ export default function WatchLaterButton({ movie, slug, hero = true }) {
           const docSnap = await getDoc(docRef);
           setIsSaved(docSnap.exists());
         } catch (error) {
-          console.error("Lỗi kiểm tra xem sau:", error);
+          console.error("Lỗi kiểm tra Yêu thích:", error);
         }
       }
       setLoading(false);
@@ -60,7 +60,7 @@ export default function WatchLaterButton({ movie, slug, hero = true }) {
         setIsSaved(true);
       }
     } catch (error) {
-      console.error("Lỗi cập nhật xem sau:", error);
+      console.error("Lỗi cập nhật Yêu thích:", error);
       alert("Có lỗi xảy ra, vui lòng thử lại.");
     } finally {
       setProcessing(false);
@@ -94,8 +94,8 @@ export default function WatchLaterButton({ movie, slug, hero = true }) {
                 : "bg-[#121212] text-white border border-white/10 hover:bg-white/20 hover:border-white"
             }`
       }`}
-      title={isSaved ? "Bỏ khỏi Xem sau" : "Thêm vào Xem sau"}
-      aria-label={isSaved ? "Bỏ khỏi Xem sau" : "Thêm vào Xem sau"}
+      title={isSaved ? "Bỏ khỏi Yêu thích" : "Thêm vào Yêu thích để xem sau hoặc nhận thông báo khi có tập mới!"}
+      aria-label={isSaved ? "Bỏ khỏi Yêu thích" : "Thêm vào Yêu thích để xem sau hoặc nhận thông báo khi có tập mới!"}
     >
       {processing ? (
         <Loader2 className="animate-spin" size={iconSize} />
