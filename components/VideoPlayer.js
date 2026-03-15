@@ -23,11 +23,17 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
   const syncTimeToFirebase = useCallback(async (timeToSave) => {
     if (!user || !slug || timeToSave <= 0) return;
     try {
-      await updateDoc(doc(db, "users", user.uid, "history", slug), {
+      const dataToSave = {
         seconds: timeToSave,
         last_watched: serverTimestamp(),
-        [`details.${episodeSlug}`]: timeToSave
-      });
+        details: {
+          [episodeSlug]: timeToSave
+        }
+      };
+      if (episodeName) dataToSave.episode = episodeName;
+      if (episodeSlug) dataToSave.episode_slug = episodeSlug;
+      
+      await setDoc(doc(db, "users", user.uid, "history", slug), dataToSave, { merge: true });
       // console.log("  Đã lưu mốc thời gian lên Firebase:", timeToSave);
     } catch (error) {
       console.error("❌ Lỗi lưu lịch sử:", error);
@@ -63,14 +69,20 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
       try {
         const data = JSON.parse(localStorage.getItem(key));
         if (data.uid === user.uid) {
-          const { slug: pendingSlug, episodeSlug: pendingEpisodeSlug, currentTime: pendingTime } = data;
+          const { slug: pendingSlug, episodeSlug: pendingEpisodeSlug, currentTime: pendingTime, episodeName: pendingEpisodeName } = data;
           
           // Đồng bộ lên Firebase
-          await updateDoc(doc(db, "users", user.uid, "history", pendingSlug), {
+          const pendingDataToSave = {
             seconds: pendingTime,
             last_watched: serverTimestamp(),
-            [`details.${pendingEpisodeSlug}`]: pendingTime
-          });
+            details: {
+              [pendingEpisodeSlug]: pendingTime
+            }
+          };
+          if (pendingEpisodeName) pendingDataToSave.episode = pendingEpisodeName;
+          if (pendingEpisodeSlug) pendingDataToSave.episode_slug = pendingEpisodeSlug;
+          
+          await setDoc(doc(db, "users", user.uid, "history", pendingSlug), pendingDataToSave, { merge: true });
           
           // Xóa khỏi localStorage sau khi sync thành công
           localStorage.removeItem(key);
@@ -552,6 +564,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
             uid: user.uid,
             slug: slug,
             episodeSlug: episodeSlug,
+            episodeName: episodeName,
             currentTime: timeToSave
           })
         });
@@ -571,6 +584,7 @@ export default function VideoPlayer({ url, slug, movieName, episodeName, episode
         currentTime: currentTimeRef.current,
         slug: slug,
         episodeSlug: episodeSlug,
+        episodeName: episodeName,
         timestamp: new Date().toISOString()
       }));
 

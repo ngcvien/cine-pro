@@ -14,7 +14,7 @@ export async function POST(request) {
       body = JSON.parse(text);
     }
 
-    const { uid, slug, episodeSlug, currentTime } = body;
+    const { uid, slug, episodeSlug, currentTime, episodeName } = body;
 
     // Validation
     if (!uid || !slug || currentTime <= 0) {
@@ -33,11 +33,17 @@ export async function POST(request) {
       .doc(slug);
 
     // Lưu dữ liệu lên Firebase
-    await historyRef.update({
+    const historyData = {
       seconds: currentTime,
       last_watched: new Date(),
-      [`details.${episodeSlug}`]: currentTime,
-    });
+      details: {
+        [episodeSlug]: currentTime
+      }
+    };
+    if (episodeName) historyData.episode = episodeName;
+    if (episodeSlug) historyData.episode_slug = episodeSlug;
+    
+    await historyRef.set(historyData, { merge: true });
 
     console.log(`  Saved watch history for user ${uid}, video ${slug}, time ${currentTime}s`);
 
