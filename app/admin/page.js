@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { db } from "@/lib/firebase";
+import { GripVertical, ImagePlus , ImageMinus  } from "lucide-react";
+import { db, auth } from "@/lib/firebase";
 import {
     collection,
     getDocs,
@@ -361,12 +362,14 @@ function HotMovieManager() {
     const [hotList, setHotList] = useState([]); // Danh sách phim đầy đủ (đã fetch từ slug)
     const [loading, setLoading] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [editingMovieSlug, setEditingMovieSlug] = useState(null); // Phim đang chỉnh sửa name_image_url
+    const [uploadingSlug, setUploadingSlug] = useState(null); // Phim đang upload
+    const [draggedIndex, setDraggedIndex] = useState(null); // Theo dõi phim đang kéo
 
     // 1. TẢI DANH SÁCH HOT TỪ DB & FETCH CHI TIẾT
     useEffect(() => {
         const fetchHotMovies = async () => {
             try {
-                // Gọi API Route chúng ta vừa tạo ở Bước 1
                 const res = await fetch("/api/config/hero");
                 const data = await res.json();
 
@@ -380,7 +383,7 @@ function HotMovieManager() {
         fetchHotMovies();
     }, []);
 
-    // 2. TÌM KIẾM PHIM (Giữ nguyên logic cũ)
+    // 2. TÌM KIẾM PHIM
     const handleSearch = async () => {
         if (!queryStr.trim()) return;
         setIsSearching(true);
@@ -394,13 +397,12 @@ function HotMovieManager() {
         }
     };
 
-    // 3. THÊM PHIM VÀO LIST
+    // 3. THÊM PHIM VÀO LIST (TỰ ĐỘNG ĐẶT LÊN ĐẦU)
     const addMovie = (movie) => {
         if (hotList.find(m => m.slug === movie.slug)) {
             return alert("Phim này đã có trong danh sách!");
         }
-        // Thêm vào UI ngay lập tức
-        setHotList([...hotList, movie]);
+        setHotList([{ ...movie, url_name_image: "" }, ...hotList]);
     };
 
     // 4. XÓA PHIM
@@ -420,19 +422,108 @@ function HotMovieManager() {
         setHotList(newList);
     };
 
-    // 6. LƯU VÀO FIRESTORE (QUAN TRỌNG: CHỈ LƯU SLUG)
+    // 6. CẬP NHẬT url_name_image của phim
+    const updateMovieNameImage = (slug, url) => {
+        setHotList(hotList.map(m => 
+            m.slug === slug ? { ...m, url_name_image: url } : m
+        ));
+    };
+
+    // 6.5 XÓA url_name_image của phim
+    const deleteMovieImage = (slug) => {
+        setHotList(hotList.map(m => 
+            m.slug === slug ? { ...m, url_name_image: "" } : m
+        ));
+    };
+
+    // 7. XỬ LÝ DRAG & DROP
+    const handleDragStart = (e, index) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+    };
+
+    const handleDrop = (e, targetIndex) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+        const newList = [...hotList];
+        const [movedItem] = newList.splice(draggedIndex, 1);
+        newList.splice(targetIndex, 0, movedItem);
+        setHotList(newList);
+        setDraggedIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
+
+    // 8. UPLOAD ẢNH BẰNG CLOUDINARY
+    const handleUploadImage = async (slug, file) => {
+        if (!file || !auth?.currentUser) {
+            alert("Vui lòng đăng nhập trước!");
+            return;
+        }
+
+        setUploadingSlug(slug);
+        try {
+            // Lấy ID token từ Firebase
+            const idToken = await auth.currentUser.getIdToken();
+
+            // Tạo FormData
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("folder", "cine-pro/hero-names");
+
+            // Upload qua API endpoint (sẽ xử lý bảo mật server-side)
+            const response = await fetch("/api/upload/cloudinary", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${idToken}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || "Upload thất bại");
+            }
+
+            const data = await response.json();
+            updateMovieNameImage(slug, data.secure_url);
+            alert("Upload thành công!");
+        } catch (error) {
+            console.error("Lỗi upload:", error);
+            alert("Lỗi upload: " + error.message);
+        } finally {
+            setUploadingSlug(null);
+        }
+    };
+
+    // 9. LƯU VÀO FIRESTORE (LƯU SLUG + url_name_image)
     const saveChanges = async () => {
         setLoading(true);
         try {
-            // Trích xuất chỉ lấy mảng slug từ danh sách phim đầy đủ
-            const slugArray = hotList.map(m => m.slug);
+            // Chuẩn bị dữ liệu
+            const movieData = hotList.map(m => ({
+                slug: m.slug,
+                url_name_image: m.url_name_image || ""
+            }));
 
-            const docRef = doc(db, "configs", "hero_banner"); // Đúng collection/doc của bạn
+            const docRef = doc(db, "configs", "hero_banner");
 
-            // Lưu đè mảng movie_slugs mới
-            await setDoc(docRef, { movie_slugs: slugArray }, { merge: true });
+            // Lưu: movie_slugs (để compatible cũ) + movies_data (mới với url_name_image)
+            await setDoc(docRef, { 
+                movie_slugs: hotList.map(m => m.slug),
+                movies_data: movieData,
+                updated_at: new Date().toISOString()
+            }, { merge: true });
 
-            alert(`  Đã lưu ${slugArray.length} phim vào Banner thành công!`);
+            alert(`Đã lưu ${hotList.length} phim vào Banner thành công!`);
         } catch (e) {
             console.error(e);
             alert("Lỗi lưu: " + e.message);
@@ -444,7 +535,7 @@ function HotMovieManager() {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[80vh]">
 
-            {/* CỘT TRÁI: TÌM KIẾM (GIỮ NGUYÊN GIAO DIỆN CŨ) */}
+            {/* CỘT TRÁI: TÌM KIẾM */}
             <div className="flex flex-col gap-4">
                 <div className="bg-[#121212] p-4 border border-white/5">
                     <h3 className="text-xs font-bold uppercase text-[#00FF41] mb-2 tracking-widest">1. Tìm & Chọn Phim</h3>
@@ -480,7 +571,7 @@ function HotMovieManager() {
                 </div>
             </div>
 
-            {/* CỘT PHẢI: QUẢN LÝ SLUG (ĐÃ FETCH THÔNG TIN) */}
+            {/* CỘT PHẢI: QUẢN LÝ PHIM & url_name_image */}
             <div className="flex flex-col gap-4">
                 <div className="bg-[#121212] p-4 border border-white/5 flex justify-between items-center">
                     <h3 className="text-xs font-bold uppercase text-yellow-500 tracking-widest">
@@ -497,28 +588,203 @@ function HotMovieManager() {
 
                 <div className="flex-1 overflow-y-auto bg-black border border-white/10 p-2 space-y-2">
                     {hotList.map((movie, index) => (
-                        <div key={movie.slug} className="flex items-center gap-3 p-3 border border-white/10 bg-[#0a0a0a]">
-                            <span className="font-mono text-gray-500 text-xs w-6 text-center">{index + 1}</span>
-                            <img
-                                src={movie.poster_url?.startsWith('http') ? movie.poster_url : `https://phimimg.com/${movie.poster_url}`}
-                                className="w-10 h-14 object-cover"
-                            />
-                            <div className="flex-1 min-w-0">
-                                <div className="font-bold text-sm text-gray-300 truncate">{movie.name}</div>
-                                <div className="text-[10px] text-gray-600 truncate">{movie.slug}</div>
+                        <div
+                            key={movie.slug}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragOver={handleDragOver}
+                            onDrop={(e) => handleDrop(e, index)}
+                            onDragEnd={handleDragEnd}
+                            className={`border p-3 transition-all ${
+                                draggedIndex === index
+                                    ? "border-[#00FF41] bg-[#00FF41]/10 opacity-60"
+                                    : draggedIndex !== null
+                                    ? "border-white/10 bg-[#0a0a0a]"
+                                    : "border-white/10 bg-[#0a0a0a] hover:border-[#00FF41]/50"
+                            }`}
+                        >
+                            {/* Phần chính: Poster + Tên + Nút điều khiển */}
+                            <div className="flex items-center gap-3 mb-3">
+                                {/* DRAG HANDLE WITH ICON */}
+                                <div
+                                    className="cursor-grab active:cursor-grabbing text-gray-600 hover:text-[#00FF41] transition-colors"
+                                    title="Kéo để sắp xếp"
+                                >
+                                    <GripVertical size={18} />
+                                </div>
+
+                                <span className="font-mono text-gray-500 text-xs w-4 text-center">{index + 1}</span>
+                                <img
+                                    src={movie.poster_url?.startsWith('http') ? movie.poster_url : `https://phimimg.com/${movie.poster_url}`}
+                                    className="w-10 h-14 object-cover"
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-bold text-sm text-gray-300 truncate">{movie.name}</div>
+                                    <div className="text-[10px] text-gray-600 truncate">{movie.slug}</div>
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                    <button onClick={() => moveItem(index, 'up')} disabled={index === 0} className="text-[10px] text-gray-500 hover:text-white disabled:opacity-30">▲</button>
+                                    <button onClick={() => moveItem(index, 'down')} disabled={index === hotList.length - 1} className="text-[10px] text-gray-500 hover:text-white disabled:opacity-30">▼</button>
+                                </div>
+
+                                <button
+                                    onClick={() => setEditingMovieSlug(movie.slug)}
+                                    className="text-gray-500 hover:text-[#00FF41] transition-colors"
+                                    title={movie.url_name_image ? "Chỉnh sửa ảnh tên phim" : "Thêm ảnh tên phim"}
+                                >
+                                    <ImagePlus  size={18} />
+                                </button>
+
+                                {movie.url_name_image && (
+                                    <button
+                                        onClick={() => deleteMovieImage(movie.slug)}
+                                        className="text-gray-500 hover:text-red-500 transition-colors"
+                                        title="Xóa ảnh tên phim"
+                                    >
+                                        <ImageMinus  size={18} />
+                                    </button>
+                                )}
+
+                                <button onClick={() => removeMovie(movie.slug)} className="px-3 py-1 text-[10px] font-bold text-red-500 border border-red-900 hover:bg-red-900 uppercase">Xóa</button>
                             </div>
 
-                            <div className="flex flex-col gap-1">
-                                <button onClick={() => moveItem(index, 'up')} disabled={index === 0} className="text-[10px] text-gray-500 hover:text-white disabled:opacity-30">▲</button>
-                                <button onClick={() => moveItem(index, 'down')} disabled={index === hotList.length - 1} className="text-[10px] text-gray-500 hover:text-white disabled:opacity-30">▼</button>
-                            </div>
-
-                            <button onClick={() => removeMovie(movie.slug)} className="px-3 py-1 text-[10px] font-bold text-red-500 border border-red-900 hover:bg-red-900 ml-2 uppercase">Xóa</button>
+                            {/* Phần mở rộng: Chỉnh sửa url_name_image */}
+                            {editingMovieSlug === movie.slug && (
+                                <MovieNameImageEditor 
+                                    movie={movie}
+                                    onUpdate={updateMovieNameImage}
+                                    onUpload={handleUploadImage}
+                                    onClose={() => setEditingMovieSlug(null)}
+                                    isUploading={uploadingSlug === movie.slug}
+                                />
+                            )}
                         </div>
                     ))}
                 </div>
             </div>
 
+        </div>
+    );
+}
+
+// --- COMPONENT CHỈNH SỬA ẢNH TÊN PHIM ---
+function MovieNameImageEditor({ movie, onUpdate, onUpload, onClose, isUploading }) {
+    const [tabMode, setTabMode] = useState("url"); // 'url' | 'upload'
+    const [urlInput, setUrlInput] = useState(movie.url_name_image || "");
+    const fileInputRef = useRef(null);
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            await onUpload(movie.slug, file);
+            fileInputRef.current = null;
+        }
+    };
+
+    return (
+        <div className="border-t border-white/10 pt-3 mt-3 space-y-3">
+            <h4 className="text-[11px] font-bold text-[#00FF41] uppercase">URL_NAME_IMAGE</h4>
+            
+            {/* Tabs */}
+            <div className="flex gap-2 border-b border-white/10">
+                <button
+                    onClick={() => setTabMode("url")}
+                    className={`px-3 py-1 text-[10px] font-bold uppercase border-b-2 transition-colors ${
+                        tabMode === "url" 
+                            ? "text-white border-[#00FF41]" 
+                            : "text-gray-500 border-transparent hover:text-white"
+                    }`}
+                >
+                    URL
+                </button>
+                <button
+                    onClick={() => setTabMode("upload")}
+                    className={`px-3 py-1 text-[10px] font-bold uppercase border-b-2 transition-colors ${
+                        tabMode === "upload" 
+                            ? "text-white border-[#00FF41]" 
+                            : "text-gray-500 border-transparent hover:text-white"
+                    }`}
+                >
+                    Upload
+                </button>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-2">
+                {tabMode === "url" && (
+                    <div className="space-y-2">
+                        <input
+                            type="text"
+                            placeholder="https://example.com/image.jpg"
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            className="w-full bg-black border border-white/10 p-2 text-xs text-white outline-none focus:border-[#00FF41]"
+                        />
+                        <button
+                            onClick={() => {
+                                if (urlInput.trim()) {
+                                    onUpdate(movie.slug, urlInput);
+                                    onClose();
+                                }
+                            }}
+                            className="w-full bg-[#00FF41] text-black text-xs font-bold py-1 hover:bg-[#00cc33]"
+                        >
+                            Lưu URL
+                        </button>
+                    </div>
+                )}
+
+                {tabMode === "upload" && (
+                    <div className="space-y-2">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            disabled={isUploading}
+                            className="hidden"
+                        />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                            className="w-full bg-blue-600/20 text-blue-400 text-xs font-bold py-2 border border-blue-600/50 hover:bg-blue-600/30 disabled:opacity-50 uppercase"
+                        >
+                            {isUploading ? "Đang upload..." : "Chọn ảnh từ máy"}
+                        </button>
+                        <p className="text-[10px] text-gray-500">Max 5MB. Hỗ trợ: JPG, PNG, WebP, GIF</p>
+                    </div>
+                )}
+
+                {/* Preview */}
+                {(movie.url_name_image || urlInput) && (
+                    <div className="bg-white/5 p-2 max-h-40 overflow-y-auto">
+                        <p className="text-[10px] text-gray-400 mb-1">Preview:</p>
+                        {/* Render img only if src is not empty */}
+                        {(tabMode === "url" ? urlInput : movie.url_name_image) && (
+                            <img
+                                src={tabMode === "url" ? urlInput : movie.url_name_image}
+                                alt="Preview"
+                                className="max-w-full h-auto max-h-32 mx-auto object-contain"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                }}
+                            />
+                        )}
+                        {!(tabMode === "url" ? urlInput : movie.url_name_image) && (
+                            <p className="text-[10px] text-gray-500 italic text-center py-4">Không có ảnh để preview</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Nút Hủy */}
+                <button
+                    onClick={onClose}
+                    className="w-full bg-white/10 text-gray-400 text-xs font-bold py-1 hover:bg-white/20 hover:text-white"
+                >
+                    Hủy
+                </button>
+            </div>
         </div>
     );
 }

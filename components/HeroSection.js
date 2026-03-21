@@ -76,6 +76,13 @@ export default function HeroSection({ movies = [] }) {
   // Tách tên phim để làm hiệu ứng chữ
   const titleWords = movieTitle.split(" ");
 
+  // Debug logs
+  useEffect(() => {
+    // console.log("HeroSection - Current Movie:", currentMovie);
+    // console.log("HeroSection - URL Name Image:", currentMovie?.url_name_image);
+    // console.log("HeroSection - All Movies:", movies);
+  }, [currentMovie, movies]);
+
   return (
     <>
       {/* Font import inline (hoặc có thể đưa vào layout) */}
@@ -217,8 +224,47 @@ export default function HeroSection({ movies = [] }) {
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               >
 
+
+
+                {/* ── TÊN PHIM — Ưu tiên URL_NAME_IMAGE ── */}
+                <div className="mb-6 overflow-hidden">
+                  {currentMovie?.url_name_image ? (
+                    // Hiển thị ảnh tên phim nếu có
+                    <motion.img
+                      src={currentMovie.url_name_image}
+                      alt={movieTitle}
+                      className="max-w-full h-auto max-h-[120px] md:max-h-[180px] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]"
+                      initial={{ y: "100%", opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+                    />
+                  ) : (
+                    // Fallback: Hiển thị text nếu không có ảnh
+                    <motion.h1
+                      className="hero-title text-4xl md:text-7xl text-white leading-[1.02] uppercase shimmer-text"
+                      initial={{ y: "100%" }}
+                      animate={{ y: 0 }}
+                      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+                    >
+                      {movieTitle}
+                    </motion.h1>
+                  )}
+                </div>
+
+                {/* Tên gốc */}
+                {currentMovie?.origin_name && (
+                  <motion.h2
+                    className="hero-subtitle text-lg md:text-2xl text-primary/90 mb-6"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.25, duration: 0.5 }}
+                  >
+                    — {currentMovie.origin_name}
+                  </motion.h2>
+                )}
+
                 {/* Tags row */}
-                <div className="flex items-center gap-2 mb-5">
+                {/* <div className="flex items-center gap-2 mb-5">
                   <span className="hero-tag bg-primary text-black text-[10px] px-3 py-1 rounded-sm shadow-lg shadow-primary/30">
                     #{currentIndex + 1} Trending
                   </span>
@@ -240,36 +286,14 @@ export default function HeroSection({ movies = [] }) {
                     <span className="text-gray-300 font-medium">{currentMovie.type}</span>
                     <span className="text-gray-500">|</span>
                   </>
-                )}
+                )} */}
 
-                {/* ── TÊN PHIM — Playfair Display ── */}
-                <div className="mb-2 overflow-hidden">
-                  <motion.h1
-                    className="hero-title text-4xl md:text-7xl text-white leading-[1.02] uppercase shimmer-text"
-                    initial={{ y: "100%" }}
-                    animate={{ y: 0 }}
-                    transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-                  >
-                    {movieTitle}
-                  </motion.h1>
-                </div>
 
-                {/* Tên gốc */}
-                {currentMovie?.origin_name && (
-                  <motion.h2
-                    className="hero-subtitle text-lg md:text-2xl text-primary/90 mb-6"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.25, duration: 0.5 }}
-                  >
-                    — {currentMovie.origin_name}
-                  </motion.h2>
-                )}
 
                 {/* Cốt truyện */}
                 {plotText && (
                   <motion.div
-                    className="mb-8 hidden md:block max-w-xl"
+                    className="mb-4 hidden md:block max-w-xl"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
@@ -281,6 +305,32 @@ export default function HeroSection({ movies = [] }) {
                       </p>
                     </div>
                   </motion.div>
+                )}
+
+                {/* Tags row */}
+                <div className="flex items-center gap-2 mb-5">
+                  <span className="hero-tag inline-flex items-center gap-1 text-[9px] font-medium tracking-widest uppercase text-primary/90 px-2 py-0.5">
+                    <span className="w-1 h-1 rounded-full bg-primary inline-block" />
+                    #{currentIndex + 1} Trending
+                  </span>
+                  <span className="w-px h-3 bg-white/10" />
+                  <span className="hero-tag text-[10px] text-white/40 px-1.5 py-0.5">
+                    {currentMovie?.year}
+                  </span>
+                  <span className="text-white/15">·</span>
+                  <span className="hero-tag text-[10px] text-white/40 px-1.5 py-0.5">
+                    {currentMovie.quality || "FHD"}
+                  </span>
+                  <span className="text-white/15">·</span>
+                  <span className="hero-tag text-[10px] text-white/40 px-1.5 py-0.5">
+                    {currentMovie?.episode_current || "FULL"}
+                  </span>
+                </div>
+                {currentMovie.type && (
+                  <>
+                    <span className="text-white/35 text-[11px] font-light tracking-wide">{currentMovie.type}</span>
+                    <span className="text-white/15 mx-1.5">·</span>
+                  </>
                 )}
 
                 {/* Buttons */}
@@ -329,8 +379,8 @@ export default function HeroSection({ movies = [] }) {
                 key={movie._id || movie.slug}
                 onClick={() => selectSlide(index)}
                 className={`poster-card relative cursor-pointer rounded-xl overflow-hidden ${isActive
-                    ? "active w-[72px] h-[105px] ring-2 ring-primary ring-offset-2 ring-offset-black/50 shadow-[0_8px_32px_rgba(74,222,128,0.3)]"
-                    : "w-[58px] h-[88px] ring-1 ring-white/20 opacity-50 hover:opacity-90"
+                  ? "active w-[72px] h-[105px] ring-2 ring-primary ring-offset-2 ring-offset-black/50 shadow-[0_8px_32px_rgba(74,222,128,0.3)]"
+                  : "w-[58px] h-[88px] ring-1 ring-white/20 opacity-50 hover:opacity-90"
                   }`}
               >
                 <img
