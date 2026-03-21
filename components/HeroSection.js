@@ -254,7 +254,7 @@ export default function HeroSection({ movies = [] }) {
                 {/* Tên gốc */}
                 {currentMovie?.origin_name && (
                   <motion.h2
-                    className="hero-subtitle text-lg md:text-2xl text-primary/90 mb-6"
+                    className="hero-subtitle text-lg md:text-2xl text-white/90 mb-6"
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.25, duration: 0.5 }}
