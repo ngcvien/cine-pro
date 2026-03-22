@@ -248,7 +248,7 @@ export default async function MovieDetailPage({ params }) {
                                         {[...firstServerEps].reverse().map((ep, idx) => (
                                             <Link
                                                 key={ep.slug || idx}
-                                                href={`/phim/${slug}?ep=${ep.slug}`}
+                                                href={`/phim/${slug}?tap=${ep.slug}`}
                                                 className="ep-btn"
                                             >
                                                 {ep.name}
